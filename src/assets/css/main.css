@@ -85,20 +85,33 @@ h3 {
   width: 50%;
 }
 
-button.primary {
+.btn {
   padding: 0.75rem 3rem;
   font-size: 16px;
-  color: white;
-  background-color: #49c74a;
-  border: none;
   border-radius: 5px;
   cursor: pointer;
   text-transform: uppercase;
   transition-duration: 0.3s;
 }
 
-button.primary:hover {
+.btn.primary {
+  color: white;
+  background-color: #49c74a;
+  border: none;
+}
+
+.btn.primary:hover {
   background-color: #3a9c3a;
+}
+
+.btn.alert {
+  color: white;
+  background-color: #ff930e;
+  border: none;
+}
+
+.btn.alert:hover {
+  background-color: #cf7b15;
 }
 
 @media (max-width: 768px) {

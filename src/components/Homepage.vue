@@ -24,7 +24,7 @@
             Chrome based, Opera, Edge
           </p>
           <div class="buttons">
-            <button class="primary" @click="$emit('clickConnect')">Connect Flipper</button>
+            <button class="btn primary" @click="$emit('clickConnect')">Connect Flipper</button>
           </div>
         </div>
         <div v-else class="card-desc bad-browser">
@@ -34,7 +34,7 @@
             Try one of the chromium based browsers.
           </p>
           <div class="buttons">
-            <button class="primary" href="https://caniuse.com/webusb">Compatibility List</button>
+            <button class="btn alert" href="https://caniuse.com/webusb">Compatibility List</button>
           </div>
         </div>
       </div>
