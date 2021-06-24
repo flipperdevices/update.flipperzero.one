@@ -1,16 +1,32 @@
 <template>
   <div id="app">
-    <Upgrade />
+    <h1>Flipper Zero Firmware Update page</h1>
+    <div>
+      <h2>WebUSB updater (recommended)</h2>
+      <WebUSB /> 
+    </div>
+    <div>
+      <h2>Desktop application updater</h2>
+      <QFlipper />
+    </div>
+    <div>
+      <h2>Download firmware files</h2>
+      <FirmwareFiles />
+    </div>
   </div>
 </template>
 
 <script>
-import Upgrade from './components/Upgrade.vue'
+import WebUSB from './components/WebUSB.vue'
+import QFlipper from './components/QFlipper.vue'
+import FirmwareFiles from './components/FirmwareFiles.vue'
 
 export default {
   name: 'App',
   components: {
-    Upgrade
+    WebUSB,
+    QFlipper,
+    FirmwareFiles
   }
 }
 </script>
