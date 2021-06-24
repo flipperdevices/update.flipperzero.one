@@ -15,6 +15,12 @@
         <span>2. Press "Connect"</span>
       </div>
     </div>
+    <div v-show="displayArrows" id="connection-spinner">
+      <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>
+      <p>
+        Waiting for connection...
+      </p>
+    </div>
   </div>
 </template>
 
@@ -147,3 +153,4 @@ export default {
 </script>
 
 <style src="../assets/css/webdfu.css"></style>
+<style src="../assets/css/spinner.css"></style>
