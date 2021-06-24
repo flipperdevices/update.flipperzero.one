@@ -4,13 +4,13 @@
     <h2>WebUSB updater</h2>
     <div class="component">
       <div class="card">
-        <div v-if="browser !== 'Other'" class="card-banner">
+        <div v-if="browser !== 'Not supported'" class="card-banner">
           <img v-if="browser === 'Chrome'" src="../assets/chrome.png" />
           <img v-else-if="browser === 'Edge'" src="../assets/edge.png" />
           <img v-else-if="browser === 'Opera'" src="../assets/opera.png" />
           <img v-else-if="browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
-        <div v-if="browser !== 'Other'" class="card-desc">
+        <div v-if="browser !== 'Not supported'" class="card-desc">
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
             No drivers needed!
@@ -29,7 +29,7 @@
         </div>
         <div v-else class="card-desc bad-browser">
           <h3>Your browser doesn't support WebUSB</h3>
-          <img v-if="browser === 'Other'" src="../assets/notsupported.png" />
+          <img v-if="browser === 'Not supported'" src="../assets/notsupported.png" />
           <p>
             Try one of the chromium based browsers.
           </p>

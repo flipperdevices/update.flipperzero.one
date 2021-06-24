@@ -21,7 +21,7 @@ export default {
     return {
       displayHomepage: true,
       userAgent: {
-        browser: 'Other',
+        browser: 'Not supported',
         os: 'Other'
       }
     }
@@ -40,6 +40,8 @@ export default {
     if (navigator.userAgent.indexOf("Macintosh") !== -1) this.userAgent.os = 'Mac'
     else if (navigator.userAgent.indexOf("Linux") !== -1) this.userAgent.os = 'Linux'
     else if (navigator.userAgent.indexOf("Windows") !== -1) this.userAgent.os = 'Windows'
+
+    if (!('serial' in navigator) || !('usb' in navigator)) this.userAgent.browser = 'Not supported'
   }
 }
 </script>
