@@ -14,7 +14,7 @@
 import { WebDFU } from "dfu"
 
 export default {
-  name: 'Upgrade',
+  name: 'WebUSB',
   data() {
     return {
       status: 'Connect Flipper',
@@ -31,6 +31,7 @@ export default {
           await this.port.open({
             baudRate: 9600
           });
+          console.log(this.port)
           this.status = 'Connected to Flipper in serial mode'
         } catch {
           this.status = 'No device selected'
