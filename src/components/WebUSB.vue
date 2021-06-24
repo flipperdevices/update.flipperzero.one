@@ -55,7 +55,7 @@
       </div>
       <div v-if="isOutdated" id="outdated">
         <p>
-          Your firmware is outdated, latest release is {{ hwLatest }}
+          Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
         <button class="btn primary" @click="gotoDFU">Upgrade Firmware</button>
       </div>
@@ -234,6 +234,25 @@ export default {
       if (value.includes('State of Charge: ')) {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim();
       }
+    },
+    async fetchVersions() {
+      fetch('https://update.flipperzero.one/directory.json')
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          this.versions.master.version = data.channels[0].versions[0].version;
+          this.versions.release.version = data.channels[1].versions[0].version;
+          this.versions.master.timestamp = data.channels[0].versions[0].timestamp;
+          this.versions.release.timestamp = data.channels[1].versions[0].timestamp;
+
+          if (this.versions.flipper.firmware.version === this.versions.release.version) {
+            this.isOutdated = false
+          } else {
+            this.isOutdated = true
+            this.hwLatest = this.versions.release.version;        
+          }
+        })
     },
     async gotoDFU() {
       this.write(['dfu'])
