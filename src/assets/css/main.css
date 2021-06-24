@@ -26,6 +26,7 @@ h3 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  min-height: 90vh;
   font-family: "Roboto", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

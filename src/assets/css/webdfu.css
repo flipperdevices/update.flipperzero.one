@@ -48,3 +48,27 @@
   width: 36px;
   margin-right: 0.4rem;
 }
+
+/* Error section */
+
+#error h2, #error p {
+  font-weight: 400;
+  margin: 0.5rem 0;
+}
+
+#error div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.5rem 1rem;
+  background-color: #ff930e4d;
+  border: 2px solid #ff930eb3;
+  border-radius: 5px;
+  margin-bottom: 1.5rem;
+}
+
+#error div svg {
+  position: relative;
+  top: 3px;
+  height: 1.5rem;
+}

@@ -21,12 +21,13 @@
         Waiting for connection...
       </p>
     </div>
-    <div v-show="isError">
+    <div v-show="error.isError" id="error">
       <div>
         <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g data-name="Layer 2"><g data-name="alert-circle"><rect width="24" height="24" opacity="0"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="16" r="1"/><path d="M12 7a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1z"/></g></g></svg> Error</h2>
-        <p id="error-msg"></p>
+        <p>{{ error.msg }}</p>
       </div>
-      <button class="btn primary" @click="connectSerial">Try again</button>
+      <button v-if="error.button === 'connectSerial'" class="btn primary" @click="connectSerial">Try again</button>
+      <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="connectDFU">Try again</button>
     </div>
   </div>
 </template>
@@ -41,12 +42,16 @@ export default {
   },
   data() {
     return {
+      error: {
+        isError: false,
+        msg: '',
+        button: ''
+      },
       status: 'Connect Flipper',
       port: undefined,
       webdfu: undefined,
       firmwareFile: undefined,
       displayArrows: false,
-      isError: false
     }
   },
   methods: {
@@ -59,8 +64,14 @@ export default {
           baudRate: 9600
         });
         this.status = 'Connected to Flipper in serial mode'
+        this.error.isError = false
+        this.error.msg = ''
+        this.error.button = ''
         this.displayArrows = false
       } catch {
+        this.error.isError = true
+        this.error.msg = 'No device selected'
+        this.error.button = 'connectSerial'
         this.status = 'No device selected'
         this.displayArrows = false
       }
@@ -124,9 +135,16 @@ export default {
         // Connect to first device interface
         await this.webdfu.connect(0);
         this.status = 'Connected to Flipper in DFU mode'
+        this.error.isError = false
+        this.error.msg = ''
+        this.error.button = ''
+        this.displayArrows = false
 
         this.getFirmware()
       } catch {
+        this.error.isError = true
+        this.error.msg = 'No device selected'
+        this.error.button = 'connectDFU'
         this.status = 'No device selected'
         this.displayArrows = false
       }
@@ -139,7 +157,9 @@ export default {
           })
         this.firmwareFile = new Uint8Array(buffer)
       } catch (error) {
-        console.log(error)
+        this.error.isError = true
+        this.error.msg = `Failed to fetch latest firmware (${error})`
+        this.error.button = ''
       }
     },
     async writeFirmware() {
@@ -149,7 +169,9 @@ export default {
         this.webdfu.close()
         this.status = 'OK, reboot Flipper'
       } catch (error) {
-        console.error(error);
+        this.error.isError = true
+        this.error.msg = `Failed to write firmware (${error})`
+        this.error.button = ''
         this.status = 'Failed to write firmware'
       }
     }
