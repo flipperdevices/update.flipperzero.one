@@ -19,10 +19,6 @@
       <div class="buttons">
         <button class="primary" @click="connectSerial">Connect Flipper</button>
       </div>
-      {{status}}
-      <button @click="gotoDFU">dfu</button>
-      <button @click="connectDFU">conn dfu</button>
-      <button @click="writeFirmware">write</button>
     </div>
   </div>
 </template>
