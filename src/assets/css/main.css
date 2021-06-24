@@ -75,6 +75,16 @@ h3 {
   justify-content: center;
 }
 
+.card-desc.bad-browser {
+  width: 100%;
+  padding: 0;
+  text-align: center;
+}
+
+.card-desc.bad-browser img {
+  width: 50%;
+}
+
 button.primary {
   padding: 0.75rem 3rem;
   font-size: 16px;
@@ -83,6 +93,7 @@ button.primary {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  text-transform: uppercase;
 }
 
 @media (max-width: 768px) {
