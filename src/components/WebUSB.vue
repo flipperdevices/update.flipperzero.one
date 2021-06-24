@@ -76,39 +76,6 @@ export default {
         this.displayArrows = false
       }
     },
-    adjustArrows() {
-      if (this.userAgent.os !== 'Windows') {
-        document.getElementById('arrow-2').style.left = '470px'
-      }
-      if (this.userAgent.browser === 'Edge') {
-        document.getElementById('arrow-1').style.top = '50px'
-        document.getElementById('arrow-1').style.left = '593px'
-        document.getElementById('arrow-2').style.top = '222px'
-        if (this.userAgent.os === 'Windows') {
-          document.getElementById('arrow-2').style.left = '435px'
-        } else {
-          document.getElementById('arrow-2').style.left = '519px'
-        }
-      }
-      if (this.userAgent.browser === 'Opera') {
-        document.getElementById('arrow-1').style.left = '541px'
-        document.getElementById('arrow-2').style.top = '389px'
-        if (this.userAgent.os === 'Windows') {
-          document.getElementById('arrow-2').style.left = '395px'
-        } else {
-          document.getElementById('arrow-2').style.left = '470px'
-        }
-      }
-      if (this.userAgent.browser === 'Yandex') {
-        document.getElementById('arrow-1').style.left = '651px'
-        document.getElementById('arrow-2').style.top = '427px'
-        if (this.userAgent.os === 'Windows') {
-          document.getElementById('arrow-2').style.left = '454px'
-        } else {
-          document.getElementById('arrow-2').style.left = '568px'
-        }
-      }
-    },
     async gotoDFU() {
       // eslint-disable-next-line no-undef
       const textEncoder = new TextEncoderStream();
@@ -173,6 +140,73 @@ export default {
         this.error.msg = `Failed to write firmware (${error})`
         this.error.button = ''
         this.status = 'Failed to write firmware'
+      }
+    },
+    adjustArrows() {
+      // try to detect bookmarks bar
+      const diff = window.outerHeight - window.innerHeight
+      console.log(diff)
+      let bar = false
+      if (diff > 89 && diff <= 120) {
+        bar = true
+        document.getElementById('arrow-2').style.top = '397px'
+      }
+
+      // Chrome on Linux/OS X
+      if (this.userAgent.os !== 'Windows') {
+        document.getElementById('arrow-2').style.left = '470px'
+      }
+
+      // Edge
+      if (this.userAgent.browser === 'Edge') {
+        document.getElementById('arrow-1').style.top = '50px'
+        document.getElementById('arrow-1').style.left = '593px'
+
+        if (bar) {
+          document.getElementById('arrow-2').style.top = '192px'
+        } else {
+          document.getElementById('arrow-2').style.top = '222px'
+        }        
+
+        if (this.userAgent.os === 'Windows') {
+          document.getElementById('arrow-2').style.left = '435px'
+        } else {
+          document.getElementById('arrow-2').style.left = '519px'
+        }
+      }
+
+      // Opera
+      if (this.userAgent.browser === 'Opera') {
+        document.getElementById('arrow-1').style.left = '541px'
+
+        if (bar) {
+          document.getElementById('arrow-2').style.top = '357px'
+        } else {
+          document.getElementById('arrow-2').style.top = '389px'
+        }
+
+        if (this.userAgent.os === 'Windows') {
+          document.getElementById('arrow-2').style.left = '395px'
+        } else {
+          document.getElementById('arrow-2').style.left = '470px'
+        }
+      }
+      
+      // Yandex
+      if (this.userAgent.browser === 'Yandex') {
+        document.getElementById('arrow-1').style.left = '651px'
+
+        if (bar) {
+          document.getElementById('arrow-2').style.top = '405px'
+        } else {
+          document.getElementById('arrow-2').style.top = '427px'
+        }
+
+        if (this.userAgent.os === 'Windows') {
+          document.getElementById('arrow-2').style.left = '454px'
+        } else {
+          document.getElementById('arrow-2').style.left = '568px'
+        }
       }
     }
   },
