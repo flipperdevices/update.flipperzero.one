@@ -4,10 +4,10 @@
   left: 2rem;
   padding: 0.5rem 1rem 0.5rem 2rem;
   font-size: 16px;
-  color: #585858;
+  color: #6b6b6b;
   background: url(/img/back.244182b8.svg) no-repeat center left;
   background-size: 1.5rem;
-  border: 1px solid #585858;
+  border: 1px solid #6b6b6b;
   border-radius: 5px;
   cursor: pointer;
   transition-duration: 0.3s;
@@ -15,7 +15,7 @@
 
 #back:hover {
   background-color: #f0f0f0;
-  border-color: #6d6d6d;
+  border-color: #6b6b6b;
 }
 
 /* Connecting section */
@@ -71,4 +71,16 @@
   position: relative;
   top: 3px;
   height: 1.5rem;
+}
+
+/* Connected section */
+
+#connected-serial {
+  padding: 1.5rem 2rem;
+  border-radius: 5px;
+  box-shadow: 0px 2px 10px 0px rgba(34, 60, 80, 0.2);
+}
+
+#connected-serial .card-banner, #connected-serial .card-desc {
+  width: 50%;
 }

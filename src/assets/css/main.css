@@ -37,8 +37,8 @@ h3 {
 .component {
   width: 100%;
   max-width: 1200px;
-  padding: 2rem;
   margin-bottom: 50px;
+  padding: 2rem;
   border-radius: 5px;
   box-shadow: 0px 2px 10px 0px rgba(34, 60, 80, 0.2);
 }

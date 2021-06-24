@@ -29,11 +29,64 @@
       <button v-if="error.button === 'connectSerial'" class="btn primary" @click="connectSerial">Try again</button>
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="connectDFU">Try again</button>
     </div>
+    <div v-if="flipper.name.length > 0" id="connected-serial">
+      <h2>Connected!</h2>
+      <div class="card">
+        <div class="card-banner">
+          <img src="../assets/flipper-white.png" />
+        </div>
+        <div class="card-desc">
+          <p>
+            <b>Name</b>: {{ flipper.name }}
+          </p>
+          <p>
+            <b>Battery</b>: {{ flipper.battery }}
+          </p>
+          <p>
+            <b>Bootloader</b>: {{ flipper.bootloader }}
+          </p>
+          <p>
+            <b>HW Version</b>: {{ flipper.hwVersion }}
+          </p>
+          <p>
+            <b>Firmware</b>: {{ flipper.firmware }}
+          </p>
+        </div>
+      </div>
+      <div v-if="isOutdated" id="outdated">
+        <p>
+          Your firmware is outdated, latest release is {{ hwLatest }}
+        </p>
+        <button class="btn primary" @click="gotoDFU">Upgrade Firmware</button>
+      </div>
+      <div v-if="!isOutdated" id="up-to-date">
+        <p>
+          Your firmware is up to date. 
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { WebDFU } from "dfu"
+
+class LineBreakTransformer {
+  constructor() {
+    this.chunks = '';
+  }
+
+  transform(chunk, controller) {
+    this.chunks += chunk;
+    const lines = this.chunks.split('\r\n');
+    this.chunks = lines.pop();
+    lines.forEach((line) => controller.enqueue(line));
+  }
+
+  flush(controller) {
+    controller.enqueue(this.chunks);
+  }
+}
 
 export default {
   name: 'WebUSB',
@@ -52,6 +105,39 @@ export default {
       webdfu: undefined,
       firmwareFile: undefined,
       displayArrows: false,
+      commands: ['version', 'uid', 'hw_info', 'bt_info', 'power_test'],
+      writeNextLine: [false, ''],
+      flipper: {
+        name: '',
+        battery: '',
+        bootloader: '',
+        hwVersion: '',
+        firmware: '',
+      },
+      versions: {
+        flipper: {
+          firmware: {
+            version: '',
+            date: '',
+            timestamp: ''
+          },
+          bootloader: {
+            version: '',
+            date: '',
+            timestamp: ''
+          }
+        },
+        release: {
+          version: '',
+          timestamp: ''
+        },
+        master: {
+          version: '',
+          timestamp: ''
+        }
+      },
+      hwLatest: '',
+      isOutdated: true
     }
   },
   methods: {
@@ -63,11 +149,14 @@ export default {
         await this.port.open({
           baudRate: 9600
         });
+
         this.status = 'Connected to Flipper in serial mode'
         this.error.isError = false
         this.error.msg = ''
         this.error.button = ''
         this.displayArrows = false
+
+        this.getData()
       } catch {
         this.error.isError = true
         this.error.msg = 'No device selected'
@@ -76,14 +165,78 @@ export default {
         this.displayArrows = false
       }
     },
-    async gotoDFU() {
+    async getData() {
+      this.write(this.commands)
+      this.read()
+      setTimeout(this.fetchVersions, 300)
+    },
+    async read() {
+      while (this.port.readable) {
+        // eslint-disable-next-line no-undef
+        const textDecoder = new TextDecoderStream();
+        // eslint-disable-next-line no-unused-vars
+        const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable
+          // eslint-disable-next-line no-undef
+          .pipeThrough(new TransformStream(new LineBreakTransformer()))
+          .getReader();
+        const begin = Date.now();
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done || Date.now() - begin > 2000) {
+            reader.close();
+            break;
+          }
+          this.parseReadValue(value);
+        }
+      }
+    },
+    async write(lines) {
       // eslint-disable-next-line no-undef
       const textEncoder = new TextEncoderStream();
       // eslint-disable-next-line no-unused-vars
       const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable);
       const writer = textEncoder.writable.getWriter();
-      writer.write('dfu\r');
+
+      lines.forEach(line => {
+        writer.write(line + '\r');
+      })
       writer.close();
+    },
+    parseReadValue(value) {
+      if (this.writeNextLine[0]) {
+        if (value.includes('Version:')) {
+          this.versions.flipper[this.writeNextLine[1]].version = value.slice(value.match(/Version:(\s)*/g)[0].length + 1);
+        } else if (value.includes('2021')) {
+          this.versions.flipper[this.writeNextLine[1]].date = value.slice(-10);
+          let date = this.versions.flipper[this.writeNextLine[1]].date.split('-').reverse().join('-');
+          this.versions.flipper[this.writeNextLine[1]].timestamp = Date.parse(date) / 1000;
+          this.flipper[this.writeNextLine[1]] = this.versions.flipper[this.writeNextLine[1]].version + ' ' + this.versions.flipper[this.writeNextLine[1]].date;
+          this.writeNextLine = [false, ''];
+        } else {
+          this.writeNextLine = [false, ''];
+        }
+      }
+      if (value.includes('Bootloader')) {
+        this.writeNextLine = [true, 'bootloader'];
+      }
+      if (value.includes('Firmware')) {
+        this.writeNextLine = [true, 'firmware'];
+      }
+      if (value.includes('HW version')) {
+        this.flipper.hwVersion = value.slice(11).trim()
+      }
+      if (value.includes('Production date: ')) {
+        this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim();
+      }
+      if (value.includes('State of Charge: ')) {
+        this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim();
+      }
+    },
+    async gotoDFU() {
+      this.write(['dfu'])
       this.status = 'Rebooted into DFU'
 
       this.connectDFU()
@@ -145,7 +298,6 @@ export default {
     adjustArrows() {
       // try to detect bookmarks bar
       const diff = window.outerHeight - window.innerHeight
-      console.log(diff)
       let bar = false
       if (diff > 89 && diff <= 120) {
         bar = true
