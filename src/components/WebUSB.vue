@@ -45,8 +45,10 @@ export default {
           baudRate: 9600
         });
         this.status = 'Connected to Flipper in serial mode'
+        this.displayArrows = false
       } catch {
         this.status = 'No device selected'
+        this.displayArrows = false
       }
     },
     adjustArrows() {
@@ -95,19 +97,25 @@ export default {
       this.connectDFU()
     },
     async connectDFU() {
+      this.displayArrows = true
       // Load the device by WebUSB
-      const selectedDevice = await navigator.usb.requestDevice({ filters: [] });
-      // Create and init the WebDFU instance
-      this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true });
-      await this.webdfu.init();
-      if (this.webdfu.interfaces.length == 0) {
-        throw new Error("The selected device does not have any USB DFU interfaces.");
-      }
-      // Connect to first device interface
-      await this.webdfu.connect(0);
-      this.status = 'Connected to Flipper in DFU mode'
+      try {
+        const selectedDevice = await navigator.usb.requestDevice({ filters: [] });
+        // Create and init the WebDFU instance
+        this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true });
+        await this.webdfu.init();
+        if (this.webdfu.interfaces.length == 0) {
+          throw new Error("The selected device does not have any USB DFU interfaces.");
+        }
+        // Connect to first device interface
+        await this.webdfu.connect(0);
+        this.status = 'Connected to Flipper in DFU mode'
 
-      this.getFirmware()
+        this.getFirmware()
+      } catch {
+        this.status = 'No device selected'
+        this.displayArrows = false
+      }
     },
     async getFirmware() {
       try {
