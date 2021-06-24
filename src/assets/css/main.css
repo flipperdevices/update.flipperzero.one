@@ -117,6 +117,9 @@ button.primary {
 
 @media (max-width: 480px) {
   #app {
-    padding: 0.75rem 2rem;
+    padding: 0.75rem 1rem;
+  }
+  .component {
+    padding: 1.5rem;
   }
 }
