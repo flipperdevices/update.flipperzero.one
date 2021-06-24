@@ -1,0 +1,65 @@
+* {
+  font-family: "Roboto", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern","liga";
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin-bottom: 50px;
+}
+
+h2 {
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+
+h3 {
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.card {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.card-banner {
+  display: flex;
+  align-items: center;
+  width: 40%;
+}
+
+.card-banner img {
+  width: 100%;
+}
+
+.card-desc {
+  width: 60%;
+  padding-left: 3rem;
+  text-align: initial;
+  color: #585858;
+}
+
+.card-desc p {
+  margin: 1.5rem 0;
+}
+
+.card-desc .buttons {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+button.primary {
+  padding: 0.75rem 3rem;
+  font-size: 16px;
+  color: white;
+  background-color: #49c74a;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

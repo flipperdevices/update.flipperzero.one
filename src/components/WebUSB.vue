@@ -1,12 +1,25 @@
 <template>
-  <div>
-    <button @click="connectSerial">1. Connect Serial</button>
-    <button @click="gotoDFU">2. Go to DFU</button>
-    <button @click="connectDFU">3. Connect DFU</button>
-    <button @click="writeFirmware">4. Write firmware</button>
-    <p>
-      {{ status }}
-    </p>
+  <div class="card">
+    <div class="card-banner">
+      <img src="../assets/intro.png" />
+    </div>
+    <div class="card-desc">
+      <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
+      <p>
+        No drivers needed!
+      </p>
+      <p>
+        Just connect your Flipper to the computer, press the button below and choose your device from dropping list.
+        Don't forget to grant access to WebUSB in a pop-up.
+      </p>
+      <p>
+        Currently supports only webkit-based browsers:
+        Chrome based, Opera, Edge
+      </p>
+      <div class="buttons">
+        <button class="primary" @click="connectSerial">Connect Flipper</button>
+      </div>
+    </div>
   </div>
 </template>
 
