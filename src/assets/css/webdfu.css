@@ -1,0 +1,50 @@
+#back {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 0.5rem 1rem 0.5rem 2rem;
+  font-size: 16px;
+  color: #585858;
+  background: url(/img/back.244182b8.svg) no-repeat center left;
+  background-size: 1.5rem;
+  border: 1px solid #585858;
+  border-radius: 5px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+#back:hover {
+  background-color: #f0f0f0;
+  border-color: #6d6d6d;
+}
+
+/* Connecting section */
+
+#connection-spinner {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  bottom: 3rem;
+}
+
+#arrow-1 {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 100px;
+  left: 558px;
+  height: 100px;
+}
+
+#arrow-2 {
+  position: absolute;
+  top: 427px;
+  left: 400px;
+  height: 100px;
+}
+
+.svg-container {
+  width: 36px;
+  margin-right: 0.4rem;
+}
