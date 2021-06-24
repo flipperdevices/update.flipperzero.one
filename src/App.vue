@@ -3,12 +3,12 @@
     <Homepage
       :browser="userAgent.browser"
       v-if="displayHomepage"
-      v-on:clickConnect="connect"
+      v-on:clickConnect="displayHomepage = !displayHomepage"
     />
     <WebUSB
       :userAgent="userAgent"
       v-if="!displayHomepage"
-      v-on:clickHome="home"
+      v-on:clickHome="displayHomepage = !displayHomepage"
     />
   </div>
 </template>
@@ -30,14 +30,6 @@ export default {
         browser: 'Not supported',
         os: 'Other'
       }
-    }
-  },
-  methods: {
-    connect() {
-      this.displayHomepage = false
-    },
-    home() {
-      this.displayHomepage = true
     }
   },
   mounted() {
