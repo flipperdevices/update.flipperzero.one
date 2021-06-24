@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    {{userAgent}}
     <Homepage
       :browser="userAgent.browser"
       v-if="displayHomepage"
