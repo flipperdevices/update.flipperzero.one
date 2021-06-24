@@ -19,6 +19,10 @@
       <div class="buttons">
         <button class="primary" @click="connectSerial">Connect Flipper</button>
       </div>
+      {{status}}
+      <button @click="gotoDFU">dfu</button>
+      <button @click="connectDFU">conn dfu</button>
+      <button @click="writeFirmware">write</button>
     </div>
   </div>
 </template>
@@ -44,7 +48,6 @@ export default {
           await this.port.open({
             baudRate: 9600
           });
-          console.log(this.port)
           this.status = 'Connected to Flipper in serial mode'
         } catch {
           this.status = 'No device selected'
@@ -62,6 +65,8 @@ export default {
       writer.write('dfu\r');
       writer.close();
       this.status = 'Rebooted into DFU'
+
+      this.connectDFU()
     },
     async connectDFU() {
       // Load the device by WebUSB
@@ -80,7 +85,6 @@ export default {
     },
     async getFirmware() {
       try {
-        // Get firmware
         const buffer = await fetch('https://update.flipperzero.one/fw-0.17.0/f5_full.bin')
           .then(response => {
             return response.arrayBuffer()
@@ -91,10 +95,10 @@ export default {
       }
     },
     async writeFirmware() {
-      // Write firmware in device
       try {
         this.status = 'Writing firmware'
         await this.webdfu.write(1024, this.firmwareFile);
+        this.webdfu.close()
         this.status = 'OK, reboot Flipper'
       } catch (error) {
         console.error(error);

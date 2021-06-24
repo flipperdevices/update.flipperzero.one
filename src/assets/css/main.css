@@ -21,6 +21,27 @@ h3 {
   font-weight: 400;
 }
 
+#app {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: "Roboto", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  padding: 0.75rem 3rem;
+}
+
+.component {
+  width: 100%;
+  max-width: 1200px;
+  padding: 2rem;
+  margin-bottom: 50px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 10px 0px rgba(34, 60, 80, 0.2);
+}
+
 .card {
   display: flex;
   flex-direction: row;
@@ -62,4 +83,29 @@ button.primary {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .card-banner {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .card-desc {
+    width: 100%;
+    padding: 1rem 0 0 0;
+  }
+}
+
+@media (max-width: 480px) {
+  #app {
+    padding: 0.75rem 2rem;
+  }
 }
