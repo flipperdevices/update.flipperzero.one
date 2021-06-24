@@ -94,6 +94,11 @@ button.primary {
   border-radius: 5px;
   cursor: pointer;
   text-transform: uppercase;
+  transition-duration: 0.3s;
+}
+
+button.primary:hover {
+  background-color: #3a9c3a;
 }
 
 @media (max-width: 768px) {

@@ -1,21 +1,27 @@
 <template>
   <div id="app">
-    {{userAgent}}
     <Homepage
       :browser="userAgent.browser"
       v-if="displayHomepage"
-      v-on:clickConnect="handleConnect"
+      v-on:clickConnect="connect"
+    />
+    <WebUSB
+      :userAgent="userAgent"
+      v-if="!displayHomepage"
+      v-on:clickHome="home"
     />
   </div>
 </template>
 
 <script>
 import Homepage from './components/Homepage.vue'
+import WebUSB from './components/WebUSB.vue'
 
 export default {
   name: 'App',
   components: {
-    Homepage
+    Homepage,
+    WebUSB
   },
   data() {
     return {
@@ -27,8 +33,11 @@ export default {
     }
   },
   methods: {
-    handleConnect() {
-      console.log('caught an event!')
+    connect() {
+      this.displayHomepage = false
+    },
+    home() {
+      this.displayHomepage = true
     }
   },
   mounted() {

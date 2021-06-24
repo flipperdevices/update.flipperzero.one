@@ -1,5 +1,9 @@
 <template>
   <div>
+    <button id="back" @click="$emit('clickHome')">Back</button>
+    <div class="arrows">
+
+    </div>
   </div>
 </template>
 
@@ -19,7 +23,7 @@ export default {
       firmwareFile: undefined
     }
   },
-  methods : {
+  methods: {
     async connectSerial() {
       if ('serial' in navigator) {
         try {
@@ -87,3 +91,24 @@ export default {
   }
 }
 </script>
+
+<style>
+#back {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 0.5rem 1rem 0.5rem 2rem;
+  font-size: 16px;
+  color: #585858;
+  background: url(/img/back.244182b8.svg) no-repeat center left;
+  background-size: 1.5rem;
+  border: 1px solid #585858;
+  border-radius: 5px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+}
+
+#back:hover {
+  background-color: #fff1f1;
+}
+</style>
