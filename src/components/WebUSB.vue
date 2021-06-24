@@ -1,25 +1,5 @@
 <template>
-  <div class="card">
-    <div class="card-banner">
-      <img src="../assets/intro.png" />
-    </div>
-    <div class="card-desc">
-      <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
-      <p>
-        No drivers needed!
-      </p>
-      <p>
-        Just connect your Flipper to the computer, press the button below and choose your device from dropping list.
-        Don't forget to grant access to WebUSB in a pop-up.
-      </p>
-      <p>
-        Currently supports only webkit-based browsers:
-        Chrome based, Opera, Edge
-      </p>
-      <div class="buttons">
-        <button class="primary" @click="connectSerial">Connect Flipper</button>
-      </div>
-    </div>
+  <div>
   </div>
 </template>
 
@@ -28,6 +8,9 @@ import { WebDFU } from "dfu"
 
 export default {
   name: 'WebUSB',
+  props: {
+    useragent: Object
+  },
   data() {
     return {
       status: 'Connect Flipper',
