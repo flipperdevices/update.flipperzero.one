@@ -102,26 +102,24 @@
   border-radius: 3px;
 }
 
+/* Responsive */
+
+@media (max-width: 1200px) {
+  #connected-serial {
+    margin-top: 4.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   #connected-serial .card {
     align-items: center;
   }
 
-  #connected-serial .card-banner {
+  #connected-serial .card-banner, #connected-serial .card-desc {
     width: 100%;
-  }
-
-  #connected-serial .card-desc {
-    width: 50%;
   }
 
   #connected-serial .card-banner img {
     width: 70%;
-  }
-}
-
-@media (max-width: 480px) {
-  #connected-serial .card-desc {
-    width: 80%;
   }
 }
