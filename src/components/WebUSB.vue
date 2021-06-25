@@ -61,7 +61,7 @@
       </div>
       <div v-if="!isOutdated" id="up-to-date">
         <p>
-          Your firmware is up to date. 
+          Your firmware is up to date.
         </p>
       </div>
     </div>
@@ -76,22 +76,22 @@
 </template>
 
 <script>
-import { WebDFU } from "dfu"
+import { WebDFU } from 'dfu'
 
 class LineBreakTransformer {
-  constructor() {
-    this.chunks = '';
+  constructor () {
+    this.chunks = ''
   }
 
-  transform(chunk, controller) {
-    this.chunks += chunk;
-    const lines = this.chunks.split('\r\n');
-    this.chunks = lines.pop();
-    lines.forEach((line) => controller.enqueue(line));
+  transform (chunk, controller) {
+    this.chunks += chunk
+    const lines = this.chunks.split('\r\n')
+    this.chunks = lines.pop()
+    lines.forEach((line) => controller.enqueue(line))
   }
 
-  flush(controller) {
-    controller.enqueue(this.chunks);
+  flush (controller) {
+    controller.enqueue(this.chunks)
   }
 }
 
@@ -100,7 +100,7 @@ export default {
   props: {
     userAgent: Object
   },
-  data() {
+  data () {
     return {
       error: {
         isError: false,
@@ -147,19 +147,19 @@ export default {
         }
       },
       hwLatest: '',
-      isOutdated: true,
+      isOutdated: false,
       updateType: 'latest'
     }
   },
   methods: {
-    async connectSerial() {
+    async connectSerial () {
       this.displayArrows = true
       this.adjustArrows()
       try {
-        this.port = await navigator.serial.requestPort();
+        this.port = await navigator.serial.requestPort()
         await this.port.open({
           baudRate: 9600
-        });
+        })
 
         this.status = 'Connected to Flipper in serial mode'
         this.error.isError = false
@@ -176,91 +176,91 @@ export default {
         this.displayArrows = false
       }
     },
-    async getData() {
+    async getData () {
       this.write(this.commands)
       this.read()
       setTimeout(this.fetchVersions, 300)
       this.displaySerialMenu = true
     },
-    async read() {
+    async read () {
       try {
         while (this.port.readable) {
           // eslint-disable-next-line no-undef
-          const textDecoder = new TextDecoderStream();
+          const textDecoder = new TextDecoderStream()
           // eslint-disable-next-line no-unused-vars
           const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable)
           const reader = textDecoder.readable
             // eslint-disable-next-line no-undef
             .pipeThrough(new TransformStream(new LineBreakTransformer()))
-            .getReader();
-          const begin = Date.now();
+            .getReader()
+          const begin = Date.now()
 
           // eslint-disable-next-line no-constant-condition
           while (true) {
-            const { value, done } = await reader.read();
+            const { value, done } = await reader.read()
             if (done || Date.now() - begin > 2000) {
-              reader.releaseLock();
-              break;
+              reader.releaseLock()
+              break
             }
-            this.parseReadValue(value);
+            this.parseReadValue(value)
           }
         }
       } catch (error) {
         this.status = 'Serial connection lost'
       }
     },
-    async write(lines) {
+    async write (lines) {
       // eslint-disable-next-line no-undef
-      const textEncoder = new TextEncoderStream();
+      const textEncoder = new TextEncoderStream()
       // eslint-disable-next-line no-unused-vars
-      const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable);
-      const writer = textEncoder.writable.getWriter();
+      const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable)
+      const writer = textEncoder.writable.getWriter()
 
       lines.forEach(line => {
-        writer.write(line + '\r');
+        writer.write(line + '\r')
       })
-      writer.close();
+      writer.close()
     },
-    parseReadValue(value) {
+    parseReadValue (value) {
       if (this.writeNextLine[0]) {
         if (value.includes('Version:')) {
-          this.versions.flipper[this.writeNextLine[1]].version = value.slice(value.match(/Version:(\s)*/g)[0].length + 1);
+          this.versions.flipper[this.writeNextLine[1]].version = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
         } else if (value.includes('2021')) {
-          this.versions.flipper[this.writeNextLine[1]].date = value.slice(-10);
-          let date = this.versions.flipper[this.writeNextLine[1]].date.split('-').reverse().join('-');
-          this.versions.flipper[this.writeNextLine[1]].timestamp = Date.parse(date) / 1000;
-          this.flipper[this.writeNextLine[1]] = this.versions.flipper[this.writeNextLine[1]].version + ' ' + this.versions.flipper[this.writeNextLine[1]].date;
-          this.writeNextLine = [false, ''];
+          this.versions.flipper[this.writeNextLine[1]].date = value.slice(-10)
+          const date = this.versions.flipper[this.writeNextLine[1]].date.split('-').reverse().join('-')
+          this.versions.flipper[this.writeNextLine[1]].timestamp = Date.parse(date) / 1000
+          this.flipper[this.writeNextLine[1]] = this.versions.flipper[this.writeNextLine[1]].version + ' ' + this.versions.flipper[this.writeNextLine[1]].date
+          this.writeNextLine = [false, '']
         } else {
-          this.writeNextLine = [false, ''];
+          this.writeNextLine = [false, '']
         }
       }
       if (value.includes('Bootloader')) {
-        this.writeNextLine = [true, 'bootloader'];
+        this.writeNextLine = [true, 'bootloader']
       }
       if (value.includes('Firmware')) {
-        this.writeNextLine = [true, 'firmware'];
+        this.writeNextLine = [true, 'firmware']
       }
       if (value.includes('HW version')) {
         this.flipper.hwVersion = value.slice(11).trim()
       }
       if (value.includes('Production date: ')) {
-        this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim();
+        this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim()
       }
       if (value.includes('State of Charge: ')) {
-        this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim();
+        this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
       }
     },
-    async fetchVersions() {
+    async fetchVersions () {
       fetch('https://update.flipperzero.one/directory.json')
         .then((response) => {
-          return response.json();
+          return response.json()
         })
         .then((data) => {
-          this.versions.master.version = data.channels[0].versions[0].version;
-          this.versions.release.version = data.channels[1].versions[0].version;
-          this.versions.master.timestamp = data.channels[0].versions[0].timestamp;
-          this.versions.release.timestamp = data.channels[1].versions[0].timestamp;
+          this.versions.master.version = data.channels[0].versions[0].version
+          this.versions.release.version = data.channels[1].versions[0].version
+          this.versions.master.timestamp = data.channels[0].versions[0].timestamp
+          this.versions.release.timestamp = data.channels[1].versions[0].timestamp
           this.versions.release.url = data.channels[1].versions[0].files.find(file => file.target === this.flipper.target && file.type === 'full_bin').url
 
           if (this.versions.flipper.firmware.version === this.versions.release.version) {
@@ -271,14 +271,14 @@ export default {
           }
         })
     },
-    async gotoDFU() {
+    async gotoDFU () {
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
       this.displaySerialMenu = false
 
       this.connectDFU()
     },
-    async connectDFU() {
+    async connectDFU () {
       this.displayArrows = true
       // Load the device by WebUSB
       try {
@@ -286,7 +286,7 @@ export default {
         // Create and init the WebDFU instance
         this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true })
         await this.webdfu.init()
-        if (this.webdfu.interfaces.length == 0) {
+        if (this.webdfu.interfaces.length === 0) {
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
           this.error.button = 'connectDFU'
@@ -315,7 +315,7 @@ export default {
         this.displayArrows = false
       }
     },
-    async getFirmware() {
+    async getFirmware () {
       try {
         const buffer = await fetch(this.versions.release.url)
           .then(response => {
@@ -329,10 +329,10 @@ export default {
         this.error.button = ''
       }
     },
-    async writeFirmware() {
+    async writeFirmware () {
       try {
         this.status = 'Writing firmware'
-        await this.webdfu.write(1024, this.firmwareFile);
+        await this.webdfu.write(1024, this.firmwareFile)
         this.webdfu.close()
         this.status = 'OK, reboot Flipper'
       } catch (error) {
@@ -342,7 +342,7 @@ export default {
         this.status = 'Failed to write firmware'
       }
     },
-    adjustArrows() {
+    adjustArrows () {
       // try to detect bookmarks bar
       const diff = window.outerHeight - window.innerHeight
       let bar = false
@@ -365,7 +365,7 @@ export default {
           document.getElementById('arrow-2').style.top = '192px'
         } else {
           document.getElementById('arrow-2').style.top = '222px'
-        }        
+        }
 
         if (this.userAgent.os === 'Windows') {
           document.getElementById('arrow-2').style.left = '435px'
@@ -390,7 +390,7 @@ export default {
           document.getElementById('arrow-2').style.left = '470px'
         }
       }
-      
+
       // Yandex
       if (this.userAgent.browser === 'Yandex') {
         document.getElementById('arrow-1').style.left = '651px'
@@ -409,7 +409,7 @@ export default {
       }
     }
   },
-  mounted() {
+  mounted () {
     this.connectSerial()
   }
 }
