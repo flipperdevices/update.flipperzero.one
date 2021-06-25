@@ -1,6 +1,6 @@
 <template>
-  <div>{{status}}
-    <button id="back" @click="$emit('clickHome')">Back</button>
+  <div>
+    <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">Back</button>
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
         <div class="svg-container">
@@ -29,7 +29,7 @@
       <button v-if="error.button === 'connectSerial'" class="btn primary" @click="connectSerial">Try again</button>
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="connectDFU">Try again</button>
     </div>
-    <div v-if="flipper.name.length > 0" id="connected-serial">
+    <div v-if="displaySerialMenu" id="connected-serial">
       <h2>Connected!</h2>
       <div class="card">
         <div class="card-banner">
@@ -65,6 +65,13 @@
         </p>
       </div>
     </div>
+    <div v-show="status === 'Writing firmware'" id="connection-spinner">
+      <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>
+      <p>
+        Writing firmware...
+      </p>
+    </div>
+    <h2 v-if="status === 'OK, reboot Flipper'">Firmware successfully updated. You may need to restart your Flipper.</h2>
   </div>
 </template>
 
@@ -105,6 +112,7 @@ export default {
       webdfu: undefined,
       firmwareFile: undefined,
       displayArrows: false,
+      displaySerialMenu: false,
       commands: ['version', 'uid', 'hw_info', 'bt_info', 'power_test'],
       writeNextLine: [false, ''],
       flipper: {
@@ -113,6 +121,7 @@ export default {
         bootloader: '',
         hwVersion: '',
         firmware: '',
+        target: 'f6' // TODO: get target from serial command
       },
       versions: {
         flipper: {
@@ -129,7 +138,8 @@ export default {
         },
         release: {
           version: '',
-          timestamp: ''
+          timestamp: '',
+          url: ''
         },
         master: {
           version: '',
@@ -137,7 +147,8 @@ export default {
         }
       },
       hwLatest: '',
-      isOutdated: true
+      isOutdated: true,
+      updateType: 'latest'
     }
   },
   methods: {
@@ -169,28 +180,33 @@ export default {
       this.write(this.commands)
       this.read()
       setTimeout(this.fetchVersions, 300)
+      this.displaySerialMenu = true
     },
     async read() {
-      while (this.port.readable) {
-        // eslint-disable-next-line no-undef
-        const textDecoder = new TextDecoderStream();
-        // eslint-disable-next-line no-unused-vars
-        const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable);
-        const reader = textDecoder.readable
+      try {
+        while (this.port.readable) {
           // eslint-disable-next-line no-undef
-          .pipeThrough(new TransformStream(new LineBreakTransformer()))
-          .getReader();
-        const begin = Date.now();
+          const textDecoder = new TextDecoderStream();
+          // eslint-disable-next-line no-unused-vars
+          const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable)
+          const reader = textDecoder.readable
+            // eslint-disable-next-line no-undef
+            .pipeThrough(new TransformStream(new LineBreakTransformer()))
+            .getReader();
+          const begin = Date.now();
 
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done || Date.now() - begin > 2000) {
-            reader.close();
-            break;
+          // eslint-disable-next-line no-constant-condition
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done || Date.now() - begin > 2000) {
+              reader.releaseLock();
+              break;
+            }
+            this.parseReadValue(value);
           }
-          this.parseReadValue(value);
         }
+      } catch (error) {
+        this.status = 'Serial connection lost'
       }
     },
     async write(lines) {
@@ -245,18 +261,20 @@ export default {
           this.versions.release.version = data.channels[1].versions[0].version;
           this.versions.master.timestamp = data.channels[0].versions[0].timestamp;
           this.versions.release.timestamp = data.channels[1].versions[0].timestamp;
+          this.versions.release.url = data.channels[1].versions[0].files.find(file => file.target === this.flipper.target && file.type === 'full_bin').url
 
           if (this.versions.flipper.firmware.version === this.versions.release.version) {
             this.isOutdated = false
           } else {
             this.isOutdated = true
-            this.hwLatest = this.versions.release.version;        
+            this.hwLatest = this.versions.release.version
           }
         })
     },
     async gotoDFU() {
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
+      this.displaySerialMenu = false
 
       this.connectDFU()
     },
@@ -264,15 +282,19 @@ export default {
       this.displayArrows = true
       // Load the device by WebUSB
       try {
-        const selectedDevice = await navigator.usb.requestDevice({ filters: [] });
+        const selectedDevice = await navigator.usb.requestDevice({ filters: [] })
         // Create and init the WebDFU instance
-        this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true });
-        await this.webdfu.init();
+        this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true })
+        await this.webdfu.init()
         if (this.webdfu.interfaces.length == 0) {
-          throw new Error("The selected device does not have any USB DFU interfaces.");
+          this.error.isError = true
+          this.error.msg = 'The selected device does not have any USB DFU interfaces'
+          this.error.button = 'connectDFU'
+          this.status = 'The selected device does not have any USB DFU interfaces'
+          this.displayArrows = false
         }
         // Connect to first device interface
-        await this.webdfu.connect(0);
+        await this.webdfu.connect(0)
         this.status = 'Connected to Flipper in DFU mode'
         this.error.isError = false
         this.error.msg = ''
@@ -280,21 +302,27 @@ export default {
         this.displayArrows = false
 
         this.getFirmware()
-      } catch {
+      } catch (e) {
         this.error.isError = true
-        this.error.msg = 'No device selected'
+        if (e.message.includes('No device selected')) {
+          this.error.msg = 'No device selected'
+          this.status = 'No device selected'
+        } else {
+          this.error.msg = 'The device was disconnected'
+          this.status = 'The device was disconnected'
+        }
         this.error.button = 'connectDFU'
-        this.status = 'No device selected'
         this.displayArrows = false
       }
     },
     async getFirmware() {
       try {
-        const buffer = await fetch('https://update.flipperzero.one/fw-0.17.0/f5_full.bin')
+        const buffer = await fetch(this.versions.release.url)
           .then(response => {
             return response.arrayBuffer()
           })
         this.firmwareFile = new Uint8Array(buffer)
+        this.writeFirmware()
       } catch (error) {
         this.error.isError = true
         this.error.msg = `Failed to fetch latest firmware (${error})`

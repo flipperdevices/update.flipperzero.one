@@ -18,6 +18,12 @@
   border-color: #6b6b6b;
 }
 
+#back:disabled {
+  background-color: #f0f0f0;
+  border-color: #6b6b6b;
+  cursor: not-allowed;
+}
+
 /* Connecting section */
 
 #connection-spinner {
