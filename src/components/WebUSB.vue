@@ -57,11 +57,17 @@
         <p>
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
-        <button class="btn primary" @click="gotoDFU">Upgrade Firmware</button>
+        <button class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
+        <p class="alternative">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile"/>
+        </p>
       </div>
       <div v-if="!isOutdated" id="up-to-date">
         <p>
           Your firmware is up to date.
+        </p>
+        <p class="alternative">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile"/>
         </p>
       </div>
     </div>
@@ -113,7 +119,7 @@ export default {
       firmwareFile: undefined,
       displayArrows: false,
       displaySerialMenu: false,
-      commands: ['version', 'uid', 'hw_info', 'bt_info', 'power_test'],
+      commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test'],
       writeNextLine: [false, ''],
       flipper: {
         name: '',
@@ -121,7 +127,7 @@ export default {
         bootloader: '',
         hwVersion: '',
         firmware: '',
-        target: 'f6' // TODO: get target from serial command
+        target: 'f5' // TODO: get target from serial command
       },
       versions: {
         flipper: {
@@ -147,8 +153,7 @@ export default {
         }
       },
       hwLatest: '',
-      isOutdated: false,
-      updateType: 'latest'
+      isOutdated: false
     }
   },
   methods: {
@@ -271,11 +276,29 @@ export default {
           }
         })
     },
+    async loadFirmwareFile (event) {
+      const buffer = await event.target.files[0].arrayBuffer()
+      this.firmwareFile = new Uint8Array(buffer)
+      this.gotoDFU()
+    },
+    async fetchFirmwareFile () {
+      try {
+        const buffer = await fetch(this.versions.release.url)
+          .then(response => {
+            return response.arrayBuffer()
+          })
+        this.firmwareFile = new Uint8Array(buffer)
+        this.gotoDFU()
+      } catch (error) {
+        this.error.isError = true
+        this.error.msg = `Failed to fetch latest firmware (${error})`
+        this.error.button = ''
+      }
+    },
     async gotoDFU () {
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
       this.displaySerialMenu = false
-
       this.connectDFU()
     },
     async connectDFU () {
@@ -301,7 +324,7 @@ export default {
         this.error.button = ''
         this.displayArrows = false
 
-        this.getFirmware()
+        this.writeFirmware()
       } catch (e) {
         this.error.isError = true
         if (e.message.includes('No device selected')) {
@@ -313,20 +336,6 @@ export default {
         }
         this.error.button = 'connectDFU'
         this.displayArrows = false
-      }
-    },
-    async getFirmware () {
-      try {
-        const buffer = await fetch(this.versions.release.url)
-          .then(response => {
-            return response.arrayBuffer()
-          })
-        this.firmwareFile = new Uint8Array(buffer)
-        this.writeFirmware()
-      } catch (error) {
-        this.error.isError = true
-        this.error.msg = `Failed to fetch latest firmware (${error})`
-        this.error.button = ''
       }
     },
     async writeFirmware () {

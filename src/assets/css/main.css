@@ -87,6 +87,7 @@ h3 {
 }
 
 .btn {
+  width: fit-content;
   padding: 0.75rem 3rem;
   font-size: 16px;
   border-radius: 5px;
@@ -97,7 +98,7 @@ h3 {
 }
 
 .btn.primary {
-  color: white;
+  color: #fff;
   background-color: #49c74a;
   border: none;
 }
@@ -107,13 +108,23 @@ h3 {
 }
 
 .btn.alert {
-  color: white;
+  color: #fff;
   background-color: #ff930e;
   border: none;
 }
 
 .btn.alert:hover {
   background-color: #cf7b15;
+}
+
+.btn.secondary {
+  color: #6b6b6b;
+  background-color: #fff;
+  border: none;
+}
+
+.btn.secondary:hover {
+  background-color: #eee;
 }
 
 @media (max-width: 768px) {

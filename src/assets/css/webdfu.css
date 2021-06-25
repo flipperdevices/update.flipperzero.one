@@ -7,7 +7,7 @@
   color: #6b6b6b;
   background: url(../back.svg) no-repeat center left;
   background-size: 1.5rem;
-  border: 1px solid #6b6b6b;
+  border: none;
   border-radius: 5px;
   cursor: pointer;
   transition-duration: 0.3s;
@@ -15,12 +15,10 @@
 
 #back:hover {
   background-color: #f0f0f0;
-  border-color: #6b6b6b;
 }
 
 #back:disabled {
-  background-color: #f0f0f0;
-  border-color: #6b6b6b;
+  opacity: 0.2;
   cursor: not-allowed;
 }
 
@@ -87,4 +85,18 @@
 
 #connected-serial .card-banner, #connected-serial .card-desc {
   width: 50%;
+}
+
+#outdated .btn {
+  margin: 0.5rem 0;
+}
+
+.alternative {
+  font-size: 80%;
+  margin-top: 1.5rem;
+  color: #686868;
+}
+
+.alternative input {
+  margin-left: 0.75rem
 }
