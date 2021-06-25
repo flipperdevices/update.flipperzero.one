@@ -127,7 +127,7 @@ export default {
         bootloader: '',
         hwVersion: '',
         firmware: '',
-        target: 'f5' // TODO: get target from serial command
+        target: 'f6' // TODO: get target from serial command
       },
       versions: {
         flipper: {
