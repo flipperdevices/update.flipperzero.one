@@ -67,7 +67,7 @@
           Your firmware is up to date.
         </p>
         <p class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile"/>
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
         </p>
       </div>
     </div>

@@ -98,5 +98,7 @@
 }
 
 .alternative input {
-  margin-left: 0.75rem
+  margin-left: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 3px;
 }
