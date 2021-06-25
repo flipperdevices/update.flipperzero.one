@@ -30,8 +30,6 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  position: absolute;
-  bottom: 3rem;
 }
 
 #arrow-1 {
