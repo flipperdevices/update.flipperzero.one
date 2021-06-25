@@ -93,12 +93,35 @@
 
 .alternative {
   font-size: 80%;
-  margin-top: 1.5rem;
+  margin: 1.5rem 0 0 4rem;
   color: #686868;
 }
 
 .alternative input {
   margin-left: 0.75rem;
-  background: #f5f5f5;
   border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  #connected-serial .card {
+    align-items: center;
+  }
+
+  #connected-serial .card-banner {
+    width: 100%;
+  }
+
+  #connected-serial .card-desc {
+    width: 50%;
+  }
+
+  #connected-serial .card-banner img {
+    width: 70%;
+  }
+}
+
+@media (max-width: 480px) {
+  #connected-serial .card-desc {
+    width: 80%;
+  }
 }
