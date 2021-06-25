@@ -34,7 +34,7 @@
             Try one of the chromium based browsers.
           </p>
           <div class="buttons">
-            <button class="btn alert" href="https://caniuse.com/webusb">Compatibility List</button>
+            <a class="btn alert" href="https://caniuse.com/webusb">Compatibility List</a>
           </div>
         </div>
       </div>
