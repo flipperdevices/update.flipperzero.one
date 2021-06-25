@@ -36,21 +36,20 @@
           <img src="../assets/flipper-white.png" />
         </div>
         <div class="card-desc">
-          <p>
-            <b>Name</b>: {{ flipper.name }}
-          </p>
-          <p>
-            <b>Battery</b>: {{ flipper.battery }}
-          </p>
-          <p>
-            <b>Bootloader</b>: {{ flipper.bootloader }}
-          </p>
-          <p>
-            <b>HW Version</b>: {{ flipper.hwVersion }}
-          </p>
-          <p>
-            <b>Firmware</b>: {{ flipper.firmware }}
-          </p>
+          <pre>
+            <b>battery</b>: {{ flipper.battery }}
+            <b>device_name</b>: {{ flipper.name }}
+            <b>stm32_serial</b>: {{ flipper.stm32Serial }}
+            <b>body_color</b>: {{ flipper.bodyColor }}
+            <b>hardware_ver</b>: {{ flipper.hardwareVer }}
+            <b>firmware_target</b>: {{ flipper.target }}
+            <b>firmware_version</b>: {{ flipper.firmwareVer }}
+            <b>firmware_build</b>: {{ flipper.firmwareBuild }}
+            <b>bootloader_version</b>: {{ flipper.bootloaderVer }}
+            <b>bootloader_build</b>: {{ flipper.bootloaderBuild }}
+            <b>radio_firmware</b>: {{ flipper.radioFirmware }}
+            <b>bluetooth_mac</b>: {{ flipper.btMac }}
+          </pre>
         </div>
       </div>
       <div v-if="isOutdated" id="outdated">
@@ -122,12 +121,18 @@ export default {
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test'],
       writeNextLine: [false, ''],
       flipper: {
-        name: '',
-        battery: '',
-        bootloader: '',
-        hwVersion: '',
-        firmware: '',
-        target: 'f6' // TODO: get target from serial command
+        battery: 'undefined',
+        name: 'undefined',
+        stm32Serial: 'undefined',
+        bodyColor: 'undefined',
+        hardwareVer: 'undefined',
+        target: 'f6',
+        firmwareVer: 'undefined',
+        firmwareBuild: 'undefined',
+        bootloaderVer: 'undefined',
+        bootloaderBuild: 'undefined',
+        radioFirmware: 'undefined',
+        btMac: 'undefined'
       },
       versions: {
         flipper: {
@@ -235,7 +240,8 @@ export default {
           this.versions.flipper[this.writeNextLine[1]].date = value.slice(-10)
           const date = this.versions.flipper[this.writeNextLine[1]].date.split('-').reverse().join('-')
           this.versions.flipper[this.writeNextLine[1]].timestamp = Date.parse(date) / 1000
-          this.flipper[this.writeNextLine[1]] = this.versions.flipper[this.writeNextLine[1]].version + ' ' + this.versions.flipper[this.writeNextLine[1]].date
+          this.flipper[this.writeNextLine[1] + 'Ver'] = this.versions.flipper[this.writeNextLine[1]].version
+          this.flipper[this.writeNextLine[1] + 'Build'] = this.versions.flipper[this.writeNextLine[1]].date
           this.writeNextLine = [false, '']
         } else {
           this.writeNextLine = [false, '']
@@ -248,7 +254,7 @@ export default {
         this.writeNextLine = [true, 'firmware']
       }
       if (value.includes('HW version')) {
-        this.flipper.hwVersion = value.slice(11).trim()
+        this.flipper.hardwareVer = value.slice(11).trim()
       }
       if (value.includes('Production date: ')) {
         this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim()
