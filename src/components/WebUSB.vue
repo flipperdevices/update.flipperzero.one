@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div><button @click="gotoDFU">dfu</button>
     <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">Back</button>
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
@@ -153,11 +153,15 @@ export default {
         }
       },
       hwLatest: '',
-      isOutdated: false
+      isOutdated: false,
+      closeRead: false
     }
   },
   methods: {
     async connectSerial () {
+      this.error.isError = false
+      this.error.msg = ''
+      this.error.button = ''
       this.displayArrows = true
       this.adjustArrows()
       try {
@@ -166,11 +170,8 @@ export default {
           baudRate: 9600
         })
 
-        this.status = 'Connected to Flipper in serial mode'
-        this.error.isError = false
-        this.error.msg = ''
-        this.error.button = ''
         this.displayArrows = false
+        this.status = 'Connected to Flipper in serial mode'
 
         this.getData()
       } catch {
@@ -189,7 +190,7 @@ export default {
     },
     async read () {
       try {
-        while (this.port.readable) {
+        while (this.port.readable && !this.closeRead) {
           // eslint-disable-next-line no-undef
           const textDecoder = new TextDecoderStream()
           // eslint-disable-next-line no-unused-vars
@@ -296,12 +297,16 @@ export default {
       }
     },
     async gotoDFU () {
+      this.closeRead = true
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
       this.displaySerialMenu = false
       this.connectDFU()
     },
     async connectDFU () {
+      this.error.isError = false
+      this.error.msg = ''
+      this.error.button = ''
       this.displayArrows = true
       // Load the device by WebUSB
       try {
