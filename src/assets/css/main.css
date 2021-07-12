@@ -12,7 +12,7 @@ body {
 h1 {
   font-size: 2.5rem;
   font-weight: 400;
-  margin-bottom: 50px;
+  margin: 65px 0 50px 0;
   color: #000000cc;
 }
 
@@ -36,8 +36,8 @@ h3 {
 #homepage-container {
   margin-left: auto;
   margin-right: auto;
-  max-width: 1200px;
-  padding: 1rem;
+  max-width: 1100px;
+  padding: 0 1rem;
   text-align: center;
 }
 
@@ -48,11 +48,17 @@ h3 {
   padding: 1rem;
 }
 
+/* Cards */
+
 .component {
   margin-bottom: 50px;
-  padding: 2rem;
-  border-radius: 5px;
-  box-shadow: 0px 2px 10px 0px rgba(34, 60, 80, 0.2);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.2), 0px 3px 4px rgba(0, 0, 0, 0.14), 0px 1px 8px rgba(0, 0, 0, 0.12);
+}
+
+.component.qflipper {
+  padding: 0;
 }
 
 .card {
@@ -73,11 +79,31 @@ h3 {
   min-width: 200px;
 }
 
+.qflipper .card-banner {
+  padding-top: 1.5rem;
+  justify-content: flex-start;
+  align-items: flex-end;
+  width: 35%;
+  border-radius: 10px 0 0 10px;
+  box-shadow: inset -5px 0px 8px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(117.76deg, #FF815C 7.89%, #F7D466 95.3%);
+}
+
+.qflipper .card-banner img {
+  width: 100px;
+  border-radius: 0 0 0 10px;
+}
+
 .card-desc {
   width: 60%;
-  padding-left: 3rem;
+  padding-left: 0 3rem;
   text-align: initial;
   color: #585858;
+}
+
+.qflipper .card-desc {
+  padding: 1.5rem 3rem;
+  width: 65%;
 }
 
 .card-desc p {
@@ -99,6 +125,8 @@ h3 {
 .card-desc.bad-browser img {
   width: 50%;
 }
+
+/* Buttons */
 
 .btn {
   width: fit-content;
@@ -142,6 +170,19 @@ h3 {
   background-color: #eee;
 }
 
+.btn.drop-left {
+  border-radius: 5px 0 0 5px;
+}
+.btn.drop-right {
+  position: relative;
+  left: -1px;
+  padding: 0.75rem 0.4rem 0 0.4rem;
+  border-left: 1px solid #ffffff80;
+  border-radius: 0 5px 5px 0;
+}
+
+/* Queries */
+
 @media (max-width: 768px) {
   #header {
     grid-template-columns: auto 40px 40px 22px;
@@ -163,6 +204,16 @@ h3 {
     display: flex;
     justify-content: center;
     width: 60%;
+  }
+
+  .qflipper .card-banner {
+    width: 100%;
+    border-radius: 10px 10px 0 0;
+    box-shadow: inset 0px -5px 8px rgba(0, 0, 0, 0.25);
+  }
+  
+  .qflipper .card-banner img {
+    border-radius: 0;
   }
   
   .card-desc {

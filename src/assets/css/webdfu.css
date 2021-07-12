@@ -10,10 +10,10 @@
   position: absolute;
   top: 2rem;
   left: 2rem;
-  padding: 0.5rem 1rem 0.5rem 2rem;
+  padding: 0 1rem 0.5rem 0.5rem;
   font-size: 16px;
   color: #6b6b6b;
-  background: url(../back.svg) no-repeat center left;
+  background: transparent;
   background-size: 1.5rem;
   border: none;
   border-radius: 5px;
@@ -28,6 +28,11 @@
 #back:disabled {
   opacity: 0.2;
   cursor: not-allowed;
+}
+
+#back svg {
+  position: relative;
+  top: 6px;
 }
 
 /* Connecting section */
@@ -60,6 +65,9 @@
 }
 
 /* Error section */
+#error {
+  text-align: center;
+}
 
 #error h2, #error p {
   font-weight: 400;
@@ -86,8 +94,9 @@
 /* Connected section */
 
 #connected-serial {
+  text-align: center;
   padding: 1.5rem 2rem;
-  border-radius: 5px;
+  border-radius: 10px;
   box-shadow: 0px 2px 10px 0px rgba(34, 60, 80, 0.2);
 }
 
