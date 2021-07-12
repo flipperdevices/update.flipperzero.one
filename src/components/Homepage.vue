@@ -9,13 +9,13 @@
     <h1>Flipper Zero Firmware Update page</h1>
     <div class="component">
       <div class="card">
-        <div v-if="browser !== 'Not supported'" class="card-banner">
-          <img v-if="browser === 'Chrome'" src="../assets/chrome.png" />
-          <img v-else-if="browser === 'Edge'" src="../assets/edge.png" />
-          <img v-else-if="browser === 'Opera'" src="../assets/opera.png" />
-          <img v-else-if="browser === 'Yandex'" src="../assets/yandex.png" />
+        <div v-if="userAgent.browser !== 'Not supported'" class="card-banner">
+          <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" />
+          <img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" />
+          <img v-else-if="userAgent.browser === 'Opera'" src="../assets/opera.png" />
+          <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
-        <div v-if="browser !== 'Not supported'" class="card-desc">
+        <div v-if="userAgent.browser !== 'Not supported'" class="card-desc">
           <h2>WebUSB updater (recommended)</h2>
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
@@ -33,10 +33,12 @@
           </div>
         </div>
         <div v-else class="card-desc bad-browser">
-          <h3>Your browser doesn't support WebUSB</h3>
-          <img v-if="browser === 'Not supported'" src="../assets/notsupported.png" />
+          <h3>Your browser doesn't support WebUSB updater :(</h3>
+          <img v-if="userAgent.browser === 'Not supported'" src="../assets/notsupported.png" />
           <p>
-            Try one of the chromium based browsers.
+            Your browser doesn’t support WebUSB/WebSerial.
+
+            Updater currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
           <div class="buttons">
             <a class="btn alert" href="https://caniuse.com/webusb">Compatibility List</a>
@@ -55,8 +57,20 @@
             Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
           </p>
           <div class="buttons">
-            <a class="btn primary drop-left">Windows Download</a>
-            <a class="btn primary drop-right"><i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i></a>
+            <div style="display: flex;">
+              <a v-if="userAgent.os === 'Windows'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
+              <a v-if="userAgent.os === 'Mac'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
+              <a v-if="userAgent.os === 'Linux'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
+              <button class="btn primary drop-right" @click="dropdownClick">
+                <i v-if="isDropOpened" data-eva="arrow-ios-upward-outline" data-eva-fill="#fff"></i>
+                <i v-if="!isDropOpened" data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
+              </button>
+            </div>
+            <div v-show="isDropOpened" class="drop-body">
+              <a v-if="userAgent.os !== 'Windows'" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
+              <a v-if="userAgent.os !== 'Mac'" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
+              <a v-if="userAgent.os !== 'Linux'" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
+            </div>
           </div>
         </div>
       </div>
@@ -70,7 +84,19 @@ import * as eva from 'eva-icons'
 export default {
   name: 'Homepage',
   props: {
-    browser: String
+    userAgent: Object
+  },
+  data () {
+    return {
+      isDropOpened: false
+    }
+  },
+  methods: {
+    dropdownClick () {
+      this.isDropOpened = !this.isDropOpened
+      document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
+      document.querySelector('.drop-right > svg').style.rotate = this.isDropOpened * 180 + 'deg'
+    }
   },
   mounted () {
     eva.replace()
