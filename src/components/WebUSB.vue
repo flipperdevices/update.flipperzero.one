@@ -82,6 +82,7 @@
 
 <script>
 import { WebDFU } from 'dfu'
+import * as semver from 'semver'
 
 class LineBreakTransformer {
   constructor () {
@@ -119,7 +120,6 @@ export default {
       displayArrows: false,
       displaySerialMenu: false,
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test'],
-      writeNextLine: [false, ''],
       flipper: {
         battery: 'undefined',
         name: 'undefined',
@@ -217,6 +217,7 @@ export default {
           }
         }
       } catch (error) {
+        console.log(error)
         this.status = 'Serial connection lost'
       }
     },
@@ -233,31 +234,34 @@ export default {
       writer.close()
     },
     parseReadValue (value) {
-      if (this.writeNextLine[0]) {
-        if (value.includes('Version:')) {
-          this.versions.flipper[this.writeNextLine[1]].version = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
-        } else if (value.includes('2021')) {
-          this.versions.flipper[this.writeNextLine[1]].date = value.slice(-10)
-          const date = this.versions.flipper[this.writeNextLine[1]].date.split('-').reverse().join('-')
-          this.versions.flipper[this.writeNextLine[1]].timestamp = Date.parse(date) / 1000
-          this.flipper[this.writeNextLine[1] + 'Ver'] = this.versions.flipper[this.writeNextLine[1]].version
-          this.flipper[this.writeNextLine[1] + 'Build'] = this.versions.flipper[this.writeNextLine[1]].date
-          this.writeNextLine = [false, '']
+      if (value.includes('Version:')) {
+        if (this.flipper.bootloaderVer === 'undefined') {
+          this.flipper.bootloaderVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
+          this.versions.flipper.bootloader.version = this.flipper.bootloaderVer
         } else {
-          this.writeNextLine = [false, '']
+          this.flipper.firmwareVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
+          this.versions.flipper.firmware.version = this.flipper.firmwareVer
         }
       }
-      if (value.includes('Bootloader')) {
-        this.writeNextLine = [true, 'bootloader']
-      }
-      if (value.includes('Firmware')) {
-        this.writeNextLine = [true, 'firmware']
+      if (value.includes('Build date:')) {
+        if (this.flipper.bootloaderBuild === 'undefined') {
+          this.flipper.bootloaderBuild = value.slice(-10)
+          this.versions.flipper.bootloader.date = this.flipper.bootloaderBuild
+        } else {
+          this.flipper.firmwareBuild = value.slice(-10)
+          this.versions.flipper.firmware.date = this.flipper.firmwareBuild
+        }
       }
       if (value.includes('HW version')) {
         this.flipper.hardwareVer = value.slice(11).trim()
       }
-      if (value.includes('Production date: ')) {
-        this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim()
+      if (value.includes('Name: ') || value.includes('Production date: ')) {
+        try {
+          this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim()
+        } catch (error) {
+          // different firmwares have different command formats
+          // so some actions need to be wrapped
+        }
       }
       if (value.includes('State of Charge: ')) {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
@@ -269,11 +273,16 @@ export default {
           return response.json()
         })
         .then((data) => {
+          const versions = data.channels[1].versions.map((e) => {
+            return e.version.slice(3)
+          })
+          const latest = data.channels[1].versions[(versions.indexOf(semver.maxSatisfying(versions, '*')))]
+
           this.versions.master.version = data.channels[0].versions[0].version
-          this.versions.release.version = data.channels[1].versions[0].version
+          this.versions.release.version = latest.version
           this.versions.master.timestamp = data.channels[0].versions[0].timestamp
-          this.versions.release.timestamp = data.channels[1].versions[0].timestamp
-          this.versions.release.url = data.channels[1].versions[0].files.find(file => file.target === this.flipper.target && file.type === 'full_bin').url
+          this.versions.release.timestamp = latest.timestamp
+          this.versions.release.url = latest.files.find(file => file.target === this.flipper.target && file.type === 'full_bin').url
 
           if (this.versions.flipper.firmware.version === this.versions.release.version) {
             this.isOutdated = false
