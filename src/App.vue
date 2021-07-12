@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Homepage
-      :browser="userAgent.browser"
+      :userAgent="userAgent"
       v-if="displayHomepage"
       v-on:clickConnect="displayHomepage = !displayHomepage"
     />
