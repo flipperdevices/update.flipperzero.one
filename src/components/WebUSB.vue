@@ -1,16 +1,18 @@
 <template>
   <div id="dfu-container">
-    <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">Back</button>
+    <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">
+      <i data-eva="arrow-ios-back-outline" data-eva-fill="#6b6b6b"></i> Back
+    </button>
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
         <div class="svg-container">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g data-name="Layer 2"><g data-name="arrow-circle-left"><rect width="24" height="24" opacity="0"/><path d="M16 11h-5.66l1.25-1.31a1 1 0 0 0-1.45-1.38l-2.86 3a1 1 0 0 0-.09.13.72.72 0 0 0-.11.19.88.88 0 0 0-.06.28L7 12a1 1 0 0 0 .08.38 1 1 0 0 0 .21.32l3 3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42L10.41 13H16a1 1 0 0 0 0-2z"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/></g></g></svg>
+          <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="32px"></i>
         </div>
         <span>1. Find your Flipper in dropdown menu</span>
       </div>
       <div id="arrow-2">
         <div class="svg-container">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g data-name="Layer 2"><g data-name="arrow-circle-up"><rect width="24" height="24" opacity="0"/><path d="M12.71 7.29a1 1 0 0 0-.32-.21A1 1 0 0 0 12 7h-.1a.82.82 0 0 0-.27.06.72.72 0 0 0-.19.11 1 1 0 0 0-.13.09l-3 2.86a1 1 0 0 0 1.38 1.45L11 10.34V16a1 1 0 0 0 2 0v-5.59l1.29 1.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/></g></g></svg>
+          <i data-eva="arrow-circle-up-outline" data-eva-fill="#000000cc" data-eva-height="32px"></i>
         </div>
         <span>2. Press "Connect"</span>
       </div>
@@ -23,7 +25,7 @@
     </div>
     <div v-show="error.isError" id="error">
       <div>
-        <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g data-name="Layer 2"><g data-name="alert-circle"><rect width="24" height="24" opacity="0"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="16" r="1"/><path d="M12 7a1 1 0 0 0-1 1v5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1z"/></g></g></svg> Error</h2>
+        <h2><i data-eva="alert-circle-outline" data-eva-fill="#000000cc"></i> Error</h2>
         <p>{{ error.msg }}</p>
       </div>
       <button v-if="error.button === 'connectSerial'" class="btn primary" @click="connectSerial">Try again</button>
@@ -84,6 +86,7 @@
 <script>
 import { WebDFU } from 'dfu'
 import * as semver from 'semver'
+import * as eva from 'eva-icons'
 
 class LineBreakTransformer {
   constructor () {
@@ -440,6 +443,7 @@ export default {
     }
   },
   mounted () {
+    eva.replace()
     this.connectSerial()
   }
 }

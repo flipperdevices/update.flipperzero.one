@@ -44,14 +44,36 @@
         </div>
       </div>
     </div>
+    <div class="component qflipper">
+      <div class="card">
+        <div class="card-banner">
+          <img src="../assets/qflipper.png" />
+        </div>
+        <div class="card-desc">
+          <h2>Desktop crossplatform application</h2>
+          <p>
+            Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
+          </p>
+          <div class="buttons">
+            <a class="btn primary drop-left">Windows Download</a>
+            <a class="btn primary drop-right"><i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import * as eva from 'eva-icons'
+
 export default {
   name: 'Homepage',
   props: {
     browser: String
+  },
+  mounted () {
+    eva.replace()
   }
 }
 </script>
