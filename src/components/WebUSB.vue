@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="dfu-container">
     <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">Back</button>
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">

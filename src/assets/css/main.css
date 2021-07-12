@@ -2,7 +2,7 @@
   font-family: "Roboto", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "kern","liga";
+  font-feature-settings: "kern", "liga";
 }
 
 body {
@@ -28,37 +28,27 @@ h3 {
 }
 
 #app {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 90vh;
   font-family: "Roboto", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  padding: 0 3rem;
 }
 
-#homepage {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 90vh;
+#homepage-container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1200px;
+  padding: 1rem;
+  text-align: center;
 }
 
 #header {
-  display: grid; 
+  display: grid;
   grid-template-columns: auto 80px 80px 44px;
-  gap: 0px 0px;
   grid-template-areas: ". . . .";
   padding: 1rem;
 }
 
 .component {
-  width: 100%;
-  max-width: 1200px;
   margin-bottom: 50px;
   padding: 2rem;
   border-radius: 5px;
@@ -80,6 +70,7 @@ h3 {
 
 .card-banner img {
   width: 80%;
+  min-width: 200px;
 }
 
 .card-desc {
@@ -152,16 +143,26 @@ h3 {
 }
 
 @media (max-width: 768px) {
+  #header {
+    grid-template-columns: auto 40px 40px 22px;
+    padding: 0;
+  }
+
+  #header img {
+    height: 50%;
+  }
+
   .card {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
   }
   
   .card-banner {
     display: flex;
     justify-content: center;
-    width: 100%;
+    width: 60%;
   }
   
   .card-desc {
@@ -171,9 +172,11 @@ h3 {
 }
 
 @media (max-width: 480px) {
-  #app {
-    padding: 0.75rem 1rem;
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 30px;
   }
+
   .component {
     padding: 1.5rem;
   }

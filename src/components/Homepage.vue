@@ -1,5 +1,5 @@
 <template>
-  <div id="homepage">
+  <div id="homepage-container">
     <div id="header">
       <img src="../assets/flipper-logo.png" />
       <img src="../assets/youtube.png" />
