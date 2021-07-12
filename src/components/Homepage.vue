@@ -1,5 +1,11 @@
 <template>
   <div id="homepage">
+    <div id="header">
+      <img src="../assets/flipper-logo.png" />
+      <img src="../assets/youtube.png" />
+      <img src="../assets/discord.png" />
+      <img src="../assets/github.png" />
+    </div>
     <h1>Flipper Zero Firmware Update page</h1>
     <div class="component">
       <div class="card">

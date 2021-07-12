@@ -30,7 +30,7 @@ h3 {
 #app {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   min-height: 90vh;
   font-family: "Roboto", Arial, sans-serif;
@@ -38,6 +38,22 @@ h3 {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   padding: 0 3rem;
+}
+
+#homepage {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 90vh;
+}
+
+#header {
+  display: grid; 
+  grid-template-columns: auto 80px 80px 44px;
+  gap: 0px 0px;
+  grid-template-areas: ". . . .";
+  padding: 1rem;
 }
 
 .component {
