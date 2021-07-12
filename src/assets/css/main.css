@@ -12,7 +12,7 @@ body {
 h1 {
   font-size: 2.5rem;
   font-weight: 400;
-  margin: 65px 0 50px 0;
+  margin: 50px 0;
   color: #000000cc;
 }
 
@@ -114,6 +114,11 @@ h3 {
   margin-top: 2rem;
   display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+.qflipper .card-desc .buttons {
+  flex-direction: column;
 }
 
 .card-desc.bad-browser {
@@ -127,6 +132,10 @@ h3 {
 }
 
 /* Buttons */
+
+.buttons {
+  display: block;
+}
 
 .btn {
   width: fit-content;
@@ -171,14 +180,49 @@ h3 {
 }
 
 .btn.drop-left {
+  height: calc(48px - 1rem);
   border-radius: 5px 0 0 5px;
+  padding: 1rem 1.5rem 0 1.5rem;
 }
+
 .btn.drop-right {
+  height: 48px;
   position: relative;
   left: -1px;
-  padding: 0.75rem 0.4rem 0 0.4rem;
+  padding: 0.25rem 0.4rem 0 0.4rem;
   border-left: 1px solid #ffffff80;
   border-radius: 0 5px 5px 0;
+}
+
+.btn.drop-right svg {
+  transition-duration: 0.5s;
+}
+
+.drop-body {
+  position: absolute;
+  margin-top: calc(9rem - 5px);
+  padding: 0;
+  background: #49c74a;
+  border-top: 1px solid #ffffff80;
+  border-radius: 0 0 5px 5px;
+}
+
+.drop-body a {
+  display: block;
+  padding: 1rem 1.5rem;
+  color: #fff;
+  font-size: 14px;
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: 1.5px;
+}
+
+.drop-body a:last-child {
+  border-radius: 0 0 5px 5px;
+}
+
+.drop-body a:hover {
+  background-color: #3a9c3a;
 }
 
 /* Queries */
@@ -199,7 +243,7 @@ h3 {
     justify-content: center;
     align-items: center;
   }
-  
+
   .card-banner {
     display: flex;
     justify-content: center;
@@ -220,6 +264,11 @@ h3 {
     width: 100%;
     padding: 1rem 0 0 0;
   }
+
+  .qflipper .card-desc {
+    padding: 1.5rem;
+    width: 85%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -230,5 +279,14 @@ h3 {
 
   .component {
     padding: 1.5rem;
+  }
+  
+  .drop-body {
+    margin-top: calc(9rem - 10px);
+  }
+
+  .btn, .drop-body a {
+    font-size: 12px;
+    letter-spacing: normal;
   }
 }
