@@ -1,7 +1,6 @@
 <template>
-  <div id="app">
+  <div id="homepage">
     <h1>Flipper Zero Firmware Update page</h1>
-    <h2>WebUSB updater</h2>
     <div class="component">
       <div class="card">
         <div v-if="browser !== 'Not supported'" class="card-banner">
@@ -11,6 +10,7 @@
           <img v-else-if="browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
         <div v-if="browser !== 'Not supported'" class="card-desc">
+          <h2>WebUSB updater (recommended)</h2>
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
             No drivers needed!
@@ -20,8 +20,7 @@
             Don't forget to grant access to WebUSB in a pop-up.
           </p>
           <p>
-            Currently supports only webkit-based browsers:
-            Chrome based, Opera, Edge
+            Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
           <div class="buttons">
             <button class="btn primary" @click="$emit('clickConnect')">Connect Flipper</button>
