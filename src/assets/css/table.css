@@ -42,7 +42,7 @@ td a:hover {
 .popup button {
   height: 36px;
   float: right;
-  padding-top: 1px;
+  padding-top: 4px;
   background: transparent;
   border: none;
   border-radius: 5px;

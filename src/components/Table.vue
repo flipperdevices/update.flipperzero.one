@@ -31,7 +31,7 @@
         <button @click="changelogPopup = false"><i data-eva="close-outline" data-eva-fill="#000000cc"></i></button>
         <h3>Changelog</h3>
         <div>
-          <pre>{{ changelogContent }}</pre>
+          <pre><VueMarkdown :source="changelogContent"/></pre>
         </div>
       </div>
     </div>
@@ -49,12 +49,16 @@
 
 <script>
 import * as eva from 'eva-icons'
+// import VueMarkdown from 'vue-markdown'
 export default {
   name: 'Table',
   props: {
     dev: Object,
     release: Object,
     versions: Array
+  },
+  components: {
+    VueMarkdown: () => import('vue-markdown')
   },
   data () {
     return {
