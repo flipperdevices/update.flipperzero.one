@@ -138,29 +138,6 @@ export default {
         radioFirmware: 'undefined',
         btMac: 'undefined'
       },
-      versions: {
-        flipper: {
-          firmware: {
-            version: '',
-            date: '',
-            timestamp: ''
-          },
-          bootloader: {
-            version: '',
-            date: '',
-            timestamp: ''
-          }
-        },
-        release: {
-          version: '',
-          timestamp: '',
-          url: ''
-        },
-        master: {
-          version: '',
-          timestamp: ''
-        }
-      },
       hwLatest: '',
       isOutdated: false,
       closeRead: false
