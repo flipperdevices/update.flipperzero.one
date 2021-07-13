@@ -32,26 +32,52 @@
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
     </div>
     <div v-if="displaySerialMenu" id="connected-serial">
-      <h2>Connected!</h2>
+      <h2>Flipper Zero WebUSB Updater</h2>
       <div class="card">
-        <div class="card-banner">
-          <img v-if="flipper.bodyColor === 0 || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
-          <img v-if="flipper.bodyColor === 1" src="../assets/flipper-black.png" />
+        <div>
+          <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
+          <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
         </div>
-        <div class="card-desc">
+        <div>
+          <h3><b>{{ flipper.name }}</b> connected!</h3>
+          <h3 id="battery">Battery: {{ flipper.battery }}</h3>
+        </div>
+        <div>
           <pre>
-            <b>battery</b>: {{ flipper.battery }}
-            <b>device_name</b>: {{ flipper.name }}
-            <b>stm32_serial</b>: {{ flipper.stm32Serial }}
-            <b>body_color</b>: {{ flipper.bodyColor }}
-            <b>hardware_ver</b>: {{ flipper.hardwareVer }}
-            <b>firmware_target</b>: {{ flipper.target }}
-            <b>firmware_version</b>: {{ flipper.firmwareVer }}
-            <b>firmware_build</b>: {{ flipper.firmwareBuild }}
-            <b>bootloader_version</b>: {{ flipper.bootloaderVer }}
-            <b>bootloader_build</b>: {{ flipper.bootloaderBuild }}
-            <b>radio_firmware</b>: {{ flipper.radioFirmware }}
-            <b>bluetooth_mac</b>: {{ flipper.btMac }}
+            <b>Device type:</b>
+            <b>Device name:</b>
+            <b>Stm32 serial:</b>
+            <b>Color:</b>
+            <b>Region:</b>
+            <b>Hardware version:</b>
+            <b>Firmware target:</b>
+          </pre>
+          <pre>
+    {{ flipper.type }}
+    {{ flipper.name }}
+    {{ flipper.stm32Serial }}
+    {{ flipper.bodyColor }}
+    {{ flipper.region }}
+    {{ flipper.hardwareVer }}
+    {{ flipper.target }}
+          </pre>
+        </div>
+        <div>
+          <pre>
+            <b>Firmware version:</b>
+            <b>Firmware build:</b>
+            <b>Bootloader version:</b>
+            <b>Bootloader build:</b>
+            <b>Radio firmware:</b>
+            <b>Bluetooth mac:</b>
+          </pre>
+          <pre>
+    {{ flipper.firmwareVer }}
+    {{ flipper.firmwareBuild }}
+    {{ flipper.bootloaderVer }}
+    {{ flipper.bootloaderBuild }}
+    {{ flipper.radioFirmware }}
+    {{ flipper.btMac }}
           </pre>
         </div>
       </div>
@@ -125,10 +151,12 @@ export default {
       displaySerialMenu: false,
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
       flipper: {
+        type: 'undefined',
         battery: 'undefined',
         name: 'undefined',
         stm32Serial: 'undefined',
         bodyColor: 'undefined',
+        region: 'undefined',
         hardwareVer: 'undefined',
         target: 'f6',
         firmwareVer: 'undefined',
@@ -241,14 +269,64 @@ export default {
           // so some actions need to be wrapped
         }
       }
+
+      // Battery charge parser
       if (value.includes('State of Charge: ')) {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
+        const b = document.querySelector('#battery')
+        if (parseInt(this.flipper.battery) > 50) b.style.color = '#49c74a'
+        else if (parseInt(this.flipper.battery) < 50 && parseInt(this.flipper.battery) > 20) b.style.color = '#ff9e29'
+        else b.style.color = '#e23e3e'
       }
 
       // device_info parser
-      /* if (value.includes('')) {
-        this.flipper. = value.match(//g).trim()
-      } */
+      if (value.includes('hardware_model')) {
+        this.flipper.type = value.replace(/hardware_model\s*:\s/g, '').trim()
+      }
+      if (value.includes('hardware_name')) {
+        this.flipper.name = value.replace(/hardware_name\s*:\s/g, '').trim()
+      }
+      if (value.includes('hardware_uid')) {
+        this.flipper.stm32Serial = value.replace(/hardware_uid\s*:\s/g, '').trim()
+      }
+      if (value.includes('hardware_color')) {
+        const color = value.replace(/hardware_color\s*:\s/g, '').trim()
+        switch (color) {
+          case '0':
+            this.flipper.bodyColor = 'white'
+            break
+          case '1':
+            this.flipper.bodyColor = 'black'
+            break
+        }
+      }
+      if (value.includes('hardware_region')) {
+        this.flipper.region = value.replace(/hardware_region\s*:\s/g, '').trim()
+      }
+      if (value.includes('hardware_ver')) {
+        this.flipper.hardwareVer = value.replace(/hardware_ver\s*:\s/g, '').trim()
+      }
+      if (value.includes('hardware_target')) {
+        this.flipper.target = value.replace(/hardware_target\s*:\s/g, '').trim()
+      }
+      if (value.includes('firmware_version')) {
+        this.flipper.firmwareVer = value.replace(/firmware_version\s*:\s/g, '').trim()
+      }
+      if (value.includes('firmware_build_date')) {
+        this.flipper.firmwareBuild = value.replace(/firmware_build_date\s*:\s/g, '').trim()
+      }
+      if (value.includes('boot_version')) {
+        this.flipper.bootloaderVer = value.replace(/boot_version\s*:\s/g, '').trim()
+      }
+      if (value.includes('boot_build_date')) {
+        this.flipper.bootloaderBuild = value.replace(/boot_build_date\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_stack_release')) {
+        this.flipper.radioFirmware = value.replace(/radio_stack_release\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_ble_mac')) {
+        this.flipper.btMac = value.replace(/radio_ble_mac\s*:\s/g, '').trim()
+      }
     },
     async compareVersions () {
       if (this.flipper.firmwareVer === this.latest.version) {
@@ -420,3 +498,39 @@ export default {
 
 <style src="../assets/css/webdfu.css"></style>
 <style src="../assets/css/spinner.css"></style>
+<style scoped>
+h2 {
+  margin-bottom: 2.5rem;
+}
+
+.card {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0px 4rem;
+  grid-template-areas:
+    ". ."
+    ". .";
+  color: #000000cc;
+}
+
+.card > div {
+  text-align: left;
+}
+
+.card > div:first-of-type, .card > div:nth-of-type(2) {
+  padding-left: 2.5rem;
+}
+.card > div:nth-of-type(3), .card > div:nth-of-type(4) {
+  display: flex;
+}
+
+.card pre {
+  color: #000000a4;
+}
+
+.card img {
+  width: 280px;
+}
+</style>
