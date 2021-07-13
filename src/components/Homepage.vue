@@ -7,7 +7,7 @@
       <img src="../assets/github.png" />
     </div>
     <h1>Flipper Zero Firmware Update page</h1>
-    <div class="component">
+    <div class="component web-upgrade">
       <div class="card">
         <div v-if="userAgent.browser !== 'Not supported'" class="card-banner">
           <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" />
@@ -62,8 +62,7 @@
               <a v-if="userAgent.os === 'Mac'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
               <a v-if="userAgent.os === 'Linux'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
               <button class="btn primary drop-right" @click="dropdownClick">
-                <i v-if="isDropOpened" data-eva="arrow-ios-upward-outline" data-eva-fill="#fff"></i>
-                <i v-if="!isDropOpened" data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
+                <i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
               </button>
             </div>
             <div v-show="isDropOpened" class="drop-body">
@@ -73,6 +72,36 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <h1>Download firmware files</h1>
+    <div class="component firmware-files">
+      <p>
+        In case you need firmware files locally for some reason you may need this files to flash locally with <a href="http://dfu-util.sourceforge.net/">dfu-util</a> and <a href="">st-link</a> <i>.elf</i> files for debugging.
+      </p>
+      <div class="buttons">
+        <a class="btn fw-btn" href="https://caniuse.com/webusb">
+          <div>
+            <div>
+              <p>Latest Release</p>
+              <b>5.12.14</b>
+            </div>
+            <div>
+              <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
+            </div>
+          </div>
+        </a>
+        <a class="btn fw-btn" href="https://caniuse.com/webusb">
+          <div>
+            <div>
+              <p>Nightly dev build</p>
+              <b>5.12.14</b>
+            </div>
+            <div>
+              <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
+            </div>
+          </div>
+        </a>
       </div>
     </div>
   </div>
@@ -96,10 +125,20 @@ export default {
       this.isDropOpened = !this.isDropOpened
       document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
       document.querySelector('.drop-right > svg').style.rotate = this.isDropOpened * 180 + 'deg'
+    },
+    getDir () {
+      fetch('https://update.flipperzero.one/directory.json')
+        .then((response) => {
+          return response.json()
+        })
+        .then((data) => {
+          console.log(data)
+        })
     }
   },
   mounted () {
     eva.replace()
+    this.getDir()
   }
 }
 </script>
