@@ -85,7 +85,7 @@
     <h1>Download firmware files</h1>
     <div class="component firmware-files">
       <p>
-        In case you need firmware files locally for some reason you may need this files to flash locally with <a href="http://dfu-util.sourceforge.net/">dfu-util</a> and <a href="">st-link</a> <i>.elf</i> files for debugging.
+        In case you need firmware files locally for some reason you may need this files to flash locally with <a href="https://docs.flipperzero.one/">dfu-util</a> and <a href="https://docs.flipperzero.one/">st-link</a> <i>.elf</i> files for debugging.
       </p>
       <div class="buttons">
         <a class="btn fw-btn" :href="release.url">
@@ -111,14 +111,8 @@
           </div>
         </a>
       </div>
-      <div>
-        <table>
-          <tbody>
-            <tr>
-              <td>dev</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="table">
+        <Table :dev="dev" :release="release" :versions="versions"/>
       </div>
     </div>
   </div>
@@ -130,20 +124,28 @@ import * as semver from 'semver'
 
 export default {
   name: 'Homepage',
+  components: {
+    Table: () => import('./Table.vue')
+  },
   props: {
     userAgent: Object
   },
   data () {
     return {
       isDropOpened: false,
-      data: {},
+      versions: [],
       release: {
         version: '',
-        url: ''
+        date: '',
+        url: '',
+        files: [],
+        changelog: ''
       },
       dev: {
         version: '',
-        date: ''
+        date: '',
+        url: '',
+        files: []
       }
     }
   },
@@ -159,15 +161,30 @@ export default {
           return response.json()
         })
         .then((data) => {
-          this.data = data
-
-          const versions = data.channels[1].versions.map((e) => {
-            return e.version.slice(3)
+          data.channels[1].versions.sort((a, b) => {
+            if (semver.lt(a.version.slice(3), b.version.slice(3))) return 1
+            else return -1
           })
-          const latest = data.channels[1].versions[(versions.indexOf(semver.maxSatisfying(versions, '*')))]
+          this.versions = data.channels[1].versions
+          const latest = data.channels[1].versions[0]
+          const master = data.channels[0].versions[0]
+
           this.release.version = latest.version
+          this.release.date = new Date(latest.timestamp * 1000).toISOString().slice(0, 10)
           this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
-          this.dev.date = new Date(data.channels[0].versions[0].timestamp * 1000).toISOString().slice(0, 10)
+          this.release.files = latest.files.sort((a, b) => {
+            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+            else return -1
+          })
+          this.release.changelog = latest.changelog
+
+          this.dev.version = master.version
+          this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
+          this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
+          this.dev.files = master.files.sort((a, b) => {
+            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+            else return -1
+          })
         })
     }
   },

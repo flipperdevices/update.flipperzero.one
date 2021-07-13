@@ -10,8 +10,9 @@ body {
 }
 
 a {
-  color: #4c4cf0;
+  color: #6868ff;
   text-decoration: none;
+  cursor: pointer;
 }
 
 h1 {
@@ -76,6 +77,10 @@ h3 {
 
 .component.qflipper {
   padding: 0;
+}
+
+.component.firmware-files .table {
+  overflow: auto;
 }
 
 .card {
@@ -243,7 +248,7 @@ h3 {
 }
 
 .firmware-files .buttons {
-  margin-top: 2rem;
+  margin: 2rem 0;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
