@@ -111,9 +111,7 @@
           </div>
         </a>
       </div>
-      <div class="table">
-        <Table :dev="dev" :release="release" :versions="versions"/>
-      </div>
+      <Table :dev="dev" :release="release" :versions="versions"/>
     </div>
   </div>
 </template>
