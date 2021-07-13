@@ -28,8 +28,8 @@
         <h2><i data-eva="alert-circle-outline" data-eva-fill="#000000cc"></i> Error</h2>
         <p>{{ error.msg }}</p>
       </div>
-      <button v-if="error.button === 'connectSerial'" class="btn primary" @click="connectSerial">Try again</button>
-      <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="connectDFU">Try again</button>
+      <button v-if="error.button === 'connectSerial'" class="btn primary" @click="reconnect('serial')">Try again</button>
+      <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
     </div>
     <div v-if="displaySerialMenu" id="connected-serial">
       <h2>Connected!</h2>
@@ -123,7 +123,7 @@ export default {
       firmwareFile: undefined,
       displayArrows: false,
       displaySerialMenu: false,
-      commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test'],
+      commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
       flipper: {
         battery: 'undefined',
         name: 'undefined',
@@ -215,6 +215,7 @@ export default {
       writer.close()
     },
     parseReadValue (value) {
+      // Legacy commands parser
       if (value.includes('Version:')) {
         if (this.flipper.bootloaderVer === 'undefined') {
           this.flipper.bootloaderVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
@@ -243,6 +244,11 @@ export default {
       if (value.includes('State of Charge: ')) {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
       }
+
+      // device_info parser
+      /* if (value.includes('')) {
+        this.flipper. = value.match(//g).trim()
+      } */
     },
     async compareVersions () {
       if (this.flipper.firmwareVer === this.latest.version) {
@@ -395,6 +401,13 @@ export default {
         } else {
           document.getElementById('arrow-2').style.left = '568px'
         }
+      }
+    },
+    async reconnect (type) {
+      if (type === 'serial') {
+        this.connectSerial()
+      } else if (type === 'dfu') {
+        this.connectDFU()
       }
     }
   },
