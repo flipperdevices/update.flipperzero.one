@@ -48,9 +48,20 @@ h3 {
 
 #header {
   display: grid;
-  grid-template-columns: auto 80px 80px 44px;
+  grid-template-columns: auto 50px 50px 30px;
   grid-template-areas: ". . . .";
+  height: 35px;
   padding: 1rem;
+}
+
+#header a {
+  width: fit-content;
+  text-align: left;
+}
+
+#header img {
+  height: 66%;
+  float: left;
 }
 
 /* Cards */
@@ -288,15 +299,6 @@ h3 {
 /* Queries */
 
 @media (max-width: 768px) {
-  #header {
-    grid-template-columns: auto 40px 40px 22px;
-    padding: 0;
-  }
-
-  #header img {
-    height: 50%;
-  }
-
   .card {
     display: flex;
     flex-direction: column;
@@ -343,6 +345,16 @@ h3 {
   h1 {
     font-size: 2rem;
     margin-bottom: 30px;
+  }
+
+  #header {
+    grid-template-columns: auto 40px 40px 22px;
+    height: 25px;
+    padding: 1rem 0;
+  }
+
+  #header img {
+    height: 50%;
   }
 
   .component {

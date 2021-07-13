@@ -1,10 +1,18 @@
 <template>
   <div id="homepage-container">
     <div id="header">
-      <img src="../assets/flipper-logo.png" />
-      <img src="../assets/youtube.png" />
-      <img src="../assets/discord.png" />
-      <img src="../assets/github.png" />
+      <a href="https://flipperzero.one/">
+        <img src="../assets/flipper-logo.png" />
+      </a>
+      <a href="https://www.youtube.com/channel/UCfKVWB_pOfsY-HQ2siMBn6g">
+        <img src="../assets/youtube.png" />
+      </a>
+      <a href="https://flipperzero.one/discord">
+        <img src="../assets/discord.png" />
+      </a>
+      <a href="https://github.com/Flipper-Zero">
+        <img src="../assets/github.png" />
+      </a>
     </div>
     <h1>Flipper Zero Firmware Update page</h1>
     <div class="component web-upgrade">
@@ -91,17 +99,26 @@
             </div>
           </div>
         </a>
-        <a class="btn fw-btn" :href="master.url">
+        <a class="btn fw-btn" :href="dev.url">
           <div>
             <div>
               <p>Dev build</p>
-              <b>{{ master.date }}</b>
+              <b>{{ dev.date }}</b>
             </div>
             <div>
               <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
             </div>
           </div>
         </a>
+      </div>
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <td>dev</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -124,7 +141,7 @@ export default {
         version: '',
         url: ''
       },
-      master: {
+      dev: {
         version: '',
         date: ''
       }
@@ -150,7 +167,7 @@ export default {
           const latest = data.channels[1].versions[(versions.indexOf(semver.maxSatisfying(versions, '*')))]
           this.release.version = latest.version
           this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
-          this.master.date = new Date(data.channels[0].versions[0].timestamp * 1000).toISOString().slice(0, 10)
+          this.dev.date = new Date(data.channels[0].versions[0].timestamp * 1000).toISOString().slice(0, 10)
         })
     }
   },
