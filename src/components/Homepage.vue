@@ -80,22 +80,22 @@
         In case you need firmware files locally for some reason you may need this files to flash locally with <a href="http://dfu-util.sourceforge.net/">dfu-util</a> and <a href="">st-link</a> <i>.elf</i> files for debugging.
       </p>
       <div class="buttons">
-        <a class="btn fw-btn" href="https://caniuse.com/webusb">
+        <a class="btn fw-btn" :href="release.url">
           <div>
             <div>
               <p>Latest Release</p>
-              <b>5.12.14</b>
+              <b>{{ release.version }}</b>
             </div>
             <div>
               <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
             </div>
           </div>
         </a>
-        <a class="btn fw-btn" href="https://caniuse.com/webusb">
+        <a class="btn fw-btn" :href="master.url">
           <div>
             <div>
-              <p>Nightly dev build</p>
-              <b>5.12.14</b>
+              <p>Dev build</p>
+              <b>{{ master.date }}</b>
             </div>
             <div>
               <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
@@ -109,6 +109,7 @@
 
 <script>
 import * as eva from 'eva-icons'
+import * as semver from 'semver'
 
 export default {
   name: 'Homepage',
@@ -117,7 +118,16 @@ export default {
   },
   data () {
     return {
-      isDropOpened: false
+      isDropOpened: false,
+      data: {},
+      release: {
+        version: '',
+        url: ''
+      },
+      master: {
+        version: '',
+        date: ''
+      }
     }
   },
   methods: {
@@ -132,7 +142,15 @@ export default {
           return response.json()
         })
         .then((data) => {
-          console.log(data)
+          this.data = data
+
+          const versions = data.channels[1].versions.map((e) => {
+            return e.version.slice(3)
+          })
+          const latest = data.channels[1].versions[(versions.indexOf(semver.maxSatisfying(versions, '*')))]
+          this.release.version = latest.version
+          this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
+          this.master.date = new Date(data.channels[0].versions[0].timestamp * 1000).toISOString().slice(0, 10)
         })
     }
   },

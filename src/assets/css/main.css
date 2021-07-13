@@ -329,6 +329,14 @@ h3 {
     padding: 1.5rem;
     width: 85%;
   }
+  
+  .firmware-files .buttons {
+    flex-direction: column;
+  }
+
+  .fw-btn:last-of-type {
+    margin-top: 1rem;
+  }    
 }
 
 @media (max-width: 480px) {
@@ -348,5 +356,10 @@ h3 {
   .btn, .drop-body a {
     font-size: 12px;
     letter-spacing: normal;
+  }
+
+  .fw-btn > div > div:last-of-type {
+    margin-left: 2rem;
+    top: 8px;
   }
 }
