@@ -3,12 +3,14 @@
     <Homepage
       :userAgent="userAgent"
       v-if="displayHomepage"
-      v-on:clickConnect="displayHomepage = !displayHomepage"
+      @clickConnect="displayHomepage = false"
+      @passLatestVersion="passLatestVersion"
     />
     <WebUSB
       :userAgent="userAgent"
       v-if="!displayHomepage"
-      v-on:clickHome="displayHomepage = !displayHomepage"
+      @clickHome="clickHome"
+      :latest="latest"
     />
   </div>
 </template>
@@ -29,7 +31,16 @@ export default {
       userAgent: {
         browser: 'Not supported',
         os: 'Other'
-      }
+      },
+      latest: {}
+    }
+  },
+  methods: {
+    passLatestVersion (v) {
+      this.latest = v
+    },
+    clickHome () {
+      location.reload()
     }
   },
   mounted () {

@@ -85,7 +85,6 @@
 
 <script>
 import { WebDFU } from 'dfu'
-import * as semver from 'semver'
 import * as eva from 'eva-icons'
 
 class LineBreakTransformer {
@@ -108,7 +107,8 @@ class LineBreakTransformer {
 export default {
   name: 'WebUSB',
   props: {
-    userAgent: Object
+    userAgent: Object,
+    latest: Object
   },
   data () {
     return {
@@ -194,7 +194,7 @@ export default {
     async getData () {
       this.write(this.commands)
       this.read()
-      setTimeout(this.fetchVersions, 300)
+      setTimeout(this.compareVersions, 500)
       this.displaySerialMenu = true
     },
     async read () {
@@ -241,19 +241,15 @@ export default {
       if (value.includes('Version:')) {
         if (this.flipper.bootloaderVer === 'undefined') {
           this.flipper.bootloaderVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
-          this.versions.flipper.bootloader.version = this.flipper.bootloaderVer
         } else {
           this.flipper.firmwareVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
-          this.versions.flipper.firmware.version = this.flipper.firmwareVer
         }
       }
       if (value.includes('Build date:')) {
         if (this.flipper.bootloaderBuild === 'undefined') {
           this.flipper.bootloaderBuild = value.slice(-10)
-          this.versions.flipper.bootloader.date = this.flipper.bootloaderBuild
         } else {
           this.flipper.firmwareBuild = value.slice(-10)
-          this.versions.flipper.firmware.date = this.flipper.firmwareBuild
         }
       }
       if (value.includes('HW version')) {
@@ -271,30 +267,13 @@ export default {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
       }
     },
-    async fetchVersions () {
-      fetch('https://update.flipperzero.one/directory.json')
-        .then((response) => {
-          return response.json()
-        })
-        .then((data) => {
-          const versions = data.channels[1].versions.map((e) => {
-            return e.version.slice(3)
-          })
-          const latest = data.channels[1].versions[(versions.indexOf(semver.maxSatisfying(versions, '*')))]
-
-          this.versions.master.version = data.channels[0].versions[0].version
-          this.versions.release.version = latest.version
-          this.versions.master.timestamp = data.channels[0].versions[0].timestamp
-          this.versions.release.timestamp = latest.timestamp
-          this.versions.release.url = latest.files.find(file => file.target === this.flipper.target && file.type === 'full_bin').url
-
-          if (this.versions.flipper.firmware.version === this.versions.release.version) {
-            this.isOutdated = false
-          } else {
-            this.isOutdated = true
-            this.hwLatest = this.versions.release.version
-          }
-        })
+    async compareVersions () {
+      if (this.flipper.firmwareVer === this.latest.version) {
+        this.isOutdated = false
+      } else {
+        this.isOutdated = true
+        this.hwLatest = this.latest.version
+      }
     },
     async loadFirmwareFile (event) {
       const buffer = await event.target.files[0].arrayBuffer()

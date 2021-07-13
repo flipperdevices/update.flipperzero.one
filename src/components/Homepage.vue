@@ -164,6 +164,7 @@ export default {
             else return -1
           })
           this.versions = data.channels[1].versions
+          this.$emit('passLatestVersion', this.versions[0])
           const latest = data.channels[1].versions[0]
           const master = data.channels[0].versions[0]
 
