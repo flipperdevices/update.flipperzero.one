@@ -35,8 +35,8 @@
       <h2>Connected!</h2>
       <div class="card">
         <div class="card-banner">
-          <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
-          <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
+          <img v-if="flipper.bodyColor === 0 || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
+          <img v-if="flipper.bodyColor === 1" src="../assets/flipper-black.png" />
         </div>
         <div class="card-desc">
           <pre>
