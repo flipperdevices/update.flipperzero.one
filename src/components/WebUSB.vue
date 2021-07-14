@@ -100,10 +100,10 @@
       </div>
     </div>
     <div v-show="status === 'Writing firmware'" id="connection-spinner">
-      <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>
-      <p>
-        Writing firmware...
-      </p>
+      <h3>Writing firmware. Don't disconnect your Flipper</h3>
+      <p v-if="progress.stage === 0">Erasing device memory</p>
+      <p v-else>Copying data from browser to Flipper</p>
+      <progress :max="progress.max" :value="progress.current"></progress>
     </div>
     <h2 v-if="status === 'OK, reboot Flipper'">Firmware successfully updated. You may need to restart your Flipper.</h2>
   </div>
@@ -146,6 +146,11 @@ export default {
       status: 'Connect Flipper',
       port: undefined,
       webdfu: undefined,
+      progress: {
+        current: 0,
+        max: 0,
+        stage: 0
+      },
       firmwareFile: undefined,
       displayArrows: false,
       displaySerialMenu: false,
@@ -371,7 +376,21 @@ export default {
       try {
         const selectedDevice = await navigator.usb.requestDevice({ filters: [] })
         // Create and init the WebDFU instance
-        this.webdfu = new WebDFU(selectedDevice, { forceInterfacesName: true })
+        this.webdfu = new WebDFU(
+          selectedDevice,
+          {
+            forceInterfacesName: true
+          },
+          {
+            progress: (done, total) => {
+              if (total !== this.progress.max && this.progress.max !== 0) {
+                this.progress.stage = 1
+              }
+              this.progress.max = total
+              this.progress.current = done
+            }
+          }
+        )
         await this.webdfu.init()
         if (this.webdfu.interfaces.length === 0) {
           this.error.isError = true
