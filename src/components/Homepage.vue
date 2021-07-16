@@ -37,7 +37,7 @@
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
           <div class="buttons">
-            <button class="btn primary" @click="$emit('clickConnect')">Connect Flipper</button>
+            <button class="btn primary" @click="$emit('clickConnect')">Connect to Flipper</button>
           </div>
         </div>
         <div v-else class="card-desc bad-browser">
