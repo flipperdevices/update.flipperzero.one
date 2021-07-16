@@ -357,7 +357,7 @@ export default {
             return response.arrayBuffer()
           })
         this.firmwareFile = new Uint8Array(buffer)
-        // this.gotoDFU()
+        this.gotoDFU()
       } catch (error) {
         this.error.isError = true
         this.error.msg = `Failed to fetch latest firmware (${error})`
