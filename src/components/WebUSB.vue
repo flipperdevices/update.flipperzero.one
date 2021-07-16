@@ -348,12 +348,16 @@ export default {
     },
     async fetchFirmwareFile () {
       try {
-        const buffer = await fetch(this.versions.release.url)
+        const file = this.latest.files.find((e) => {
+          if (e.url.slice(-11) === 'f' + this.flipper.target + '_full.bin') return e
+          else return undefined
+        })
+        const buffer = await fetch(file.url)
           .then(response => {
             return response.arrayBuffer()
           })
         this.firmwareFile = new Uint8Array(buffer)
-        this.gotoDFU()
+        // this.gotoDFU()
       } catch (error) {
         this.error.isError = true
         this.error.msg = `Failed to fetch latest firmware (${error})`
@@ -505,14 +509,14 @@ export default {
         try {
           if (this.port) this.port.close()
         } catch (e) {
-          console.log(e)
+          console.error(e)
         }
         this.connectSerial()
       } else if (type === 'dfu') {
         try {
           if (this.webdfu) this.webdfu.close()
         } catch (e) {
-          console.log(e)
+          console.error(e)
         }
         this.connectDFU()
       }
