@@ -502,8 +502,18 @@ export default {
     },
     async reconnect (type) {
       if (type === 'serial') {
+        try {
+          if (this.port) this.port.close()
+        } catch (e) {
+          console.log(e)
+        }
         this.connectSerial()
       } else if (type === 'dfu') {
+        try {
+          if (this.webdfu) this.webdfu.close()
+        } catch (e) {
+          console.log(e)
+        }
         this.connectDFU()
       }
     }
