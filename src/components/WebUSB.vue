@@ -163,7 +163,7 @@ export default {
         bodyColor: 'undefined',
         region: 'undefined',
         hardwareVer: 'undefined',
-        target: 'f6',
+        target: '6',
         firmwareVer: 'undefined',
         firmwareBuild: 'undefined',
         bootloaderVer: 'undefined',
