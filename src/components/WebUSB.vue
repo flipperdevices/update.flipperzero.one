@@ -6,13 +6,13 @@
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
         <div class="svg-container">
-          <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="32px"></i>
+          <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
         </div>
         <span>1. Find your Flipper in dropdown menu</span>
       </div>
       <div id="arrow-2">
         <div class="svg-container">
-          <i data-eva="arrow-circle-up-outline" data-eva-fill="#000000cc" data-eva-height="32px"></i>
+          <i data-eva="arrow-circle-up-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
         </div>
         <span>2. Press "Connect"</span>
       </div>

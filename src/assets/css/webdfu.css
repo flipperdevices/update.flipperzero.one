@@ -50,6 +50,7 @@
   top: 100px;
   left: 558px;
   height: 100px;
+  font-size: 120%;
 }
 
 #arrow-2 {
@@ -57,10 +58,11 @@
   top: 427px;
   left: 400px;
   height: 100px;
+  font-size: 120%;
 }
 
 .svg-container {
-  width: 36px;
+  width: 50px;
 }
 
 progress {
