@@ -20,7 +20,6 @@
         <div v-if="userAgent.browser !== 'Not supported'" class="card-banner">
           <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" />
           <img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" />
-          <img v-else-if="userAgent.browser === 'Opera'" src="../assets/opera.png" />
           <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
         <div v-if="userAgent.browser !== 'Not supported'" class="card-desc">
@@ -42,7 +41,7 @@
         </div>
         <div v-else class="card-desc bad-browser">
           <h3>Your browser doesn't support WebUSB updater :(</h3>
-          <img v-if="userAgent.browser === 'Not supported'" src="../assets/notsupported.png" />
+          <img v-if="userAgent.browser === 'Not supported'" src="../assets/notsupported.svg" />
           <p>
             Your browser doesn’t support WebUSB/WebSerial.
 

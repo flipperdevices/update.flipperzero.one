@@ -153,6 +153,7 @@ h3 {
 
 .card-desc.bad-browser img {
   width: 50%;
+  min-width: 200px;
 }
 
 /* Buttons */
