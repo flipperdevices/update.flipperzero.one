@@ -51,7 +51,7 @@ h3 {
 
 #header {
   display: grid;
-  grid-template-columns: auto 50px 50px 30px;
+  grid-template-columns: auto 50px 50px 50px;
   grid-template-areas: ". . . .";
   height: 35px;
   padding: 1rem;
@@ -63,7 +63,12 @@ h3 {
 }
 
 #header img {
-  height: 66%;
+  width: 66%;
+  float: right;
+}
+
+#header a:first-of-type img {
+  min-width: 120px;
   float: left;
 }
 
@@ -258,6 +263,7 @@ h3 {
 }
 
 .fw-btn {
+  width: 270px;
   display: block;
   padding: 0 1rem 1rem 1rem;
   color: #fff;
@@ -292,9 +298,9 @@ h3 {
 }
 
 .fw-btn > div > div:last-of-type {
-  margin-left: 5rem;
+  float: right;
   position: relative;
-  top: 3px;
+  top: 13px;
   border: 4px solid #fff;
   border-radius: 15px;
 }
@@ -356,13 +362,13 @@ h3 {
   }
 
   #header {
-    grid-template-columns: auto 40px 40px 22px;
+    grid-template-columns: auto 40px 40px 40px;
     height: 25px;
     padding: 1rem 0;
   }
 
   #header img {
-    height: 50%;
+    width: 50%;
   }
 
   .component {
@@ -376,6 +382,10 @@ h3 {
   .btn, .drop-body a {
     font-size: 12px;
     letter-spacing: normal;
+  }
+
+  .fw-btn {
+    width: 220px;
   }
 
   .fw-btn > div > div:last-of-type {
