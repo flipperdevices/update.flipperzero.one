@@ -226,7 +226,7 @@ export default {
           // eslint-disable-next-line no-constant-condition
           while (true) {
             const { value, done } = await reader.read()
-            if (done || Date.now() - begin > 2000) {
+            if (done || Date.now() - begin > 3000) {
               reader.releaseLock()
               break
             }
@@ -246,7 +246,7 @@ export default {
       const writer = textEncoder.writable.getWriter()
 
       lines.forEach(line => {
-        writer.write(line + '\r')
+        writer.write(line + '\r\n')
       })
       writer.close()
     },
