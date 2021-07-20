@@ -86,17 +86,19 @@
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
         <button class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
-        <p class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile"/>
+        <p v-if="!firmwareFileName.length" class="alternative">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
         </p>
+        <button v-else class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
       </div>
       <div v-if="!isOutdated" id="up-to-date">
         <p>
           Your firmware is up to date.
         </p>
-        <p class="alternative">
+        <p v-if="!firmwareFileName.length" class="alternative">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
         </p>
+        <button v-else class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
       </div>
     </div>
     <div v-show="status === 'Writing firmware'" id="connection-spinner">
@@ -152,6 +154,7 @@ export default {
         stage: 0
       },
       firmwareFile: undefined,
+      firmwareFileName: '',
       displayArrows: false,
       displaySerialMenu: false,
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
@@ -344,7 +347,7 @@ export default {
     async loadFirmwareFile (event) {
       const buffer = await event.target.files[0].arrayBuffer()
       this.firmwareFile = new Uint8Array(buffer)
-      this.gotoDFU()
+      this.firmwareFileName = event.target.files[0].name
     },
     async fetchFirmwareFile () {
       try {
@@ -418,6 +421,7 @@ export default {
           this.error.msg = 'No device selected'
           this.status = 'No device selected'
         } else {
+          console.log(e)
           this.error.msg = 'The device was disconnected'
           this.status = 'The device was disconnected'
         }
