@@ -3,7 +3,7 @@
     <table>
       <tbody>
         <tr>
-          <td><b>master</b></td>
+          <td><b>dev</b></td>
           <td class="nowrap">{{ dev.date }}</td>
           <td>
             <span v-for="file in dev.files" :key="file.url">
