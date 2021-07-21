@@ -109,7 +109,7 @@
       <div v-if="this.status === 'Serial connection lost'" class="alert">
         <span class="alert">Information is valid on {{ disconnectTime }}</span>
       </div>
-      <button id="reconnect" class="btn secondary" @click="reconnect('serial')">
+      <button v-show="this.status === 'Serial connection lost'" id="reconnect" class="btn secondary" @click="reconnect('serial')">
         <i data-eva="refresh-outline" data-eva-fill="#6b6b6b" data-eva-height="18px" data-eva-width="18px"></i> Reconnect
       </button>
     </div>
