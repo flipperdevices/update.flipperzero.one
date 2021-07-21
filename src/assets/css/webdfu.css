@@ -132,6 +132,20 @@ div.alert {
   border-radius: 3px;
 }
 
+#reconnect {
+  position: relative;
+  top: 0.5rem;
+  left: -1rem;
+  float: left;
+  padding: 0.3rem 0.7rem 0.5rem 0.7rem;
+  text-transform: none;
+}
+
+#reconnect svg {
+  position: relative;
+  top: 3px;
+}
+
 /* Responsive */
 
 @media (max-width: 1200px) {

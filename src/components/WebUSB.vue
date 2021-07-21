@@ -31,7 +31,7 @@
       <button v-if="error.button === 'connectSerial'" class="btn primary" @click="reconnect('serial')">Try again</button>
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
     </div>
-    <div v-if="displaySerialMenu" id="connected-serial">
+    <div v-show="displaySerialMenu" id="connected-serial">
       <h2>Flipper Zero WebUSB Updater</h2>
       <div class="card">
         <div>
@@ -109,6 +109,9 @@
       <div v-if="this.status === 'Serial connection lost'" class="alert">
         <span class="alert">Information is valid on {{ disconnectTime }}</span>
       </div>
+      <button id="reconnect" class="btn secondary" @click="reconnect('serial')">
+        <i data-eva="refresh-outline" data-eva-fill="#6b6b6b" data-eva-height="18px" data-eva-width="18px"></i> Reconnect
+      </button>
     </div>
     <div v-show="status === 'Writing firmware'" id="connection-spinner">
       <h3>Writing firmware. Don't disconnect your Flipper</h3>
@@ -224,6 +227,7 @@ export default {
       this.read()
       setTimeout(this.compareVersions, 500)
       this.displaySerialMenu = true
+      eva.replace()
     },
     async read () {
       try {
