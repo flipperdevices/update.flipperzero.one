@@ -216,7 +216,13 @@ export default {
           // eslint-disable-next-line no-undef
           const textDecoder = new TextDecoderStream()
           // eslint-disable-next-line no-unused-vars
-          const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable)
+          const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable).catch(error => {
+            if (error.message.includes('The device has been lost.')) {
+              this.status = 'Serial connection lost'
+            } else {
+              console.log(error.message)
+            }
+          })
           const reader = textDecoder.readable
             // eslint-disable-next-line no-undef
             .pipeThrough(new TransformStream(new LineBreakTransformer()))
@@ -234,8 +240,18 @@ export default {
           }
         }
       } catch (error) {
-        console.log(error)
-        this.status = 'Serial connection lost'
+        if (error.message.includes('The device has been lost.')) {
+          this.status = 'Serial connection lost'
+          if (this.port) {
+            this.port.close().catch(error => {
+              if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {
+                console.log(error.message)
+              }
+            })
+          }
+        } else {
+          console.log(error.message)
+        }
       }
     },
     async write (lines) {
@@ -511,9 +527,9 @@ export default {
     async reconnect (type) {
       if (type === 'serial') {
         if (this.port) {
-          this.port.close().catch(e => {
-            if (!e.message.includes('The port is already closed')) {
-              console.log(e.message)
+          this.port.close().catch(error => {
+            if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {
+              console.log(error.message)
             }
           })
         }
@@ -521,8 +537,8 @@ export default {
       } else if (type === 'dfu') {
         try {
           if (this.webdfu) this.webdfu.close()
-        } catch (e) {
-          console.error(e)
+        } catch (error) {
+          console.log(error.message)
         }
         this.connectDFU()
       }
