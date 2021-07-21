@@ -551,6 +551,7 @@ export default {
     },
     async reconnect (type) {
       if (type === 'serial') {
+        this.displaySerialMenu = false // temporarily
         if (this.port) {
           this.port.close().catch(error => {
             if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {
