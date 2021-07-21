@@ -352,7 +352,7 @@ export default {
     async fetchFirmwareFile () {
       try {
         const file = this.latest.files.find((e) => {
-          if (e.url.slice(-11) === 'f' + this.flipper.target + '_full.bin') return e
+          if (e.url.includes('f' + this.flipper.target + '_full.bin')) return e
           else return undefined
         })
         const buffer = await fetch(file.url)
