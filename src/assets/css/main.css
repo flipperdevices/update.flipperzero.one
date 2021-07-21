@@ -72,6 +72,10 @@ h3 {
   float: left;
 }
 
+span.alert {
+  color: #ff930e;
+}
+
 .ml-1 {
   margin-left: 1rem !important;
 }

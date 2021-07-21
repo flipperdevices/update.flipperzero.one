@@ -39,7 +39,11 @@
           <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
         </div>
         <div>
-          <h3><b>{{ flipper.name }}</b> connected!</h3>
+          <h3>
+            <b>{{ flipper.name }} </b>
+            <span v-if="this.status !== 'Serial connection lost'">connected!</span>
+            <span v-else class="alert">disconnected!</span>
+          </h3>
           <h3 id="battery">Battery: {{ flipper.battery }}</h3>
         </div>
         <div>
@@ -81,7 +85,7 @@
           </pre>
         </div>
       </div>
-      <div v-if="isOutdated" id="outdated">
+      <div v-if="isOutdated && this.status !== 'Serial connection lost'" id="outdated">
         <p v-if="!firmwareFileName.length">
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
@@ -92,7 +96,7 @@
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
       </div>
-      <div v-if="!isOutdated" id="up-to-date">
+      <div v-if="!isOutdated && this.status !== 'Serial connection lost'" id="up-to-date">
         <p v-if="!firmwareFileName.length">
           Your firmware is up to date.
         </p>
@@ -101,6 +105,9 @@
         </p>
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
+      </div>
+      <div v-if="this.status === 'Serial connection lost'" class="alert">
+        <span class="alert">Information is valid on {{ disconnectTime }}</span>
       </div>
     </div>
     <div v-show="status === 'Writing firmware'" id="connection-spinner">
@@ -178,7 +185,8 @@ export default {
       },
       hwLatest: '',
       isOutdated: false,
-      closeRead: false
+      closeRead: false,
+      disconnectTime: ''
     }
   },
   methods: {
@@ -248,7 +256,10 @@ export default {
         }
       } catch (error) {
         if (error.message.includes('The device has been lost.')) {
+          const d = new Date(Date.now())
+          this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
           this.status = 'Serial connection lost'
+          document.querySelector('#battery').style.color = '#c6c6c6'
           if (this.port) {
             this.port.close().catch(error => {
               if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {

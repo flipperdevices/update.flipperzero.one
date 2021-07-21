@@ -96,6 +96,14 @@ progress {
   height: 1.5rem;
 }
 
+div.alert {
+  width: fit-content;
+  margin: auto;
+  padding: 0.5rem 1rem;
+  border: 2px solid #ff930eb3;
+  border-radius: 5px;
+}
+
 /* Connected section */
 
 #connected-serial {
