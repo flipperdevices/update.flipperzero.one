@@ -82,23 +82,25 @@
         </div>
       </div>
       <div v-if="isOutdated" id="outdated">
-        <p>
+        <p v-if="!firmwareFileName.length">
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
-        <button class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
+        <button v-if="!firmwareFileName.length" class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
         <p v-if="!firmwareFileName.length" class="alternative">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
         </p>
-        <button v-else class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
+        <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
+        <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
       </div>
       <div v-if="!isOutdated" id="up-to-date">
-        <p>
+        <p v-if="!firmwareFileName.length">
           Your firmware is up to date.
         </p>
         <p v-if="!firmwareFileName.length" class="alternative">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
         </p>
-        <button v-else class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
+        <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
+        <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
       </div>
     </div>
     <div v-show="status === 'Writing firmware'" id="connection-spinner">
@@ -542,6 +544,10 @@ export default {
         }
         this.connectDFU()
       }
+    },
+    cancelUpload () {
+      this.firmwareFile = undefined
+      this.firmwareFileName = ''
     }
   },
   mounted () {
