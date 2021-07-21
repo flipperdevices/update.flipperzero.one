@@ -510,10 +510,12 @@ export default {
     },
     async reconnect (type) {
       if (type === 'serial') {
-        try {
-          if (this.port) this.port.close()
-        } catch (e) {
-          console.error(e)
+        if (this.port) {
+          this.port.close().catch(e => {
+            if (!e.message.includes('The port is already closed')) {
+              console.log(e.message)
+            }
+          })
         }
         this.connectSerial()
       } else if (type === 'dfu') {
