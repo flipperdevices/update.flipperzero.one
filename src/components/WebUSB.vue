@@ -26,7 +26,7 @@
     <div v-show="error.isError" id="error">
       <div>
         <h2><i data-eva="alert-circle-outline" data-eva-fill="#000000cc"></i> Error</h2>
-        <p>{{ error.msg }}</p>
+        <p>{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></p>
       </div>
       <button v-if="error.button === 'connectSerial'" class="btn primary" @click="reconnect('serial')">Try again</button>
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
@@ -198,9 +198,14 @@ export default {
         this.status = 'Connected to Flipper in serial mode'
 
         this.getData()
-      } catch {
+      } catch (error) {
+        if (!error.message.includes('Failed to open serial port.')) {
+          console.log(error.message)
+          this.error.msg = error.message
+        } else {
+          this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process.'
+        }
         this.error.isError = true
-        this.error.msg = 'No device selected'
         this.error.button = 'connectSerial'
         this.status = 'No device selected'
         this.displayArrows = false
@@ -433,13 +438,16 @@ export default {
         this.displayArrows = false
 
         this.writeFirmware()
-      } catch (e) {
+      } catch (error) {
         this.error.isError = true
-        if (e.message.includes('No device selected')) {
+        if (error.message.includes('No device selected')) {
           this.error.msg = 'No device selected'
           this.status = 'No device selected'
+        } else if (error.message.includes('Access denied')) {
+          this.error.msg = 'Chrome can\'t access Flipper in DFU mode. This may be caused by using '
+          this.status = 'The device was disconnected'
         } else {
-          console.log(e)
+          console.log(error.message)
           this.error.msg = 'The device was disconnected'
           this.status = 'The device was disconnected'
         }
