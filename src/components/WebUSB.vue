@@ -91,7 +91,7 @@
         </p>
         <button v-if="!firmwareFileName.length" class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
         <p v-if="!firmwareFileName.length" class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu"/>
         </p>
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
@@ -101,7 +101,7 @@
           Your firmware is up to date.
         </p>
         <p v-if="!firmwareFileName.length" class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".bin"/>
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu"/>
         </p>
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
@@ -160,6 +160,7 @@ export default {
       status: 'Connect Flipper',
       port: undefined,
       webdfu: undefined,
+      startAddress: '',
       progress: {
         current: 0,
         max: 0,
@@ -386,11 +387,12 @@ export default {
       const buffer = await event.target.files[0].arrayBuffer()
       this.firmwareFile = new Uint8Array(buffer)
       this.firmwareFileName = event.target.files[0].name
+      this.cropDFUFile()
     },
     async fetchFirmwareFile () {
       try {
         const file = this.latest.files.find((e) => {
-          if (e.url.includes('f' + this.flipper.target + '_full.bin')) return e
+          if (e.url.includes('f' + this.flipper.target + '_full.dfu')) return e
           else return undefined
         })
         const buffer = await fetch(file.url)
@@ -398,12 +400,25 @@ export default {
             return response.arrayBuffer()
           })
         this.firmwareFile = new Uint8Array(buffer)
+        this.cropDFUFile()
         this.gotoDFU()
       } catch (error) {
         this.error.isError = true
         this.error.msg = `Failed to fetch latest firmware (${error})`
         this.error.button = ''
       }
+    },
+    cropDFUFile () {
+      function toHex (f, s, e) {
+        return Array.from(f.slice(s, e), function (byte) {
+          return ('0' + (byte & 0xFF).toString(16)).slice(-2)
+        }).join(' ')
+      }
+
+      this.startAddress = toHex(this.firmwareFile, 285, 289).split(' ').reverse().join('')
+      const size = parseInt(toHex(this.firmwareFile, 289, 293).split(' ').reverse().join(''), 16)
+      const binary = this.firmwareFile.slice(293, size + 293)
+      this.firmwareFile = binary
     },
     async gotoDFU () {
       this.closeRead = true
@@ -473,6 +488,7 @@ export default {
     async writeFirmware () {
       try {
         this.status = 'Writing firmware'
+        this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
         await this.webdfu.write(1024, this.firmwareFile)
         this.webdfu.close()
         this.status = 'OK, reboot Flipper'
