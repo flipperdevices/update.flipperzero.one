@@ -161,7 +161,8 @@ export default {
     dropdownClick () {
       this.isDropOpened = !this.isDropOpened
       document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
-      document.querySelector('.drop-right > svg').style.rotate = this.isDropOpened * 180 + 'deg'
+      document.querySelector('.drop-body').style.top = (document.querySelector('div.component.qflipper > div > div.card-desc > div > div:nth-child(1)').offsetTop + 44) + 'px'
+      document.querySelector('.drop-right > svg').style.transform = 'rotate(' + this.isDropOpened * 180 + 'deg)'
     },
     getDir () {
       fetch('https://update.flipperzero.one/directory.json')
@@ -186,13 +187,15 @@ export default {
           })
           this.release.changelog = latest.changelog
 
-          this.dev.version = master.version
-          this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
-          this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
-          this.dev.files = master.files.sort((a, b) => {
-            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
-            else return -1
-          })
+          try {
+            this.dev.version = master.version
+            this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
+            this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
+            this.dev.files = master.files.sort((a, b) => {
+              if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+              else return -1
+            })
+          } catch (e) {}
         })
     }
   },
