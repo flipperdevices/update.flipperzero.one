@@ -8,7 +8,7 @@
         <div class="svg-container">
           <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
         </div>
-        <span>1. Find your Flipper in dropdown menu</span>
+        <span>1. {{ arrowText }}</span>
       </div>
       <div id="arrow-2">
         <div class="svg-container">
@@ -190,7 +190,8 @@ export default {
       hwLatest: '',
       isOutdated: false,
       closeRead: false,
-      disconnectTime: ''
+      disconnectTime: '',
+      arrowText: 'Find your Flipper in dropdown menu'
     }
   },
   methods: {
@@ -199,6 +200,7 @@ export default {
       this.error.msg = ''
       this.error.button = ''
       this.displayArrows = true
+      this.arrowText = 'Find your Flipper serial mode (Flipper <name>)'
       this.adjustArrows()
       try {
         this.port = await navigator.serial.requestPort()
@@ -432,6 +434,7 @@ export default {
       this.error.msg = ''
       this.error.button = ''
       this.displayArrows = true
+      this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
       // Load the device by WebUSB
       try {
         const selectedDevice = await navigator.usb.requestDevice({ filters: [] })
