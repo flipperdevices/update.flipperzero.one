@@ -16,14 +16,14 @@
     </div>
     <h1>Flipper Zero Firmware Update page</h1>
     <div class="component web-upgrade">
-      <div class="card">
+      <div v-if="showIntro" class="card">
         <div v-if="userAgent.browser !== 'Not supported'" class="card-banner">
           <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" />
           <img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" />
           <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
         <div v-if="userAgent.browser !== 'Not supported'" class="card-desc">
-          <h2>WebUSB updater</h2>
+          <h2>Web updater</h2>
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
             No drivers needed!
@@ -36,7 +36,7 @@
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
           <div class="buttons">
-            <button class="btn primary" @click="$emit('clickConnect')">Connect to Flipper</button>
+            <button class="btn primary" @click="clickConnect">Connect to Flipper</button>
           </div>
         </div>
         <div v-else class="card-desc bad-browser">
@@ -52,6 +52,11 @@
           </div>
         </div>
       </div>
+      <Updater
+        v-else
+        :userAgent="userAgent"
+        :latest="this.versions[0]"
+      />
     </div>
     <div class="component qflipper">
       <div class="card">
@@ -116,19 +121,22 @@
 </template>
 
 <script>
+import Updater from './Updater.vue'
 import * as eva from 'eva-icons'
 import * as semver from 'semver'
 
 export default {
   name: 'Homepage',
   components: {
-    Table: () => import('./Table.vue')
+    Table: () => import('./Table.vue'),
+    Updater
   },
   props: {
     userAgent: Object
   },
   data () {
     return {
+      showIntro: true,
       isDropOpened: false,
       versions: [],
       release: {
@@ -147,6 +155,9 @@ export default {
     }
   },
   methods: {
+    clickConnect () {
+      this.showIntro = false
+    },
     dropdownClick () {
       this.isDropOpened = !this.isDropOpened
       document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
@@ -163,7 +174,6 @@ export default {
             else return -1
           })
           this.versions = data.channels[1].versions
-          this.$emit('passLatestVersion', this.versions[0])
           const latest = data.channels[1].versions[0]
           const master = data.channels[0].versions[0]
 
