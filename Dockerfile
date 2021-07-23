@@ -1,12 +1,18 @@
 FROM node:lts-alpine as frontend
 WORKDIR /app
+
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
+
 COPY frontend/ .
 RUN npm run build
 
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+FROM alpine
+
+RUN apk update && apk add nginx-mod-http-fancyindex
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx-theme /nginx-theme
 COPY --from=frontend /app/dist /usr/share/nginx/html
 
 EXPOSE 80
