@@ -239,7 +239,6 @@ span.alert {
 .drop-body {
   display: inline-block;
   position: absolute;
-  margin-top: calc(9rem - 5px);
   padding: 0;
   background: #49c74a;
   border-top: 1px solid #ffffff80;
