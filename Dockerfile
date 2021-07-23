@@ -9,7 +9,7 @@ RUN npm run build
 
 FROM alpine
 
-RUN apk update && apk add nginx-mod-http-fancyindex
+RUN apk update && apk add tzdata nginx-mod-http-fancyindex
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-theme /nginx-theme
