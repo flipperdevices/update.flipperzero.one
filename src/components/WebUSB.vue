@@ -4,6 +4,7 @@
       <i data-eva="arrow-ios-back-outline" data-eva-fill="#6b6b6b"></i> Back
     </button>
     <div v-show="displayArrows" class="arrows">
+      <div class="popup-overlay"></div>
       <div id="arrow-1">
         <div class="svg-container">
           <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
