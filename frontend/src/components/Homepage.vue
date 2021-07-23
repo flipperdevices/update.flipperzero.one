@@ -187,13 +187,15 @@ export default {
           })
           this.release.changelog = latest.changelog
 
-          this.dev.version = master.version
-          this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
-          this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
-          this.dev.files = master.files.sort((a, b) => {
-            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
-            else return -1
-          })
+          try {
+            this.dev.version = master.version
+            this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
+            this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
+            this.dev.files = master.files.sort((a, b) => {
+              if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+              else return -1
+            })
+          } catch (e) {}
         })
     }
   },
