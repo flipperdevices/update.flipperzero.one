@@ -119,7 +119,7 @@
       <p v-else>Copying data from browser to Flipper</p>
       <progress :max="progress.max" :value="progress.current"></progress>
     </div>
-    <h2 v-if="status === 'OK, reboot Flipper'">Firmware successfully updated. You may need to restart your Flipper.</h2>
+    <h2 v-if="status === 'OK, reboot Flipper'">Firmware successfully updated.</h2>
   </div>
 </template>
 
