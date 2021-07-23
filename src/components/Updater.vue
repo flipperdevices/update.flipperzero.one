@@ -1,19 +1,16 @@
 <template>
   <div id="dfu-container">
-    <button id="back" :disabled="status === 'Writing firmware'" @click="$emit('clickHome')">
-      <i data-eva="arrow-ios-back-outline" data-eva-fill="#6b6b6b"></i> Back
-    </button>
     <div v-show="displayArrows" class="arrows">
       <div class="popup-overlay"></div>
       <div id="arrow-1">
         <div class="svg-container">
-          <i data-eva="arrow-circle-left-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
+          <i data-eva="arrow-circle-left-outline" data-eva-fill="#fff" data-eva-height="48px" data-eva-width="48px"></i>
         </div>
         <span>1. {{ arrowText }}</span>
       </div>
       <div id="arrow-2">
         <div class="svg-container">
-          <i data-eva="arrow-circle-up-outline" data-eva-fill="#000000cc" data-eva-height="48px" data-eva-width="48px"></i>
+          <i data-eva="arrow-circle-up-outline" data-eva-fill="#fff" data-eva-height="48px" data-eva-width="48px"></i>
         </div>
         <span>2. Press "Connect"</span>
       </div>
@@ -42,7 +39,7 @@
         <div>
           <h3>
             <b>{{ flipper.name }} </b>
-            <span v-if="this.status !== 'Serial connection lost'">connected!</span>
+            <span v-if="status !== 'Serial connection lost'">connected!</span>
             <span v-else class="alert">disconnected!</span>
           </h3>
           <h3 id="battery">Battery: {{ flipper.battery }}</h3>
@@ -86,7 +83,7 @@
           </pre>
         </div>
       </div>
-      <div v-if="isOutdated && this.status !== 'Serial connection lost'" id="outdated">
+      <div v-if="isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="outdated">
         <p v-if="!firmwareFileName.length">
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
@@ -97,7 +94,7 @@
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
       </div>
-      <div v-if="!isOutdated && this.status !== 'Serial connection lost'" id="up-to-date">
+      <div v-if="!isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="up-to-date">
         <p v-if="!firmwareFileName.length">
           Your firmware is up to date.
         </p>
@@ -107,20 +104,22 @@
         <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
         <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
       </div>
-      <div v-if="this.status === 'Serial connection lost'" class="alert">
+      <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
         <span class="alert">Information is valid on {{ disconnectTime }}</span>
       </div>
-      <button v-show="this.status === 'Serial connection lost'" id="reconnect" class="btn secondary" @click="reconnect('serial')">
+      <div v-show="status === 'Writing firmware'">
+        <h3>Writing firmware. Don't disconnect your Flipper</h3>
+        <p v-if="progress.stage === 0">Erasing device memory</p>
+        <p v-else>Copying data from browser to Flipper</p>
+        <progress :max="progress.max" :value="progress.current"></progress>
+      </div>
+    </div>
+    <h2 v-if="status === 'OK'" id="ok">Firmware successfully updated.</h2>
+    <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
+      <button class="btn secondary" @click="reconnect('serial')">
         <i data-eva="refresh-outline" data-eva-fill="#6b6b6b" data-eva-height="18px" data-eva-width="18px"></i> Reconnect
       </button>
     </div>
-    <div v-show="status === 'Writing firmware'" id="connection-spinner">
-      <h3>Writing firmware. Don't disconnect your Flipper</h3>
-      <p v-if="progress.stage === 0">Erasing device memory</p>
-      <p v-else>Copying data from browser to Flipper</p>
-      <progress :max="progress.max" :value="progress.current"></progress>
-    </div>
-    <h2 v-if="status === 'OK, reboot Flipper'">Firmware successfully updated.</h2>
   </div>
 </template>
 
@@ -190,7 +189,6 @@ export default {
       },
       hwLatest: '',
       isOutdated: false,
-      closeRead: false,
       disconnectTime: '',
       arrowText: 'Find your Flipper in dropdown menu'
     }
@@ -201,7 +199,7 @@ export default {
       this.error.msg = ''
       this.error.button = ''
       this.displayArrows = true
-      this.arrowText = 'Find your Flipper serial mode (Flipper <name>)'
+      this.arrowText = 'Find your Flipper in serial mode (Flipper <name>)'
       this.adjustArrows()
       try {
         this.port = await navigator.serial.requestPort()
@@ -220,6 +218,7 @@ export default {
         } else {
           this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process.'
         }
+        this.displaySerialMenu = false
         this.error.isError = true
         this.error.button = 'connectSerial'
         this.status = 'No device selected'
@@ -235,11 +234,10 @@ export default {
     },
     async read () {
       try {
-        while (this.port.readable && !this.closeRead) {
+        while (this.port && this.port.readable) {
           // eslint-disable-next-line no-undef
           const textDecoder = new TextDecoderStream()
-          // eslint-disable-next-line no-unused-vars
-          const readableStreamClosed = this.port.readable.pipeTo(textDecoder.writable).catch(error => {
+          this.port.readable.pipeTo(textDecoder.writable).catch(error => {
             if (error.message.includes('The device has been lost.')) {
               this.status = 'Serial connection lost'
             } else {
@@ -252,8 +250,7 @@ export default {
             .getReader()
           const begin = Date.now()
 
-          // eslint-disable-next-line no-constant-condition
-          while (true) {
+          while (this.port && this.port.readable) {
             const { value, done } = await reader.read()
             if (done || Date.now() - begin > 3000) {
               reader.releaseLock()
@@ -283,8 +280,7 @@ export default {
     async write (lines) {
       // eslint-disable-next-line no-undef
       const textEncoder = new TextEncoderStream()
-      // eslint-disable-next-line no-unused-vars
-      const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable)
+      textEncoder.readable.pipeTo(this.port.writable)
       const writer = textEncoder.writable.getWriter()
 
       lines.forEach(line => {
@@ -406,6 +402,7 @@ export default {
         this.cropDFUFile()
         this.gotoDFU()
       } catch (error) {
+        this.displaySerialMenu = false
         this.error.isError = true
         this.error.msg = `Failed to fetch latest firmware (${error})`
         this.error.button = ''
@@ -424,13 +421,12 @@ export default {
       this.firmwareFile = binary
     },
     async gotoDFU () {
-      this.closeRead = true
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
-      this.displaySerialMenu = false
       this.connectDFU()
     },
     async connectDFU () {
+      this.disconnectSerial()
       this.error.isError = false
       this.error.msg = ''
       this.error.button = ''
@@ -457,6 +453,7 @@ export default {
         )
         await this.webdfu.init()
         if (this.webdfu.interfaces.length === 0) {
+          this.displaySerialMenu = false
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
           this.error.button = 'connectDFU'
@@ -473,6 +470,7 @@ export default {
 
         this.writeFirmware()
       } catch (error) {
+        this.displaySerialMenu = false
         this.error.isError = true
         if (error.message.includes('No device selected')) {
           this.error.msg = 'No device selected'
@@ -495,8 +493,10 @@ export default {
         this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
         await this.webdfu.write(1024, this.firmwareFile)
         this.webdfu.close()
-        this.status = 'OK, reboot Flipper'
+        this.status = 'OK'
+        this.displaySerialMenu = false
       } catch (error) {
+        this.displaySerialMenu = false
         this.error.isError = true
         this.error.msg = `Failed to write firmware (${error})`
         this.error.button = ''
@@ -570,15 +570,15 @@ export default {
       }
     },
     async reconnect (type) {
+      this.firmwareFile = undefined
+      this.firmwareFileName = ''
+      this.progress = {
+        current: 0,
+        max: 0,
+        stage: 0
+      }
       if (type === 'serial') {
-        this.displaySerialMenu = false // temporarily
-        if (this.port) {
-          this.port.close().catch(error => {
-            if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {
-              console.log(error.message)
-            }
-          })
-        }
+        this.disconnectSerial()
         this.connectSerial()
       } else if (type === 'dfu') {
         try {
@@ -587,6 +587,19 @@ export default {
           console.log(error.message)
         }
         this.connectDFU()
+      }
+    },
+    async disconnectSerial () {
+      if (this.port) {
+        const localPort = this.port
+        this.port = undefined
+        await localPort.close().catch(error => {
+          if (!error.message.includes('The port is already closed') &&
+            !error.message.includes('The device has been lost.') &&
+            !error.message.includes('locked stream')) {
+            console.log(error.message)
+          }
+        })
       }
     },
     cancelUpload () {
@@ -601,7 +614,7 @@ export default {
 }
 </script>
 
-<style src="../assets/css/webdfu.css"></style>
+<style src="../assets/css/updater.css"></style>
 <style src="../assets/css/spinner.css"></style>
 <style scoped>
 h2 {

@@ -2,45 +2,24 @@
   <div id="app">
     <Homepage
       :userAgent="userAgent"
-      v-if="displayHomepage"
-      @clickConnect="displayHomepage = false"
-      @passLatestVersion="passLatestVersion"
-    />
-    <Updater
-      :userAgent="userAgent"
-      v-if="!displayHomepage"
-      @clickHome="clickHome"
-      :latest="latest"
     />
   </div>
 </template>
 
 <script>
 import Homepage from './components/Homepage.vue'
-import Updater from './components/Updater.vue'
 
 export default {
   name: 'App',
   components: {
-    Homepage,
-    Updater
+    Homepage
   },
   data () {
     return {
-      displayHomepage: true,
       userAgent: {
         browser: 'Not supported',
         os: 'Other'
-      },
-      latest: {}
-    }
-  },
-  methods: {
-    passLatestVersion (v) {
-      this.latest = v
-    },
-    clickHome () {
-      location.reload()
+      }
     }
   },
   mounted () {
