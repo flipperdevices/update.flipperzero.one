@@ -23,7 +23,7 @@
           <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" />
         </div>
         <div v-if="userAgent.browser !== 'Not supported'" class="card-desc">
-          <h2>WebUSB updater</h2>
+          <h2>Web updater</h2>
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
             No drivers needed!

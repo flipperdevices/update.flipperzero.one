@@ -6,7 +6,7 @@
       @clickConnect="displayHomepage = false"
       @passLatestVersion="passLatestVersion"
     />
-    <WebUSB
+    <Updater
       :userAgent="userAgent"
       v-if="!displayHomepage"
       @clickHome="clickHome"
@@ -17,13 +17,13 @@
 
 <script>
 import Homepage from './components/Homepage.vue'
-import WebUSB from './components/WebUSB.vue'
+import Updater from './components/Updater.vue'
 
 export default {
   name: 'App',
   components: {
     Homepage,
-    WebUSB
+    Updater
   },
   data () {
     return {

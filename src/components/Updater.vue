@@ -33,7 +33,7 @@
       <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
     </div>
     <div v-show="displaySerialMenu" id="connected-serial">
-      <h2>Flipper Zero WebUSB Updater</h2>
+      <h2>Flipper Zero Web Updater</h2>
       <div class="card">
         <div>
           <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
@@ -146,7 +146,7 @@ class LineBreakTransformer {
 }
 
 export default {
-  name: 'WebUSB',
+  name: 'Updater',
   props: {
     userAgent: Object,
     latest: Object
