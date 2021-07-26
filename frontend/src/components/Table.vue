@@ -3,7 +3,7 @@
     <table>
       <tbody>
         <tr>
-          <td><b>dev</b></td>
+          <td><b>development</b></td>
           <td class="nowrap">{{ dev.date }}</td>
           <td>
             <span v-for="file in dev.files" :key="file.url">
@@ -12,15 +12,15 @@
           </td>
           <td>[<a @click="showChangelogPopup(dev.changelog)">changelog</a>]</td>
         </tr>
-        <tr>
-          <td><b>{{ rc.version }}</b></td>
-          <td class="nowrap">{{ rc.date }}</td>
+        <tr v-for="v in rcVersions" :key="v.version">
+          <td><b>{{ v.version }}</b></td>
+          <td class="nowrap">{{ new Date(v.timestamp * 1000).toISOString().slice(0, 10) }}</td>
           <td>
-            <span v-for="file in rc.files" :key="file.url">
+            <span v-for="file in v.files" :key="file.url">
               [<a :href="file.url" @click="showDownloadPopup(file)">{{ file.type.replace('_', '.') }}</a>]
             </span>
           </td>
-          <td>[<a @click="showChangelogPopup(rc.changelog)">changelog</a>]</td>
+          <td>[<a @click="showChangelogPopup(v.changelog)">changelog</a>]</td>
         </tr>
         <tr v-for="v in versions" :key="v.version">
           <td class="nowrap">
@@ -29,9 +29,7 @@
           <td class="nowrap">{{ new Date(v.timestamp * 1000).toISOString().slice(0, 10) }}</td>
           <td>
             <span v-for="file in v.files" :key="file.url">
-              [<a :href="file.url" @click="showDownloadPopup(file)">
-                <i v-if="file.target === 'f5'">{{ file.target }}</i> {{ file.type.replace('_', '.') }}
-              </a>]
+              [<a :href="file.url" @click="showDownloadPopup(file)"><i v-if="file.target === 'f5'">{{ file.target }} </i>{{ file.type.replace('_', '.') }}</a>]
             </span>
           </td>
           <td>[<a @click="showChangelogPopup(v.changelog)">changelog</a>]</td>
@@ -66,7 +64,7 @@ export default {
   name: 'Table',
   props: {
     dev: Object,
-    rc: Object,
+    rcVersions: Array,
     versions: Array
   },
   components: {

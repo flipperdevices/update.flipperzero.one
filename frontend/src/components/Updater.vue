@@ -179,7 +179,7 @@ export default {
         bodyColor: 'undefined',
         region: 'undefined',
         hardwareVer: 'undefined',
-        target: '6',
+        target: 'undefined',
         firmwareVer: 'undefined',
         firmwareBuild: 'undefined',
         bootloaderVer: 'undefined',
@@ -289,34 +289,6 @@ export default {
       writer.close()
     },
     parseReadValue (value) {
-      // Legacy commands parser
-      if (value.includes('Version:')) {
-        if (this.flipper.bootloaderVer === 'undefined') {
-          this.flipper.bootloaderVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
-        } else {
-          this.flipper.firmwareVer = value.slice(value.match(/Version:(\s)*/g)[0].length + 1)
-        }
-      }
-      if (value.includes('Build date:')) {
-        if (this.flipper.bootloaderBuild === 'undefined') {
-          this.flipper.bootloaderBuild = value.slice(-10)
-        } else {
-          this.flipper.firmwareBuild = value.slice(-10)
-        }
-      }
-      if (value.includes('HW version')) {
-        this.flipper.hardwareVer = value.slice(11).trim()
-      }
-      if (value.includes('Name: ') || value.includes('Production date: ')) {
-        try {
-          this.flipper.name = value.match(/Name:(\s)*(\S)*/g)[0].slice(5).trim()
-        } catch (error) {
-          // different firmwares have different command formats
-          // so some actions need to be wrapped
-        }
-      }
-
-      // Battery charge parser
       if (value.includes('State of Charge: ')) {
         this.flipper.battery = value.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
         const b = document.querySelector('#battery')
@@ -325,7 +297,6 @@ export default {
         else b.style.color = '#e23e3e'
       }
 
-      // device_info parser
       if (value.includes('hardware_model')) {
         this.flipper.type = value.replace(/hardware_model\s*:\s/g, '').trim()
       }
@@ -432,10 +403,8 @@ export default {
       this.error.button = ''
       this.displayArrows = true
       this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
-      // Load the device by WebUSB
       try {
         const selectedDevice = await navigator.usb.requestDevice({ filters: [] })
-        // Create and init the WebDFU instance
         this.webdfu = new WebDFU(
           selectedDevice,
           {
@@ -460,7 +429,7 @@ export default {
           this.status = 'The selected device does not have any USB DFU interfaces'
           this.displayArrows = false
         }
-        // Connect to first device interface
+
         await this.webdfu.connect(0)
         this.status = 'Connected to Flipper in DFU mode'
         this.error.isError = false
@@ -504,7 +473,6 @@ export default {
       }
     },
     adjustArrows () {
-      // try to detect bookmarks bar
       const diff = window.outerHeight - window.innerHeight
       let bar = false
       if (diff > 89 && diff <= 120) {
@@ -512,12 +480,10 @@ export default {
         document.getElementById('arrow-2').style.top = '397px'
       }
 
-      // Chrome on Linux/OS X
       if (this.userAgent.os !== 'Windows') {
         document.getElementById('arrow-2').style.left = '470px'
       }
 
-      // Edge
       if (this.userAgent.browser === 'Edge') {
         document.getElementById('arrow-1').style.top = '50px'
         document.getElementById('arrow-1').style.left = '593px'
@@ -535,7 +501,6 @@ export default {
         }
       }
 
-      // Opera
       if (this.userAgent.browser === 'Opera') {
         document.getElementById('arrow-1').style.left = '541px'
 
@@ -552,7 +517,6 @@ export default {
         }
       }
 
-      // Yandex
       if (this.userAgent.browser === 'Yandex') {
         document.getElementById('arrow-1').style.left = '651px'
 
