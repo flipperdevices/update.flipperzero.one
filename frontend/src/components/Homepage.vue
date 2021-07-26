@@ -172,6 +172,7 @@ export default {
       this.isDropOpened = !this.isDropOpened
       document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
       document.querySelector('.drop-body').style.top = (document.querySelector('div.component.qflipper > div > div.card-desc > div > div:nth-child(1)').offsetTop + 44) + 'px'
+      document.querySelector('.drop-body').style.left = (document.querySelector('div.component.qflipper > div > div.card-desc > div > div:nth-child(1)').offsetLeft) + 'px'
       document.querySelector('.drop-right > svg').style.transform = 'rotate(' + this.isDropOpened * 180 + 'deg)'
     },
     getDir () {
