@@ -103,11 +103,11 @@
             </div>
           </div>
         </a>
-        <a class="btn fw-btn" :href="dev.url">
+        <a class="btn fw-btn" :href="rc.url">
           <div>
             <div>
-              <p>Dev build</p>
-              <b>{{ dev.date }}</b>
+              <p>Release Candidate</p>
+              <b>{{ rc.date }}</b>
             </div>
             <div>
               <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
@@ -115,7 +115,8 @@
           </div>
         </a>
       </div>
-      <Table :dev="dev" :release="release" :versions="versions"/>
+      <a class="btn secondary" :href="dev.url">Dev build ({{ dev.date }})</a>
+      <Table :dev="dev" :rc="rc" :versions="versions"/>
     </div>
   </div>
 </template>
@@ -150,7 +151,15 @@ export default {
         version: '',
         date: '',
         url: '',
-        files: []
+        files: [],
+        changelog: ''
+      },
+      rc: {
+        version: '',
+        date: '',
+        url: '',
+        files: [],
+        changelog: ''
       }
     }
   },
@@ -170,32 +179,43 @@ export default {
           return response.json()
         })
         .then((data) => {
-          data.channels[1].versions.sort((a, b) => {
-            if (semver.lt(a.version.slice(3), b.version.slice(3))) return 1
+          const dev = data.channels.find(e => e.id === 'development')
+          const rc = data.channels.find(e => e.id === 'release-candidate')
+          const release = data.channels.find(e => e.id === 'release')
+
+          release.versions.sort((a, b) => {
+            if (semver.lt(a.version, b.version)) return 1
             else return -1
           })
-          this.versions = data.channels[1].versions
-          const latest = data.channels[1].versions[0]
-          const master = data.channels[0].versions[0]
+          this.versions = release.versions
+          const latest = release.versions[0]
 
           this.release.version = latest.version
           this.release.date = new Date(latest.timestamp * 1000).toISOString().slice(0, 10)
-          this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
+          this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
           this.release.files = latest.files.sort((a, b) => {
             if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
             else return -1
           })
           this.release.changelog = latest.changelog
 
-          try {
-            this.dev.version = master.version
-            this.dev.date = new Date(master.timestamp * 1000).toISOString().slice(0, 10)
-            this.dev.url = master.files.find(file => file.target === 'f6' && file.type === 'full_bin').url
-            this.dev.files = master.files.sort((a, b) => {
-              if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
-              else return -1
-            })
-          } catch (e) {}
+          this.dev.version = dev.versions[0].version
+          this.dev.date = new Date(dev.versions[0].timestamp * 1000).toISOString().slice(0, 10)
+          this.dev.url = dev.versions[0].files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
+          this.dev.files = dev.versions[0].files.sort((a, b) => {
+            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+            else return -1
+          })
+          this.dev.changelog = dev.versions[0].changelog
+
+          this.rc.version = rc.versions[0].version
+          this.rc.date = new Date(rc.versions[0].timestamp * 1000).toISOString().slice(0, 10)
+          this.rc.url = rc.versions[0].files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
+          this.rc.files = rc.versions[0].files.sort((a, b) => {
+            if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
+            else return -1
+          })
+          this.rc.changelog = rc.versions[0].changelog
         })
     }
   },
