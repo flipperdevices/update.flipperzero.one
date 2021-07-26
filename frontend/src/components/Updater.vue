@@ -391,7 +391,7 @@ export default {
     async fetchFirmwareFile () {
       try {
         const file = this.latest.files.find((e) => {
-          if (e.url.includes('f' + this.flipper.target + '_full.dfu')) return e
+          if (e.type === 'full_dfu' && e.target === 'f' + this.flipper.target) return e
           else return undefined
         })
         const buffer = await fetch(file.url)
