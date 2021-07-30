@@ -69,18 +69,20 @@
             Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
           </p>
           <div class="buttons">
-            <div style="display: flex;">
-              <a v-if="userAgent.os === 'Windows'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
-              <a v-if="userAgent.os === 'Mac'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
-              <a v-if="userAgent.os === 'Linux'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
-              <button class="btn primary drop-right" @click="dropdownClick">
-                <i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
-              </button>
-            </div>
-            <div v-show="isDropOpened" class="drop-body">
-              <a v-if="userAgent.os !== 'Windows'" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
-              <a v-if="userAgent.os !== 'Mac'" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
-              <a v-if="userAgent.os !== 'Linux'" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
+            <div class="grid relative">
+              <div style="display: flex;">
+                <a v-if="userAgent.os === 'Windows'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
+                <a v-if="userAgent.os === 'Mac'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
+                <a v-if="userAgent.os === 'Linux'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
+                <button class="btn primary drop-right" @click="dropdownClick">
+                  <i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
+                </button>
+              </div>
+              <div v-show="isDropOpened" class="drop-body">
+                <a v-if="userAgent.os !== 'Windows'" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
+                <a v-if="userAgent.os !== 'Mac'" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
+                <a v-if="userAgent.os !== 'Linux'" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
+              </div>
             </div>
           </div>
         </div>
@@ -170,9 +172,6 @@ export default {
     },
     dropdownClick () {
       this.isDropOpened = !this.isDropOpened
-      document.querySelector('.drop-body').style.width = document.querySelector('div.component.qflipper .buttons > div').clientWidth - 1 + 'px'
-      document.querySelector('.drop-body').style.top = (document.querySelector('div.component.qflipper > div > div.card-desc > div > div:nth-child(1)').offsetTop + 44) + 'px'
-      document.querySelector('.drop-body').style.left = (document.querySelector('div.component.qflipper > div > div.card-desc > div > div:nth-child(1)').offsetLeft) + 'px'
       document.querySelector('.drop-right > svg').style.transform = 'rotate(' + this.isDropOpened * 180 + 'deg)'
     },
     getDir () {
