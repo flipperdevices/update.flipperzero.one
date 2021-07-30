@@ -37,7 +37,8 @@
       </tbody>
     </table>
 
-    <div v-show="changelogPopup" class="popup-overlay">
+    <div v-show="changelogPopup" class="popup-container">
+      <div v-show="changelogPopup" @click="changelogPopup = !changelogPopup" class="popup-overlay"></div>
       <div v-show="changelogPopup" class="popup">
         <button @click="changelogPopup = false"><i data-eva="close-outline" data-eva-fill="#000000cc"></i></button>
         <h3>Changelog</h3>
@@ -46,8 +47,9 @@
         </div>
       </div>
     </div>
-    <div v-show="downloadPopup" class="popup-overlay">
-      <div v-show="downloadPopup" class="popup">
+    <div v-show="downloadPopup" class="popup-container">
+      <div v-show="downloadPopup" @click="downloadPopup = !downloadPopup" class="popup-overlay"></div>
+      <div class="popup">
         <button @click="downloadPopup = false"><i data-eva="close-outline" data-eva-fill="#000000cc"></i></button>
         <h3>Downloading <a :href="downloadedFile.url">{{ downloadedFile.url.match(/[\w.]+$/g)[0] }}</a></h3>
         <div>

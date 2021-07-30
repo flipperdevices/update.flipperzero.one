@@ -80,6 +80,14 @@ span.alert {
   margin-left: 1rem !important;
 }
 
+.grid {
+  display: grid;
+}
+
+.relative {
+  position: relative;
+}
+
 /* Cards */
 
 .component {
@@ -237,8 +245,9 @@ span.alert {
 }
 
 .drop-body {
-  display: inline-block;
   position: absolute;
+  top: calc(100% - 3px);
+  width: calc(100% - 1px);
   padding: 0;
   background: #49c74a;
   border-top: 1px solid #ffffff80;
@@ -381,10 +390,6 @@ span.alert {
 
   .component {
     padding: 1.5rem;
-  }
-  
-  .drop-body {
-    margin-top: calc(9rem - 10px);
   }
 
   .btn, .drop-body a {
