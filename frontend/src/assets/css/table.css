@@ -22,7 +22,7 @@ td a:hover {
   background-color: #828cff26;
 }
 
-.popup-overlay {
+.popup-overlay, .popup-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -31,6 +31,9 @@ td a:hover {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.popup-overlay {
   background: #000000b3;
   backdrop-filter: blur(10px);
   z-index: 3;
@@ -41,6 +44,7 @@ td a:hover {
   padding: 1rem;
   border-radius: 10px;
   background: #fff;
+  z-index: 4;
 }
 
 .popup button {
