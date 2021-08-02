@@ -599,7 +599,15 @@ export default defineComponent({
         stage: 0
       }
       for (const p in this.flipper) {
-        this.flipper[p] = 'undefined'
+        if (p === 'radioFusFirmware' || p === 'radioFirmware') {
+          this.flipper[p] = {
+            major: '',
+            minor: '',
+            sub: ''
+          }
+        } else {
+          this.flipper[p] = 'undefined'
+        }
       }
       this.newerThanLTS = false
       if (type === 'serial') {
