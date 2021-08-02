@@ -54,7 +54,7 @@
       </q-card-section>
     </q-card>
 
-    <q-card class="q-pa-none q-mt-xl text-left shadow-4">
+    <q-card class="q-pa-none q-mt-xl q-mb-xl text-left shadow-4">
       <q-card-section :horizontal="$q.screen.gt.xs" class="q-pa-none">
         <q-card-section class="col-4 flex content-end qflippa-img">
           <img src="../assets/qflipper.png"/>
