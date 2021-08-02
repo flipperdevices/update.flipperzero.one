@@ -1,6 +1,6 @@
 <template>
   <div id="homepage-container" class="fit text-center q-pa-sm">
-    <h1>Flipper Zero Firmware Update page</h1>
+    <h3>Flipper Zero Firmware Update page</h3>
 
     <q-card class="shadow-4" v-if="showIntro">
       <q-card-section :horizontal="$q.screen.gt.xs" class="q-pa-none">
@@ -10,8 +10,8 @@
           <q-img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" class="updater-img"></q-img>
         </q-card-section>
         <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
-          <h2>Web updater</h2>
-          <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
+          <h4>Web updater</h4>
+          <h5>Flash the latest firmware right in your browser using WebUSB.</h5>
           <p>
             No drivers needed!
           </p>
@@ -31,7 +31,7 @@
         v-if="userAgent.browser === 'Not supported'"
         class="fit flex column flex-center q-pa-md"
       >
-        <h3>Your browser doesn't support WebUSB updater :(</h3>
+        <h4>Your browser doesn't support WebUSB updater :(</h4>
         <q-img
           v-if="userAgent.browser === 'Not supported'"
           src="../assets/notsupported.svg"
@@ -60,7 +60,7 @@
           <img src="../assets/qflipper.png"/>
         </q-card-section>
         <q-card-section class="col-8 q-pb-lg qflippa-desc">
-          <h2>Desktop crossplatform application</h2>
+          <h4>Desktop crossplatform application</h4>
           <p>
             Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
           </p>
@@ -103,7 +103,7 @@
       </q-card-section>
     </q-card>
 
-    <h1>Download firmware files</h1>
+    <h3>Download firmware files</h3>
 
     <q-card class="shadow-4">
       <q-card-section class="q-pa-lg">

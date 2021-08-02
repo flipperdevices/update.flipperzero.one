@@ -37,7 +37,7 @@
     </q-card>
 
     <div v-show="displaySerialMenu" id="connected">
-      <h2>Flipper Zero Web Updater</h2>
+      <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
         <q-card-section horizontal class="text-left">
@@ -45,13 +45,13 @@
             <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
             <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
-          <div class="col-6 q-ml-xl">
-            <h3>
+          <div class="col-6 q-ml-xl" style="white-space: nowrap;">
+            <h5>
               <b>{{ flipper.name }}&nbsp;</b>
-              <span v-if="status !== 'Serial connection lost'">connected!</span>
+              <span v-if="status !== 'Serial connection lost'">connected<span v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'"> in recovery mode</span>!</span>
               <span v-else class="text-accent">disconnected!</span>
-            </h3>
-            <h3 id="battery">Battery: {{ flipper.battery }}</h3>
+            </h5>
+            <h5 id="battery">Battery: {{ flipper.battery }}</h5>
           </div>
         </q-card-section>
         <q-card-section horizontal class="text-left">
@@ -130,14 +130,14 @@
       </div>
 
       <div v-show="status === 'Writing firmware'">
-        <h3>Writing firmware. Don't disconnect your Flipper</h3>
+        <h5>Writing firmware. Don't disconnect your Flipper</h5>
         <p v-if="progress.stage === 0">Erasing device memory</p>
         <p v-else>Copying data from browser to Flipper</p>
         <progress :max="progress.max" :value="progress.current"></progress>
       </div>
     </div>
 
-    <h2 v-if="status === 'OK'" id="ok">Firmware successfully updated.</h2>
+    <h4 v-if="status === 'OK'" id="ok">Firmware successfully updated</h4>
 
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
       <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline" flat>
