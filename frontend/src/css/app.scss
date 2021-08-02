@@ -1,0 +1,69 @@
+* {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-feature-settings: "kern", "liga";
+}
+
+body {
+	margin: 0;
+}
+
+a {
+	color: $link;
+	text-decoration: none;
+	cursor: pointer;
+  transition-duration: 0.3s;
+	&:hover {
+    text-decoration: underline;
+	}
+}
+
+h1 {
+	font-size: 2.5rem;
+	font-weight: 400;
+	margin: 40px 0;
+	color: #000000cc;
+}
+h2 {
+	font-size: 2rem;
+	font-weight: 400;
+	color: #000000cc;
+}
+h3 {
+	font-size: 1.3rem;
+	font-weight: 300;
+}
+
+#header {
+  max-width: 1200px;
+  .q-focus-helper {
+    display: none;
+  }
+  a {
+    &:hover {
+      color: $accent;
+    }
+  }
+}
+
+.q-card {
+  border-radius: 10px;
+}
+
+.q-item {
+  padding-left: 30px;
+}
+
+.popup-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000b3;
+  backdrop-filter: blur(10px);
+  z-index: 2001;
+}
