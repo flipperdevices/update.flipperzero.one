@@ -2,7 +2,10 @@ name: Deploy
 
 on:
   push:
-    branches: main
+    branches:
+      - main
+      - dev
+      - quasar
 
 jobs:
   build:
@@ -12,6 +15,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/flipper-zero/update.flipperzero.one
+          flavor: latest=${{ github.ref == 'refs/heads/main' }}
+          tags: type=ref,event=branch
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -28,6 +38,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/flipper-zero/update.flipperzero.one:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
