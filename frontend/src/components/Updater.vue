@@ -140,7 +140,7 @@
     <h2 v-if="status === 'OK'" id="ok">Firmware successfully updated.</h2>
 
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
-      <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline">
+      <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline" flat>
         Reconnect
       </q-btn>
     </div>
