@@ -1,4 +1,4 @@
-FROM node:lts-alpine as frontend
+FROM node:16-alpine as frontend
 WORKDIR /app
 
 COPY frontend/package.json frontend/package-lock.json ./
