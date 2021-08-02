@@ -82,7 +82,8 @@
 <b>Firmware build:</b>
 <b>Bootloader version:</b>
 <b>Bootloader build:</b>
-<b>Radio firmware:</b>
+<b>Radio fus firmware:</b>
+<b>Radio stack firmware:</b>
 <b>Bluetooth mac:</b>
               </pre>
               <pre>
@@ -90,7 +91,8 @@
   {{ flipper.firmwareBuild }}
   {{ flipper.bootloaderVer }}
   {{ flipper.bootloaderBuild }}
-  {{ flipper.radioFirmware }}
+  {{ flipper.radioFusFirmware.major + '.' + flipper.radioFusFirmware.minor + '.' +flipper.radioFusFirmware.sub }}
+  {{ flipper.radioFirmware.major + '.' + flipper.radioFirmware.minor + '.' +flipper.radioFirmware.sub }}
   {{ flipper.btMac }}
               </pre>
             </q-card-section>
@@ -210,7 +212,16 @@ export default defineComponent({
         firmwareBuild: 'undefined',
         bootloaderVer: 'undefined',
         bootloaderBuild: 'undefined',
-        radioFirmware: 'undefined',
+        radioFusFirmware: {
+          major: '',
+          minor: '',
+          sub: ''
+        },
+        radioFirmware: {
+          major: '',
+          minor: '',
+          sub: ''
+        },
         btMac: 'undefined'
       }),
       hwLatest: ref(''),
@@ -366,8 +377,23 @@ export default defineComponent({
       if (value.includes('boot_build_date')) {
         this.flipper.bootloaderBuild = value.replace(/boot_build_date\s*:\s/g, '').trim()
       }
-      if (value.includes('radio_stack_release')) {
-        this.flipper.radioFirmware = value.replace(/radio_stack_release\s*:\s/g, '').trim()
+      if (value.includes('radio_fus_major')) {
+        this.flipper.radioFusFirmware.major = value.replace(/radio_fus_major\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_fus_minor')) {
+        this.flipper.radioFusFirmware.minor = value.replace(/radio_fus_minor\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_fus_sub')) {
+        this.flipper.radioFusFirmware.sub = value.replace(/radio_fus_sub\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_stack_major')) {
+        this.flipper.radioFirmware.major = value.replace(/radio_stack_major\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_stack_minor')) {
+        this.flipper.radioFirmware.minor = value.replace(/radio_stack_minor\s*:\s/g, '').trim()
+      }
+      if (value.includes('radio_stack_sub')) {
+        this.flipper.radioFirmware.sub = value.replace(/radio_stack_sub\s*:\s/g, '').trim()
       }
       if (value.includes('radio_ble_mac')) {
         this.flipper.btMac = value.replace(/radio_ble_mac\s*:\s/g, '').trim()
