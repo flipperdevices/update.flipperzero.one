@@ -13,7 +13,7 @@ RUN apk update && apk add tzdata nginx-mod-http-fancyindex
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-theme /nginx-theme
-COPY --from=frontend /app/dist /usr/share/nginx/html
+COPY --from=frontend /app/dist/spa /usr/share/nginx/html
 
 EXPOSE 80
 VOLUME ["/builds"]
