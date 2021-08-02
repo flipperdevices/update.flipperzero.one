@@ -239,7 +239,9 @@ export default defineComponent({
 
         this.getData()
       } catch (error) {
-        if (!error.message.includes('Failed to open serial port.')) {
+        if (error.message.includes('No port selected by the user.')) {
+          this.error.msg = 'No port selected.'
+        } else if (!error.message.includes('Failed to open serial port.')) {
           console.log(error.message)
           this.error.msg = error.message
         } else {
