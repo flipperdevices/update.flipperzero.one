@@ -146,6 +146,8 @@
           flat
           color="grey-8"
           class="q-mt-lg"
+          type="a"
+          :href="dev.url"
         >
           Dev Build ({{ dev.date }})
         </q-btn>
