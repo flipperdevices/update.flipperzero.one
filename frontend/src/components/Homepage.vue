@@ -1,28 +1,15 @@
 <template>
-  <div id="homepage-container">
-    <div id="header">
-      <a href="https://flipperzero.one/">
-        <img src="../assets/flipper-logo.png" />
-      </a>
-      <a href="https://www.youtube.com/channel/UCfKVWB_pOfsY-HQ2siMBn6g">
-        <img src="../assets/youtube.png" />
-      </a>
-      <a href="https://flipperzero.one/discord">
-        <img src="../assets/discord.png" />
-      </a>
-      <a href="https://github.com/Flipper-Zero">
-        <img src="../assets/github.png" />
-      </a>
-    </div>
+  <div id="homepage-container" class="fit text-center q-pa-sm">
     <h1>Flipper Zero Firmware Update page</h1>
-    <div class="component web-upgrade">
-      <div v-if="showIntro" class="card">
-        <div v-if="userAgent.browser !== 'Not supported'" class="card-banner">
-          <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" />
-          <img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" />
-          <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" />
-        </div>
-        <div v-if="userAgent.browser !== 'Not supported'" class="card-desc">
+
+    <q-card class="shadow-4" v-if="showIntro">
+      <q-card-section :horizontal="$q.screen.gt.xs" class="q-pa-none">
+        <q-card-section v-if="userAgent.browser !== 'Not supported'" class="col-5 flex content-center justify-center">
+          <q-img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" class="updater-img"></q-img>
+          <q-img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" class="updater-img"></q-img>
+          <q-img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" class="updater-img"></q-img>
+        </q-card-section>
+        <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
           <h2>Web updater</h2>
           <h3>Flash the latest firmware right in your browser using WebUSB.</h3>
           <p>
@@ -35,144 +22,201 @@
           <p>
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
-          <div class="buttons">
-            <button class="btn primary" @click="clickConnect">Connect to Flipper</button>
+          <div class="text-center q-mt-lg">
+            <q-btn color="positive" padding="12px 30px" @click="clickConnect">Connect to Flipper</q-btn>
           </div>
+        </q-card-section>
+      </q-card-section>
+      <q-card-section
+        v-if="userAgent.browser === 'Not supported'"
+        class="fit flex column flex-center q-pa-md"
+      >
+        <h3>Your browser doesn't support WebUSB updater :(</h3>
+        <q-img
+          v-if="userAgent.browser === 'Not supported'"
+          src="../assets/notsupported.svg"
+          width="50%"
+        ></q-img>
+        <p class="q-pt-md">Your browser doesn’t support WebUSB/WebSerial.</p>
+        <p>Updater currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.</p>
+        <div class="q-pb-sm">
+          <q-btn color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
         </div>
-        <div v-else class="card-desc bad-browser">
-          <h3>Your browser doesn't support WebUSB updater :(</h3>
-          <img v-if="userAgent.browser === 'Not supported'" src="../assets/notsupported.svg" />
-          <p>
-            Your browser doesn’t support WebUSB/WebSerial.
+      </q-card-section>
+    </q-card>
 
-            Updater currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
-          </p>
-          <div class="buttons">
-            <a class="btn alert" href="https://caniuse.com/webusb">Compatibility List</a>
-          </div>
-        </div>
-      </div>
-      <Updater
-        v-else
-        :userAgent="userAgent"
-        :latest="this.versions[0]"
-      />
-    </div>
-    <div class="component qflipper">
-      <div class="card">
-        <div class="card-banner">
-          <img src="../assets/qflipper.png" />
-        </div>
-        <div class="card-desc">
+    <q-card v-else class="shadow-4">
+      <q-card-section>
+        <Updater
+          :userAgent="userAgent"
+          :latest="versions[0]"
+        />
+      </q-card-section>
+    </q-card>
+
+    <q-card class="q-pa-none q-mt-xl text-left shadow-4">
+      <q-card-section :horizontal="$q.screen.gt.xs" class="q-pa-none">
+        <q-card-section class="col-4 flex content-end qflippa-img">
+          <img src="../assets/qflipper.png"/>
+        </q-card-section>
+        <q-card-section class="col-8 q-pb-lg qflippa-desc">
           <h2>Desktop crossplatform application</h2>
           <p>
             Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
           </p>
-          <div class="buttons">
-            <div class="grid relative">
-              <div style="display: flex;">
-                <a v-if="userAgent.os === 'Windows'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
-                <a v-if="userAgent.os === 'Mac'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
-                <a v-if="userAgent.os === 'Linux'" class="btn primary drop-left" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
-                <button class="btn primary drop-right" @click="dropdownClick">
-                  <i data-eva="arrow-ios-downward-outline" data-eva-fill="#fff"></i>
-                </button>
-              </div>
-              <div v-show="isDropOpened" class="drop-body">
-                <a v-if="userAgent.os !== 'Windows'" href="https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe">Windows Download</a>
-                <a v-if="userAgent.os !== 'Mac'" href="https://update.flipperzero.one/qFlipper/qflipper.dmg">Mac OS X Download</a>
-                <a v-if="userAgent.os !== 'Linux'" href="https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage">Linux Download</a>
-              </div>
-            </div>
+          <div class="text-center">
+            <q-btn-dropdown
+              auto-close
+              split
+              :label="dropdown[0].text"
+              :dropdown-icon="mdiChevronDown"
+              @click="route(dropdown[0].href)"
+              color="positive"
+              padding="12px 30px"
+              class="q-mt-sm"
+            >
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="route(dropdown[1].href)"
+                  class="bg-positive text-white text-uppercase text-weight-medium"
+                >
+                  <q-item-section>
+                    <q-item-label>{{ dropdown[1].text }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="route(dropdown[1].href)"
+                  class="bg-positive text-white text-uppercase text-weight-medium"
+                >
+                  <q-item-section>
+                    <q-item-label>{{ dropdown[2].text }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
           </div>
-        </div>
-      </div>
-    </div>
+        </q-card-section>
+      </q-card-section>
+    </q-card>
+
     <h1>Download firmware files</h1>
-    <div class="component firmware-files">
-      <p>
-        In case you need firmware files locally for some reason you may need this files to flash locally with <a href="https://docs.flipperzero.one/">dfu-util</a> and <a href="https://docs.flipperzero.one/">st-link</a> <i>.elf</i> files for debugging.
-      </p>
-      <div class="buttons">
-        <a class="btn fw-btn" :href="release.url">
-          <div>
-            <div>
-              <p>Latest Release</p>
-              <b>{{ release.version }}</b>
+
+    <q-card class="shadow-4">
+      <q-card-section class="q-pa-lg">
+        <p class="q-pa-lg">
+          In case you need firmware files locally for some reason you may need this files to flash locally with <a href="https://docs.flipperzero.one/">dfu-util</a> and <a href="https://docs.flipperzero.one/">st-link</a> <i>.elf</i> files for debugging.
+        </p>
+        <div class="flex justify-evenly">
+          <q-btn
+            class="fw-btn"
+            type="a"
+            :href="release.url"
+          >
+            <div class="fw-btn-inner flex justify-between">
+              <div>
+                <p>Latest Release</p>
+                <b>{{ release.version }}</b>
+              </div>
+              <div class="flex flex-center">
+                <q-icon :name="evaArrowDownwardOutline"></q-icon>
+              </div>
             </div>
-            <div>
-              <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
+          </q-btn>
+          <q-btn
+            class="fw-btn"
+            type="a"
+            :href="rc.url"
+          >
+            <div class="fw-btn-inner flex justify-between">
+              <div>
+                <p>Release Candidate</p>
+                <b>{{ rc.version }}</b>
+              </div>
+              <div class="flex flex-center">
+                <q-icon :name="evaArrowDownwardOutline"></q-icon>
+              </div>
             </div>
-          </div>
-        </a>
-        <a class="btn fw-btn" :href="rc.url">
-          <div>
-            <div>
-              <p>Release Candidate</p>
-              <b>{{ rc.date }}</b>
-            </div>
-            <div>
-              <i data-eva="arrow-downward-outline" data-eva-fill="#fff" data-eva-height="48" data-eva-width="52"></i>
-            </div>
-          </div>
-        </a>
-      </div>
-      <a class="btn secondary" :href="dev.url">Dev build ({{ dev.date }})</a>
-      <Table :dev="dev" :rcVersions="rcVersions" :versions="versions"/>
-    </div>
+          </q-btn>
+        </div>
+        <q-btn
+          flat
+          color="grey-8"
+          class="q-mt-lg"
+        >
+          Dev Build ({{ dev.date }})
+        </q-btn>
+      </q-card-section>
+    </q-card>
   </div>
 </template>
 
 <script>
+import { defineComponent, ref } from 'vue'
 import Updater from './Updater.vue'
-import * as eva from 'eva-icons'
 import * as semver from 'semver'
+import { mdiChevronDown } from '@quasar/extras/mdi-v5'
+import { evaArrowDownwardOutline } from '@quasar/extras/eva-icons'
 
-export default {
+export default defineComponent({
   name: 'Homepage',
   components: {
-    Table: () => import('./Table.vue'),
     Updater
   },
   props: {
     userAgent: Object
   },
-  data () {
+  setup () {
     return {
-      showIntro: true,
-      isDropOpened: false,
-      versions: [],
-      rcVersions: [],
-      release: {
+      showIntro: ref(true),
+      dropdown: ref([
+        {
+          text: 'Mac OS X Download',
+          href: 'https://update.flipperzero.one/qFlipper/qflipper.dmg'
+        },
+        {
+          text: 'Windows Download',
+          href: 'https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe'
+        },
+        {
+          text: 'Linux Download',
+          href: 'https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage'
+        }
+      ]),
+      versions: ref([]),
+      rcVersions: ref([]),
+      release: ref({
         version: '',
         date: '',
         url: '',
         files: [],
         changelog: ''
-      },
-      dev: {
+      }),
+      dev: ref({
         version: '',
         date: '',
         url: '',
         files: [],
         changelog: ''
-      },
-      rc: {
+      }),
+      rc: ref({
         version: '',
         date: '',
         url: '',
         files: [],
         changelog: ''
-      }
+      })
     }
   },
   methods: {
     clickConnect () {
       this.showIntro = false
     },
-    dropdownClick () {
-      this.isDropOpened = !this.isDropOpened
-      document.querySelector('.drop-right > svg').style.transform = 'rotate(' + this.isDropOpened * 180 + 'deg)'
+    route (url) {
+      location.href = url
     },
     getDir () {
       fetch('https://update.flipperzero.one/directory.json')
@@ -226,9 +270,16 @@ export default {
         })
     }
   },
-  mounted () {
-    eva.replace()
+  created () {
+    this.mdiChevronDown = mdiChevronDown
+    this.evaArrowDownwardOutline = evaArrowDownwardOutline
+    this.dropdown.sort(e => {
+      if (e.text === this.userAgent.os + ' Download') return -1
+      else return 1
+    })
     this.getDir()
   }
-}
+})
 </script>
+
+<style lang="scss" src="../css/homepage.scss"></style>

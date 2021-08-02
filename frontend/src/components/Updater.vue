@@ -1,112 +1,134 @@
 <template>
-  <div id="dfu-container">
+  <div id="updater-container" class="flex column flex-center">
     <div v-show="displayArrows" class="arrows">
       <div class="popup-overlay"></div>
       <div id="arrow-1">
-        <div class="svg-container">
-          <i data-eva="arrow-circle-left-outline" data-eva-fill="#fff" data-eva-height="48px" data-eva-width="48px"></i>
-        </div>
-        <span>1. {{ arrowText }}</span>
+        <q-icon :name="evaArrowBackOutline"></q-icon>
+        <span class="q-pl-sm">1. {{ arrowText }}</span>
       </div>
       <div id="arrow-2">
-        <div class="svg-container">
-          <i data-eva="arrow-circle-up-outline" data-eva-fill="#fff" data-eva-height="48px" data-eva-width="48px"></i>
-        </div>
-        <span>2. Press "Connect"</span>
+        <q-icon :name="evaArrowUpwardOutline"></q-icon>
+        <span class="q-pl-sm q-pt-xs">2. Press "Connect"</span>
       </div>
     </div>
+
     <div v-show="displayArrows" id="connection-spinner">
-      <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>
+      <q-spinner
+        color="accent"
+        size="3em"
+      ></q-spinner>
       <p>
         Waiting for connection...
       </p>
     </div>
-    <div v-show="error.isError" id="error">
-      <div>
-        <h2><i data-eva="alert-circle-outline" data-eva-fill="#000000cc"></i> Error</h2>
-        <p>{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></p>
-      </div>
-      <button v-if="error.button === 'connectSerial'" class="btn primary" @click="reconnect('serial')">Try again</button>
-      <button v-else-if="error.button === 'connectDFU'" class="btn primary" @click="reconnect('serial')">Try again</button>
-    </div>
-    <div v-show="displaySerialMenu" id="connected-serial">
+
+    <q-card v-show="error.isError" id="error">
+      <q-card-section class="bg-negative text-white text-left">
+        <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
+        <div class="text-subtitle2">{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+      </q-card-section>
+
+      <q-separator></q-separator>
+
+      <q-card-actions align="right">
+        <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
+        <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
+      </q-card-actions>
+    </q-card>
+
+    <div v-show="displaySerialMenu" id="connected">
       <h2>Flipper Zero Web Updater</h2>
-      <div class="card">
-        <div>
-          <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
-          <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
-        </div>
-        <div>
-          <h3>
-            <b>{{ flipper.name }} </b>
-            <span v-if="status !== 'Serial connection lost'">connected!</span>
-            <span v-else class="alert">disconnected!</span>
-          </h3>
-          <h3 id="battery">Battery: {{ flipper.battery }}</h3>
-        </div>
-        <div>
-          <pre>
-            <b>Device type:</b>
-            <b>Device name:</b>
-            <b>Stm32 serial:</b>
-            <b>Color:</b>
-            <b>Region:</b>
-            <b>Hardware version:</b>
-            <b>Firmware target:</b>
-          </pre>
-          <pre>
-    {{ flipper.type }}
-    {{ flipper.name }}
-    {{ flipper.stm32Serial }}
-    {{ flipper.bodyColor }}
-    {{ flipper.region }}
-    {{ flipper.hardwareVer }}
-    {{ flipper.target }}
-          </pre>
-        </div>
-        <div>
-          <pre>
-            <b>Firmware version:</b>
-            <b>Firmware build:</b>
-            <b>Bootloader version:</b>
-            <b>Bootloader build:</b>
-            <b>Radio firmware:</b>
-            <b>Bluetooth mac:</b>
-          </pre>
-          <pre>
-    {{ flipper.firmwareVer }}
-    {{ flipper.firmwareBuild }}
-    {{ flipper.bootloaderVer }}
-    {{ flipper.bootloaderBuild }}
-    {{ flipper.radioFirmware }}
-    {{ flipper.btMac }}
-          </pre>
-        </div>
-      </div>
+
+      <q-card flat>
+        <q-card-section horizontal class="text-left">
+          <div class="col-6 flex flex-center">
+            <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
+            <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
+          </div>
+          <div class="col-6 q-ml-xl">
+            <h3>
+              <b>{{ flipper.name }}&nbsp;</b>
+              <span v-if="status !== 'Serial connection lost'">connected!</span>
+              <span v-else class="text-accent">disconnected!</span>
+            </h3>
+            <h3 id="battery">Battery: {{ flipper.battery }}</h3>
+          </div>
+        </q-card-section>
+        <q-card-section horizontal class="text-left">
+          <q-card flat class="col-6">
+            <q-card-section horizontal>
+              <pre>
+<b>Device type:</b>
+<b>Device name:</b>
+<b>Stm32 serial:</b>
+<b>Color:</b>
+<b>Hardware version:</b>
+<b>Firmware target:</b>
+              </pre>
+              <pre>
+  {{ flipper.type }}
+  {{ flipper.name }}
+  {{ flipper.stm32Serial }}
+  {{ flipper.bodyColor }}
+  {{ flipper.hardwareVer }}
+  {{ flipper.target }}
+              </pre>
+            </q-card-section>
+          </q-card>
+          <q-card flat class="col-6 q-ml-xl">
+            <q-card-section horizontal>
+              <pre>
+<b>Firmware version:</b>
+<b>Firmware build:</b>
+<b>Bootloader version:</b>
+<b>Bootloader build:</b>
+<b>Radio firmware:</b>
+<b>Bluetooth mac:</b>
+              </pre>
+              <pre>
+  {{ flipper.firmwareVer }}
+  {{ flipper.firmwareBuild }}
+  {{ flipper.bootloaderVer }}
+  {{ flipper.bootloaderBuild }}
+  {{ flipper.radioFirmware }}
+  {{ flipper.btMac }}
+              </pre>
+            </q-card-section>
+          </q-card>
+        </q-card-section>
+      </q-card>
+
       <div v-if="isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="outdated">
         <p v-if="!firmwareFileName.length">
           Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
         </p>
-        <button v-if="!firmwareFileName.length" class="btn primary" @click="fetchFirmwareFile">Update firmware to {{ hwLatest }}</button>
-        <p v-if="!firmwareFileName.length" class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu"/>
+        <q-btn v-if="!firmwareFileName.length" @click="fetchFirmwareFile" color="positive" padding="12px 30px">Update firmware to {{ hwLatest }}</q-btn>
+        <p v-if="!firmwareFileName.length" class="q-mt-lg">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
-        <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
-        <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
+        <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
+        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
       </div>
       <div v-if="!isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="up-to-date">
-        <p v-if="!firmwareFileName.length">
+        <p v-if="!firmwareFileName.length && !newerThanLTS">
           Your firmware is up to date.
         </p>
-        <p v-if="!firmwareFileName.length" class="alternative">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu"/>
+        <p v-if="!firmwareFileName.length && newerThanLTS">
+          Your fimware version is ahead of latest release.
         </p>
-        <button v-if="firmwareFileName.length" class="btn primary" @click="gotoDFU">Flash {{ firmwareFileName }}</button>
-        <button v-if="firmwareFileName.length" class="ml-1 btn secondary" @click="cancelUpload">Cancel</button>
+        <q-btn v-if="!firmwareFileName.length && !newerThanLTS" @click="fetchFirmwareFile" color="accent" padding="12px 30px">Re-flash latest release ({{ hwLatest }})</q-btn>
+        <q-btn v-if="!firmwareFileName.length && newerThanLTS" @click="fetchFirmwareFile" color="positive" padding="12px 30px">Flash latest release ({{ hwLatest }})</q-btn>
+        <p v-if="!firmwareFileName.length" class="q-mt-lg">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
+        </p>
+        <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
+        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
       </div>
+
       <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
-        <span class="alert">Information is valid on {{ disconnectTime }}</span>
+        <span class="text-accent">Information is valid on {{ disconnectTime }}</span>
       </div>
+
       <div v-show="status === 'Writing firmware'">
         <h3>Writing firmware. Don't disconnect your Flipper</h3>
         <p v-if="progress.stage === 0">Erasing device memory</p>
@@ -114,18 +136,22 @@
         <progress :max="progress.max" :value="progress.current"></progress>
       </div>
     </div>
+
     <h2 v-if="status === 'OK'" id="ok">Firmware successfully updated.</h2>
+
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
-      <button class="btn secondary" @click="reconnect('serial')">
-        <i data-eva="refresh-outline" data-eva-fill="#6b6b6b" data-eva-height="18px" data-eva-width="18px"></i> Reconnect
-      </button>
+      <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline">
+        Reconnect
+      </q-btn>
     </div>
   </div>
 </template>
 
 <script>
+import { defineComponent, ref } from 'vue'
 import { WebDFU } from 'dfu'
-import * as eva from 'eva-icons'
+import * as semver from 'semver'
+import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline } from '@quasar/extras/eva-icons'
 
 class LineBreakTransformer {
   constructor () {
@@ -144,34 +170,34 @@ class LineBreakTransformer {
   }
 }
 
-export default {
+export default defineComponent({
   name: 'Updater',
   props: {
     userAgent: Object,
     latest: Object
   },
-  data () {
+  setup () {
     return {
-      error: {
+      error: ref({
         isError: false,
         msg: '',
         button: ''
-      },
-      status: 'Connect Flipper',
-      port: undefined,
-      webdfu: undefined,
-      startAddress: '',
-      progress: {
+      }),
+      status: ref('Connect Flipper'),
+      port: ref(undefined),
+      webdfu: ref(undefined),
+      startAddress: ref(''),
+      progress: ref({
         current: 0,
         max: 0,
         stage: 0
-      },
-      firmwareFile: undefined,
-      firmwareFileName: '',
-      displayArrows: false,
-      displaySerialMenu: false,
+      }),
+      firmwareFile: ref(undefined),
+      firmwareFileName: ref(''),
+      displayArrows: ref(false),
+      displaySerialMenu: ref(false),
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
-      flipper: {
+      flipper: ref({
         type: 'undefined',
         battery: 'undefined',
         name: 'undefined',
@@ -186,11 +212,12 @@ export default {
         bootloaderBuild: 'undefined',
         radioFirmware: 'undefined',
         btMac: 'undefined'
-      },
-      hwLatest: '',
-      isOutdated: false,
-      disconnectTime: '',
-      arrowText: 'Find your Flipper in dropdown menu'
+      }),
+      hwLatest: ref(''),
+      isOutdated: ref(false),
+      newerThanLTS: ref(false),
+      disconnectTime: ref(''),
+      arrowText: ref('Find your Flipper in dropdown menu')
     }
   },
   methods: {
@@ -204,7 +231,7 @@ export default {
       try {
         this.port = await navigator.serial.requestPort()
         await this.port.open({
-          baudRate: 9600
+          baudRate: 1
         })
 
         this.displayArrows = false
@@ -230,7 +257,6 @@ export default {
       this.read()
       setTimeout(this.compareVersions, 500)
       this.displaySerialMenu = true
-      eva.replace()
     },
     async read () {
       try {
@@ -346,11 +372,14 @@ export default {
       }
     },
     async compareVersions () {
-      if (this.flipper.firmwareVer === this.latest.version) {
+      this.hwLatest = this.latest.version
+      if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.latest.version)) {
         this.isOutdated = false
+      } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.latest.version)) {
+        this.isOutdated = false
+        this.newerThanLTS = true
       } else {
         this.isOutdated = true
-        this.hwLatest = this.latest.version
       }
     },
     async loadFirmwareFile (event) {
@@ -541,6 +570,10 @@ export default {
         max: 0,
         stage: 0
       }
+      for (const p in this.flipper) {
+        this.flipper[p] = 'undefined'
+      }
+      this.newerThanLTS = false
       if (type === 'serial') {
         this.disconnectSerial()
         this.connectSerial()
@@ -571,48 +604,16 @@ export default {
       this.firmwareFileName = ''
     }
   },
+  created () {
+    this.evaArrowBackOutline = evaArrowBackOutline
+    this.evaArrowUpwardOutline = evaArrowUpwardOutline
+    this.evaAlertCircleOutline = evaAlertCircleOutline
+    this.evaRefreshOutline = evaRefreshOutline
+  },
   mounted () {
-    eva.replace()
     this.connectSerial()
   }
-}
+})
 </script>
 
-<style src="../assets/css/updater.css"></style>
-<style src="../assets/css/spinner.css"></style>
-<style scoped>
-h2 {
-  margin-bottom: 2.5rem;
-}
-
-.card {
-  display: grid;
-  grid-auto-columns: 1fr;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 0px 4rem;
-  grid-template-areas:
-    ". ."
-    ". .";
-  color: #000000cc;
-}
-
-.card > div {
-  text-align: left;
-}
-
-.card > div:first-of-type, .card > div:nth-of-type(2) {
-  padding-left: 2.5rem;
-}
-.card > div:nth-of-type(3), .card > div:nth-of-type(4) {
-  display: flex;
-}
-
-.card pre {
-  color: #000000a4;
-}
-
-.card img {
-  width: 280px;
-}
-</style>
+<style lang="scss" src="../css/updater.scss"></style>
