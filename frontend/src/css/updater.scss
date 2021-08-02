@@ -52,6 +52,13 @@
   img {
     max-width: 280px;
   }
+  .alert {
+    width: fit-content;
+    margin: auto;
+    padding: 0.3rem 3rem;
+    border: 2px solid $accent-light;
+    border-radius: 5px;
+  }
 }
 
 #up-to-date, #outdated {
@@ -62,7 +69,7 @@
     color: $dark-secondary;
   }
   input {
-    width: 186px;
+    width: 215px;
   }
 }
 
