@@ -504,6 +504,7 @@ export default defineComponent({
       } catch (error) {
         this.displaySerialMenu = false
         this.error.isError = true
+        this.error.button = 'connectDFU'
         if (error.message.includes('No device selected')) {
           this.error.msg = 'No device selected'
           this.status = 'No device selected'
@@ -514,8 +515,8 @@ export default defineComponent({
           console.log(error.message)
           this.error.msg = 'The device was disconnected'
           this.status = 'The device was disconnected'
+          this.error.button = 'connectSerial'
         }
-        this.error.button = 'connectDFU'
         this.displayArrows = false
       }
     },
