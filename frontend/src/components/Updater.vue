@@ -240,7 +240,10 @@ export default defineComponent({
       this.arrowText = 'Find your Flipper in serial mode (Flipper <name>)'
       this.adjustArrows()
       try {
-        this.port = await navigator.serial.requestPort()
+        const filters = [
+          { usbVendorId: 1155, usbProductId: 22336 }
+        ]
+        this.port = await navigator.serial.requestPort({ filters })
         await this.port.open({
           baudRate: 1
         })
@@ -461,7 +464,10 @@ export default defineComponent({
       this.displayArrows = true
       this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
       try {
-        const selectedDevice = await navigator.usb.requestDevice({ filters: [] })
+        const filters = [
+          { usbVendorId: 1155, usbProductId: 22336 }
+        ]
+        const selectedDevice = await navigator.usb.requestDevice({ filters })
         this.webdfu = new WebDFU(
           selectedDevice,
           {
