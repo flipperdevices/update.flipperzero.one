@@ -102,12 +102,51 @@
 
       <div v-if="isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="outdated">
         <p v-if="!firmwareFileName.length">
-          Your firmware is outdated, latest release is <b>{{ hwLatest }}</b>
+          Your firmware is outdated, latest release is <b>{{ release.version }}</b>
         </p>
-        <q-btn v-if="!firmwareFileName.length" @click="fetchFirmwareFile" color="positive" padding="12px 30px">Update firmware to {{ hwLatest }}</q-btn>
+
+        <!-- <q-btn-dropdown
+          v-if="!firmwareFileName.length"
+          auto-close
+          :label="'Update firmware to ' + release.version"
+          :dropdown-icon="mdiChevronDown"
+          @click="fetchFirmwareFile('release')"
+          padding="12px 30px"
+        >
+          <q-list separator>
+            <q-item
+              clickable
+              v-close-popup
+              @click="fetchFirmwareFile('rc')"
+              class="text-uppercase text-weight-medium"
+            >
+              <q-item-section>
+                <q-item-label>
+                  <p>Release-candidate</p>
+                  ({{ rc.version }})
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              @click="fetchFirmwareFile('dev')"
+              class="text-uppercase text-weight-medium"
+            >
+              <q-item-section>
+                <q-item-label>
+                  <p>Dev (unstable)</p>
+                  ({{ dev.date }})
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown> -->
+
         <p v-if="!firmwareFileName.length" class="q-mt-lg">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
+
         <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
         <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
       </div>
@@ -118,9 +157,66 @@
         <p v-if="!firmwareFileName.length && newerThanLTS">
           Your fimware version is ahead of latest release.
         </p>
-        <q-btn v-if="!firmwareFileName.length && !newerThanLTS" @click="fetchFirmwareFile" color="accent" padding="12px 30px">Re-flash latest release ({{ hwLatest }})</q-btn>
-        <q-btn v-if="!firmwareFileName.length && newerThanLTS" @click="fetchFirmwareFile" color="positive" padding="12px 30px">Flash latest release ({{ hwLatest }})</q-btn>
-        <p v-if="!firmwareFileName.length" class="q-mt-lg">
+
+        <!-- <q-btn-dropdown
+          v-if="!firmwareFileName.length"
+          auto-close
+          :label="newerThanLTS ? 'Flash latest release (' + release.version + ')' : 'Re-flash latest release (' + release.version + ')'"
+          :dropdown-icon="mdiChevronDown"
+          padding="12px 30px"
+        >
+          <q-list separator>
+            <q-item
+              clickable
+              v-close-popup
+              class="text-uppercase text-weight-medium"
+            >
+              <q-item-section>
+                <q-item-label>
+                  <p>Release-candidate</p>
+                  ({{ rc.version }})
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              class="text-uppercase text-weight-medium"
+            >
+              <q-item-section>
+                <q-item-label>
+                  <p>Dev (unstable)</p>
+                  ({{ dev.date }})
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown> -->
+        <div class="flex flex-center">
+          <q-select
+            v-model="fwModel"
+            :options="fwOptions"
+            label="Choose firmware"
+            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+            :icon="mdiChevronDown"
+            id="fw-select"
+            style="width: 300px;"
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section class="items-start">
+                  <q-item-label v-html="scope.opt.label" />
+                </q-item-section>
+                <q-item-section class="items-end">
+                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
+        </div>
+
+        <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
         <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
@@ -153,6 +249,7 @@
 import { defineComponent, ref } from 'vue'
 import { WebDFU } from 'dfu'
 import * as semver from 'semver'
+import { mdiChevronDown } from '@quasar/extras/mdi-v5'
 import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline } from '@quasar/extras/eva-icons'
 
 class LineBreakTransformer {
@@ -176,7 +273,9 @@ export default defineComponent({
   name: 'Updater',
   props: {
     userAgent: Object,
-    latest: Object
+    release: Object,
+    rc: Object,
+    dev: Object
   },
   setup () {
     return {
@@ -224,7 +323,20 @@ export default defineComponent({
         },
         btMac: 'undefined'
       }),
-      hwLatest: ref(''),
+      fwModel: ref({
+        label: 'Release', value: 'release', version: ''
+      }),
+      fwOptions: ref([
+        {
+          label: 'Release', value: 'release', version: ''
+        },
+        {
+          label: 'Release-candidate', value: 'rc', version: ''
+        },
+        {
+          label: 'Dev (unstable)', value: 'dev', version: ''
+        }
+      ]),
       isOutdated: ref(false),
       newerThanLTS: ref(false),
       disconnectTime: ref(''),
@@ -403,10 +515,9 @@ export default defineComponent({
       }
     },
     async compareVersions () {
-      this.hwLatest = this.latest.version
-      if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.latest.version)) {
+      if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
         this.isOutdated = false
-      } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.latest.version)) {
+      } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
         this.isOutdated = false
         this.newerThanLTS = true
       } else {
@@ -419,9 +530,9 @@ export default defineComponent({
       this.firmwareFileName = event.target.files[0].name
       this.cropDFUFile()
     },
-    async fetchFirmwareFile () {
+    async fetchFirmwareFile (type) {
       try {
-        const file = this.latest.files.find((e) => {
+        const file = this[type.toLowerCase()].files.find((e) => {
           if (e.type === 'full_dfu' && e.target === 'f' + this.flipper.target) return e
           else return undefined
         })
@@ -648,12 +759,17 @@ export default defineComponent({
     }
   },
   created () {
+    this.mdiChevronDown = mdiChevronDown
     this.evaArrowBackOutline = evaArrowBackOutline
     this.evaArrowUpwardOutline = evaArrowUpwardOutline
     this.evaAlertCircleOutline = evaAlertCircleOutline
     this.evaRefreshOutline = evaRefreshOutline
   },
   mounted () {
+    this.fwOptions[0].version = this.release.version
+    this.fwModel = this.fwOptions[0]
+    this.fwOptions[1].version = this.rc.version
+    this.fwOptions[2].version = this.dev.version
     this.connectSerial()
   }
 })

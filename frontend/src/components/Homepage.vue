@@ -49,7 +49,9 @@
       <q-card-section>
         <Updater
           :userAgent="userAgent"
-          :latest="versions[0]"
+          :release="release"
+          :rc="rc"
+          :dev="dev"
         />
       </q-card-section>
     </q-card>

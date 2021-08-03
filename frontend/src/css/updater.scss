@@ -81,3 +81,19 @@
     margin-right: 0.5rem;
   }
 }
+
+.fw-option-label {
+  width: fit-content;
+  padding: 0.2rem 0.4rem;
+  color: #fff;
+  border-radius: 5px;
+  &.release {
+    background-color: $positive;
+  }
+  &.rc {
+    background-color: $accent;
+  }
+  &.dev {
+    background-color: $negative;
+  }
+}
