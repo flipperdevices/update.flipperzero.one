@@ -105,43 +105,29 @@
           Your firmware is outdated, latest release is <b>{{ release.version }}</b>
         </p>
 
-        <!-- <q-btn-dropdown
-          v-if="!firmwareFileName.length"
-          auto-close
-          :label="'Update firmware to ' + release.version"
-          :dropdown-icon="mdiChevronDown"
-          @click="fetchFirmwareFile('release')"
-          padding="12px 30px"
-        >
-          <q-list separator>
-            <q-item
-              clickable
-              v-close-popup
-              @click="fetchFirmwareFile('rc')"
-              class="text-uppercase text-weight-medium"
-            >
-              <q-item-section>
-                <q-item-label>
-                  <p>Release-candidate</p>
-                  ({{ rc.version }})
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-close-popup
-              @click="fetchFirmwareFile('dev')"
-              class="text-uppercase text-weight-medium"
-            >
-              <q-item-section>
-                <q-item-label>
-                  <p>Dev (unstable)</p>
-                  ({{ dev.date }})
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown> -->
+        <div class="flex flex-center">
+          <q-select
+            v-model="fwModel"
+            :options="fwOptions"
+            label="Choose firmware"
+            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+            :icon="mdiChevronDown"
+            id="fw-select"
+            style="width: 300px;"
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section class="items-start">
+                  <q-item-label v-html="scope.opt.label" />
+                </q-item-section>
+                <q-item-section class="items-end">
+                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
+        </div>
 
         <p v-if="!firmwareFileName.length" class="q-mt-lg">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
@@ -158,40 +144,6 @@
           Your fimware version is ahead of latest release.
         </p>
 
-        <!-- <q-btn-dropdown
-          v-if="!firmwareFileName.length"
-          auto-close
-          :label="newerThanLTS ? 'Flash latest release (' + release.version + ')' : 'Re-flash latest release (' + release.version + ')'"
-          :dropdown-icon="mdiChevronDown"
-          padding="12px 30px"
-        >
-          <q-list separator>
-            <q-item
-              clickable
-              v-close-popup
-              class="text-uppercase text-weight-medium"
-            >
-              <q-item-section>
-                <q-item-label>
-                  <p>Release-candidate</p>
-                  ({{ rc.version }})
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-close-popup
-              class="text-uppercase text-weight-medium"
-            >
-              <q-item-section>
-                <q-item-label>
-                  <p>Dev (unstable)</p>
-                  ({{ dev.date }})
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown> -->
         <div class="flex flex-center">
           <q-select
             v-model="fwModel"
