@@ -185,7 +185,7 @@ export default defineComponent({
         },
         {
           text: 'Linux Download',
-          href: 'https://update.flipperzero.one/qFlipper/qflipper-x86_64.AppImage'
+          href: 'https://update.flipperzero.one/qFlipper/qFlipper-x86_64.AppImage'
         }
       ]),
       versions: ref([]),
