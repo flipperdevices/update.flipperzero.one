@@ -62,7 +62,7 @@
 <b>Device name:</b>
 <b>Stm32 serial:</b>
 <b>Color:</b>
-<b>Hardware version:</b>
+<b>Hardware revision:</b>
 <b>Firmware target:</b>
               </pre>
               <pre>
@@ -82,8 +82,8 @@
 <b>Firmware build:</b>
 <b>Bootloader version:</b>
 <b>Bootloader build:</b>
-<b>Radio fus firmware:</b>
-<b>Radio stack firmware:</b>
+<b>FUS version:</b>
+<b>Radio stack version:</b>
 <b>Bluetooth mac:</b>
               </pre>
               <pre>
@@ -150,16 +150,18 @@
       </div>
 
       <div v-show="status === 'Writing firmware'">
-        <h5>Writing firmware. Don't disconnect your Flipper</h5>
-        <p v-if="progress.stage === 0">Erasing device memory</p>
-        <p v-else>Copying data from browser to Flipper</p>
+        <h5>Flashing firmware. Don't disconnect your Flipper</h5>
         <q-linear-progress
           rounded
-          size="20px"
+          size="2.25rem"
           :value="progress.current / progress.max"
           color="positive"
           class="q-mt-sm q-mb-lg"
-        ></q-linear-progress>
+        >
+          <div class="absolute-full flex flex-center">
+            <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+          </div>
+        </q-linear-progress>
       </div>
     </div>
 
