@@ -68,9 +68,10 @@
   p:last-of-type {
     color: $dark-secondary;
   }
-  input {
-    width: 215px;
-  }
+}
+
+input[type=file] {
+  width: 215px;
 }
 
 #reconnect {

@@ -104,37 +104,6 @@
         <p v-if="!firmwareFileName.length">
           Your firmware is outdated, latest release is <b>{{ release.version }}</b>
         </p>
-
-        <div class="flex flex-center">
-          <q-select
-            v-model="fwModel"
-            :options="fwOptions"
-            label="Choose firmware"
-            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-            :icon="mdiChevronDown"
-            id="fw-select"
-            style="width: 300px;"
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section class="items-start">
-                  <q-item-label v-html="scope.opt.label" />
-                </q-item-section>
-                <q-item-section class="items-end">
-                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-          <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
-        </div>
-
-        <p v-if="!firmwareFileName.length" class="q-mt-lg">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
-        </p>
-
-        <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
-        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
       </div>
       <div v-if="!isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="up-to-date">
         <p v-if="!firmwareFileName.length && !newerThanLTS">
@@ -143,31 +112,32 @@
         <p v-if="!firmwareFileName.length && newerThanLTS">
           Your fimware version is ahead of latest release.
         </p>
+      </div>
 
-        <div class="flex flex-center">
-          <q-select
-            v-model="fwModel"
-            :options="fwOptions"
-            label="Choose firmware"
-            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-            :icon="mdiChevronDown"
-            id="fw-select"
-            style="width: 300px;"
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section class="items-start">
-                  <q-item-label v-html="scope.opt.label" />
-                </q-item-section>
-                <q-item-section class="items-end">
-                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-          <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
-        </div>
+      <div v-if="!firmwareFileName.length && status !== 'Writing firmware'" class="flex flex-center">
+        <q-select
+          v-model="fwModel"
+          :options="fwOptions"
+          label="Choose firmware"
+          :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+          id="fw-select"
+          style="width: 300px;"
+        >
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section class="items-start">
+                <q-item-label v-html="scope.opt.label" />
+              </q-item-section>
+              <q-item-section class="items-end">
+                <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+        <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
+      </div>
 
+      <div v-if="status !== 'Writing firmware'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
@@ -183,7 +153,13 @@
         <h5>Writing firmware. Don't disconnect your Flipper</h5>
         <p v-if="progress.stage === 0">Erasing device memory</p>
         <p v-else>Copying data from browser to Flipper</p>
-        <progress :max="progress.max" :value="progress.current"></progress>
+        <q-linear-progress
+          rounded
+          size="20px"
+          :value="progress.current / progress.max"
+          color="positive"
+          class="q-mt-sm q-mb-lg"
+        ></q-linear-progress>
       </div>
     </div>
 
