@@ -154,6 +154,18 @@
           Dev Build ({{ dev.date }})
         </q-btn>
       </q-card-section>
+      <q-separator inset></q-separator>
+      <q-card-section>
+        <q-btn
+          flat
+          color="grey-8"
+          class="q-ma-sm"
+          type="a"
+          href="https://update.flipperzero.one/builds/"
+        >
+          Browse all builds
+        </q-btn>
+      </q-card-section>
     </q-card>
   </div>
 </template>
