@@ -67,11 +67,11 @@
         class="fit flex column flex-center q-pa-md"
       >
         <h4>Your browser doesn't support WebUSB updater :(</h4>
-        <q-img
+        <img
           v-if="userAgent.browser === 'Not supported'"
           src="../assets/notsupported.svg"
-          width="50%"
-        ></q-img>
+          class="unsupported-img"
+        />
         <p class="q-pt-md">Your browser doesn’t support WebUSB/WebSerial.</p>
         <p>Updater currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.</p>
         <div class="q-pb-sm">
