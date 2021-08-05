@@ -12,12 +12,47 @@
         <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
           <h4>Web updater</h4>
           <h5>Flash the latest firmware right in your browser using WebUSB.</h5>
-          <p>
+          <p v-if="userAgent.os === 'Windows'">
+            1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use our <a href="https://cdn.flipperzero.one/flipper_zadig.exe">driver installer</a>.
+          </p>
+          <p v-if="userAgent.os === 'Linux'">
+            1. On Linux you need to allow WebUSB to access devices first:
+            <ul>
+              <li>
+                Put <a @click="route('linuxFiles')">these two files</a> (manual download: <a href="https://cdn.flipperzero.one/48-stm32dfu.rules">1</a>, <a href="https://cdn.flipperzero.one/48-stmvcp.rules">2</a>) into the directory
+                <div>
+                  <code>
+                    /usr/lib/udev
+                    <span>
+                      <q-icon :name="evaClipboardOutline" @click="copy('/usr/lib/udev')"></q-icon>
+                      <q-tooltip anchor="top middle" self="center middle">
+                        <span v-if="!copied">Copy to clipboard</span>
+                        <span v-else>Copied!</span>
+                      </q-tooltip>
+                    </span>
+                  </code>
+                </div>
+              </li>
+              <li>
+                Run as root:
+                <code>
+                  cp *.rules /usr/lib/udev/rules.d udevadm control --reload-rules &amp;&amp; udevadm trigger
+                  <span>
+                    <q-icon :name="evaClipboardOutline" @click="copy('cp *.rules /usr/lib/udev/rules.d udevadm control --reload-rules && udevadm trigger')"></q-icon>
+                    <q-tooltip anchor="top middle" self="center middle">
+                      <span v-if="!copied">Copy to clipboard</span>
+                      <span v-else>Copied!</span>
+                    </q-tooltip>
+                  </span>
+                </code>
+              </li>
+            </ul>
+          </p>
+          <p v-if="userAgent.os === 'Mac OS X'">
             No drivers needed!
           </p>
           <p>
-            Just connect your Flipper to the computer, press the button below and choose your device from dropping list.
-            Don't forget to grant access to WebUSB in a pop-up.
+            <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from dropping list.
           </p>
           <p>
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
@@ -175,7 +210,7 @@ import { defineComponent, ref } from 'vue'
 import Updater from './Updater.vue'
 import * as semver from 'semver'
 import { mdiChevronDown } from '@quasar/extras/mdi-v5'
-import { evaArrowDownwardOutline } from '@quasar/extras/eva-icons'
+import { evaArrowDownwardOutline, evaClipboardOutline } from '@quasar/extras/eva-icons'
 
 export default defineComponent({
   name: 'Homepage',
@@ -188,6 +223,7 @@ export default defineComponent({
   setup () {
     return {
       showIntro: ref(true),
+      copied: ref(false),
       dropdown: ref([
         {
           text: 'Mac OS X Download',
@@ -232,7 +268,16 @@ export default defineComponent({
       this.showIntro = false
     },
     route (url) {
-      location.href = url
+      if (url === 'linuxFiles') {
+        window.open('https://cdn.flipperzero.one/48-stm32dfu.rules')
+        window.open('https://cdn.flipperzero.one/48-stmvcp.rules')
+      } else {
+        location.href = url
+      }
+    },
+    copy (text) {
+      navigator.clipboard.writeText(text).then(this.copied = true)
+      setTimeout(() => { this.copied = false }, 1500)
     },
     getDir () {
       fetch('https://update.flipperzero.one/directory.json')
@@ -289,6 +334,7 @@ export default defineComponent({
   created () {
     this.mdiChevronDown = mdiChevronDown
     this.evaArrowDownwardOutline = evaArrowDownwardOutline
+    this.evaClipboardOutline = evaClipboardOutline
     this.dropdown.sort(e => {
       if (e.text === this.userAgent.os + ' Download') return -1
       else return 1

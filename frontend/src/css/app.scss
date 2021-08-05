@@ -32,6 +32,27 @@ pre {
   font-family: inherit;
 }
 
+code {
+  font-size: 14px;
+  line-height: 1.8rem;
+  background-color: #eee;
+  border: 1px solid #ddd;
+  padding: 0.2rem 0.4rem;
+  border-radius: 5px;
+  .q-icon {
+    position: relative;
+    top: -1px;
+    padding: 1px;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition-duration: 0.3s;
+    &:hover {
+      color: $positive;
+    }
+  }
+}
+
 #header {
   max-width: 1200px;
   .q-focus-helper {
