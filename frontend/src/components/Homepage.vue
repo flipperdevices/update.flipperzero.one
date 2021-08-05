@@ -126,7 +126,7 @@
                 <q-item
                   clickable
                   v-close-popup
-                  @click="route(dropdown[1].href)"
+                  @click="route(dropdown[2].href)"
                   class="bg-positive text-white text-uppercase text-weight-medium"
                 >
                   <q-item-section>
