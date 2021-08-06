@@ -573,7 +573,12 @@ export default defineComponent({
       } catch (error) {
         this.displaySerialMenu = false
         this.error.isError = true
-        this.error.msg = `Failed to write firmware (${error})`
+        console.log(error)
+        if (error.includes('Error: stall')) {
+          this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process. Close it and reload this page.'
+        } else {
+          this.error.msg = `Failed to write firmware (${error})`
+        }
         this.error.button = ''
         this.status = 'Failed to write firmware'
       }
