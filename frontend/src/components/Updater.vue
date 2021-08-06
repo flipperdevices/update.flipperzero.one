@@ -1,7 +1,17 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
     <div v-show="displayArrows" class="arrows">
-      <div class="popup-overlay"></div>
+      <div class="popup-overlay">
+        <div id="arrows-spinner">
+          <q-spinner
+            color="accent"
+            size="3em"
+          ></q-spinner>
+          <p class="text-white">
+            Waiting for connection...
+          </p>
+        </div>
+      </div>
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
         <span class="q-pl-sm">1. {{ arrowText }}</span>
@@ -12,13 +22,13 @@
       </div>
     </div>
 
-    <div v-show="displayArrows" id="connection-spinner">
+    <div v-show="loadingSerial">
       <q-spinner
         color="accent"
         size="3em"
       ></q-spinner>
-      <p>
-        Waiting for connection...
+      <p v-if="loadingSerial">
+        Connecting to Flipper...
       </p>
     </div>
 
@@ -226,6 +236,7 @@ export default defineComponent({
       firmwareFile: ref(undefined),
       firmwareFileName: ref(''),
       displayArrows: ref(false),
+      loadingSerial: ref(false),
       displaySerialMenu: ref(false),
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
       flipper: ref({
@@ -311,14 +322,24 @@ export default defineComponent({
       }
     },
     async getData () {
-      this.write(this.commands)
-      this.read()
-      setTimeout(this.compareVersions, 500)
+      this.loadingSerial = true
+      await new Promise(resolve => {
+        const readInterval = setInterval(() => {
+          if (this.flipper.firmwareVer !== 'undefined') {
+            resolve()
+            clearInterval(readInterval)
+          }
+          this.write(this.commands)
+          this.read()
+        }, 500)
+      })
+      this.compareVersions()
+      this.loadingSerial = false
       this.displaySerialMenu = true
     },
     async read () {
       try {
-        while (this.port && this.port.readable) {
+        while (this.port && this.port.readable && !this.port.readable.locked) {
           // eslint-disable-next-line no-undef
           const textDecoder = new TextDecoderStream()
           this.port.readable.pipeTo(textDecoder.writable).catch(error => {
@@ -362,15 +383,16 @@ export default defineComponent({
       }
     },
     async write (lines) {
-      // eslint-disable-next-line no-undef
-      const textEncoder = new TextEncoderStream()
-      textEncoder.readable.pipeTo(this.port.writable)
-      const writer = textEncoder.writable.getWriter()
-
-      lines.forEach(line => {
-        writer.write(line + '\r\n')
-      })
-      writer.close()
+      if (!this.port.writable.locked) {
+        // eslint-disable-next-line no-undef
+        const textEncoder = new TextEncoderStream()
+        textEncoder.readable.pipeTo(this.port.writable)
+        const writer = textEncoder.writable.getWriter()
+        lines.forEach(line => {
+          writer.write(line + '\r\n')
+        })
+        writer.close()
+      }
     },
     parseReadValue (value) {
       if (value.includes('State of Charge: ')) {
@@ -445,6 +467,9 @@ export default defineComponent({
       }
     },
     async compareVersions () {
+      if (this.flipper.firmwareVer.includes('fw-')) {
+        this.flipper.firmwareVer = this.flipper.firmwareVer.replace('fw-', '')
+      }
       if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
         this.isOutdated = false
       } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
