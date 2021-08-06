@@ -28,9 +28,9 @@
         <div class="text-subtitle2">{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
       </q-card-section>
 
-      <q-separator></q-separator>
+      <q-separator v-if="error.button.length"></q-separator>
 
-      <q-card-actions align="right">
+      <q-card-actions v-if="error.button.length" align="right">
         <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
         <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
       </q-card-actions>
@@ -114,7 +114,7 @@
         </p>
       </div>
 
-      <div v-if="!firmwareFileName.length && status !== 'Writing firmware'" class="flex flex-center">
+      <div v-if="!firmwareFileName.length && status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <q-select
           v-model="fwModel"
           :options="fwOptions"
@@ -137,7 +137,7 @@
         <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
       </div>
 
-      <div v-if="status !== 'Writing firmware'" class="flex flex-center">
+      <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
@@ -474,10 +474,11 @@ export default defineComponent({
         this.cropDFUFile()
         this.gotoDFU()
       } catch (error) {
+        console.error(error)
         this.displaySerialMenu = false
         this.error.isError = true
-        this.error.msg = `Failed to fetch latest firmware (${error})`
-        this.error.button = ''
+        this.error.msg = 'Failed to fetch latest firmware. Try again later or flash firmware from file.'
+        this.error.button = 'connectSerial'
       }
     },
     cropDFUFile () {
