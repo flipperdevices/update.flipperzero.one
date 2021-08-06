@@ -474,11 +474,19 @@ export default defineComponent({
         this.cropDFUFile()
         this.gotoDFU()
       } catch (error) {
-        console.error(error)
         this.displaySerialMenu = false
         this.error.isError = true
-        this.error.msg = 'Failed to fetch latest firmware. Try again later or flash firmware from file.'
-        this.error.button = 'connectSerial'
+        if (isNaN(Number(this.flipper.target))) {
+          this.error.msg = 'Unknown firmware target. Try repairing your Flipper via desktop app'
+          this.error.button = ''
+        } else if (Number(this.flipper.target) < '6') {
+          this.error.msg = 'Unsupported firmware target'
+          this.error.button = ''
+        } else {
+          console.error(error)
+          this.error.msg = 'Failed to fetch latest firmware. Try again later or flash firmware from file.'
+          this.error.button = 'connectSerial'
+        }
       }
     },
     cropDFUFile () {
