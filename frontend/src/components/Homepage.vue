@@ -15,44 +15,31 @@
           <p v-if="userAgent.os === 'Windows'">
             1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use our <a href="https://cdn.flipperzero.one/flipper_zadig.exe">driver installer</a>.
           </p>
-          <p v-if="userAgent.os === 'Linux'">
-            1. On Linux you need to allow WebUSB to access devices first:
-            <ul>
-              <li>
-                Put <a @click="route('linuxFiles')">these two files</a> (manual download: <a href="https://cdn.flipperzero.one/48-stm32dfu.rules">1</a>, <a href="https://cdn.flipperzero.one/48-stmvcp.rules">2</a>) into the directory
-                <div>
-                  <code>
-                    /usr/lib/udev
-                    <span>
-                      <q-icon :name="evaClipboardOutline" @click="copy('/usr/lib/udev')"></q-icon>
-                      <q-tooltip anchor="top middle" self="center middle">
-                        <span v-if="!copied">Copy to clipboard</span>
-                        <span v-else>Copied!</span>
-                      </q-tooltip>
-                    </span>
-                  </code>
-                </div>
-              </li>
-              <li>
-                Run as root:
-                <code>
-                  cp *.rules /usr/lib/udev/rules.d udevadm control --reload-rules &amp;&amp; udevadm trigger
-                  <span>
-                    <q-icon :name="evaClipboardOutline" @click="copy('cp *.rules /usr/lib/udev/rules.d udevadm control --reload-rules && udevadm trigger')"></q-icon>
-                    <q-tooltip anchor="top middle" self="center middle">
-                      <span v-if="!copied">Copy to clipboard</span>
-                      <span v-else>Copied!</span>
-                    </q-tooltip>
-                  </span>
-                </code>
-              </li>
-            </ul>
-          </p>
+          <div v-if="userAgent.os === 'Linux'">
+            <p class="q-mb-sm">
+            1. On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh">this script</a>:
+            </p>
+            <div class="q-mb-sm">
+              <code>
+                sh setup_rules.sh
+                <span>
+                  <q-icon :name="evaClipboardOutline" @click="copy('sh setup_rules.sh')"></q-icon>
+                  <q-tooltip anchor="top middle" self="center middle">
+                    <span v-if="!copied">Copy to clipboard</span>
+                    <span v-else>Copied!</span>
+                  </q-tooltip>
+                </span>
+              </code>
+            </div>
+            <p>
+              This script will install system rules that will enable communication with your Flipper Zero.
+            </p>
+          </div>
           <p v-if="userAgent.os === 'Mac OS X'">
             No drivers needed!
           </p>
           <p>
-            <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from dropping list.
+            <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from browser prompt.
           </p>
           <p>
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
