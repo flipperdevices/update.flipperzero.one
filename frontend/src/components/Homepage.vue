@@ -17,7 +17,7 @@
           </p>
           <div v-if="userAgent.os === 'Linux'">
             <p class="q-mb-sm">
-            1. On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh">this script</a>:
+            1. On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh" target="blank">this script</a>:
             </p>
             <div class="q-mb-sm">
               <code>
