@@ -35,7 +35,7 @@ rules_uninstall() {
         # The danger zone
         sudo rm -rf $RULES_FILE &&
         sudo udevadm control --reload-rules &&
-        sudo udevadm trigger &&
+        sudo udevadm trigger
         # End of danger zone
 
         if [ $? -eq 0 ]; then
