@@ -48,16 +48,21 @@
   }
 }
 
-#connected {
+.connected {
   img {
     max-width: 280px;
   }
   .alert {
     width: fit-content;
     margin: auto;
+    margin-bottom: 1.5rem;
     padding: 0.3rem 3rem;
-    border: 2px solid $accent-light;
+    background-color: $accent-light;
+    border: 2px solid $accent;
     border-radius: 5px;
+    ul {
+      text-align: left;
+    }
   }
 }
 

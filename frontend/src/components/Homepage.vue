@@ -47,6 +47,15 @@
           <div class="text-center q-mt-lg">
             <q-btn color="positive" padding="12px 30px" @click="clickConnect">Connect to Flipper</q-btn>
           </div>
+          <div class="text-right" style="height: 0;">
+            <q-btn
+              flat
+              color="grey-8"
+              size="13px"
+              style="position:relative; top: -1.5rem;"
+              @click="showIntro = false; updaterMode = 'dfu'"
+            >Recovery mode</q-btn>
+          </div>
         </q-card-section>
       </q-card-section>
       <q-card-section
@@ -74,6 +83,7 @@
           :release="release"
           :rc="rc"
           :dev="dev"
+          :mode="updaterMode"
         />
       </q-card-section>
     </q-card>
@@ -210,6 +220,7 @@ export default defineComponent({
   setup () {
     return {
       showIntro: ref(true),
+      updaterMode: 'serial',
       copied: ref(false),
       dropdown: ref([
         {

@@ -46,7 +46,7 @@
       </q-card-actions>
     </q-card>
 
-    <div v-show="displaySerialMenu" id="connected">
+    <div v-show="displaySerialMenu" class="connected">
       <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
@@ -154,13 +154,103 @@
         <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
         <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
       </div>
-
       <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
-        <span class="text-accent">Information is valid on {{ disconnectTime }}</span>
+        <span>Information is valid on {{ disconnectTime }}</span>
       </div>
 
       <div v-show="status === 'Writing firmware'">
-        <h5>Flashing firmware. Don't disconnect your Flipper</h5>
+        <div class="alert">
+          <h5>Flashing firmware</h5>
+          <ul>
+            <li>Don't disconnect your Flipper</li>
+            <li>Don't leave this tab until the process is over</li>
+          </ul>
+        </div>
+        <q-linear-progress
+          rounded
+          size="2.25rem"
+          :value="progress.current / progress.max"
+          color="positive"
+          class="q-mt-sm q-mb-lg"
+        >
+          <div class="absolute-full flex flex-center">
+            <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+          </div>
+        </q-linear-progress>
+      </div>
+    </div>
+
+    <div v-show="displayRecoveryMenu" class="connected">
+      <h4>Flipper Zero Web Updater</h4>
+
+      <q-card flat>
+        <q-card-section horizontal class="text-left">
+          <div class="col-5 flex flex-center">
+            <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
+            <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
+          </div>
+          <div class="col-7 q-ml-xl" style="white-space: nowrap;">
+            <h5>
+              <b>{{ flipper.name }}&nbsp;</b>
+              <span v-if="status !== 'Serial connection lost'">connected<span v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'"> in recovery mode</span>!</span>
+              <span v-else class="text-accent">disconnected!</span>
+            </h5>
+            <p>
+              <b>Hardware revision:</b> {{ flipper.hardwareVer }}
+            </p>
+            <p>
+              <b>Firmware target:</b> {{ flipper.target }}
+            </p>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <div v-if="!firmwareFileName.length && status !== 'Writing firmware'" class="flex flex-center">
+        <q-select
+          v-model="fwModel"
+          :options="fwOptions"
+          label="Choose firmware"
+          :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+          id="fw-select"
+          style="width: 300px;"
+        >
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section class="items-start">
+                <q-item-label v-html="scope.opt.label" />
+              </q-item-section>
+              <q-item-section class="items-end">
+                <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+        <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
+      </div>
+
+      <div v-if="status !== 'Writing firmware'" class="flex flex-center">
+        <p v-if="!firmwareFileName.length" class="q-mt-xl">
+          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
+        </p>
+        <q-btn v-if="firmwareFileName.length" @click="writeFirmware" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
+        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
+      </div>
+
+      <!--
+        //! TODO
+        <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
+          <span class="text-accent">Information is valid on {{ disconnectTime }}</span>
+        </div>
+      -->
+
+      <div v-show="status === 'Writing firmware'">
+        <div class="alert">
+          <h5>Flashing firmware</h5>
+          <ul>
+            <li>Don't disconnect your Flipper</li>
+            <li>Don't leave this tab until the process is over</li>
+          </ul>
+        </div>
         <q-linear-progress
           rounded
           size="2.25rem"
@@ -215,7 +305,8 @@ export default defineComponent({
     userAgent: Object,
     release: Object,
     rc: Object,
-    dev: Object
+    dev: Object,
+    mode: String
   },
   setup () {
     return {
@@ -238,6 +329,7 @@ export default defineComponent({
       displayArrows: ref(false),
       loadingSerial: ref(false),
       displaySerialMenu: ref(false),
+      displayRecoveryMenu: ref(false),
       commands: ['version', 'uid', 'hw_info', 'power_info', 'power_test', 'device_info'],
       flipper: ref({
         type: 'undefined',
@@ -306,9 +398,9 @@ export default defineComponent({
 
         this.getData()
       } catch (error) {
-        if (error.message.includes('No port selected by the user.')) {
+        if (error.message && error.message.includes('No port selected by the user.')) {
           this.error.msg = 'No port selected.'
-        } else if (!error.message.includes('Failed to open serial port.')) {
+        } else if (!error.message && error.message.includes('Failed to open serial port.')) {
           console.log(error.message)
           this.error.msg = error.message
         } else {
@@ -343,7 +435,7 @@ export default defineComponent({
           // eslint-disable-next-line no-undef
           const textDecoder = new TextDecoderStream()
           this.port.readable.pipeTo(textDecoder.writable).catch(error => {
-            if (error.message.includes('The device has been lost.')) {
+            if (error.message && error.message.includes('The device has been lost.')) {
               this.status = 'Serial connection lost'
             } else {
               console.log(error.message)
@@ -365,14 +457,14 @@ export default defineComponent({
           }
         }
       } catch (error) {
-        if (error.message.includes('The device has been lost.')) {
+        if (error.message && error.message.includes('The device has been lost.')) {
           const d = new Date(Date.now())
           this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
           this.status = 'Serial connection lost'
           document.querySelector('#battery').style.color = '#c6c6c6'
           if (this.port) {
             this.port.close().catch(error => {
-              if (!error.message.includes('The port is already closed') && !error.message.includes('The device has been lost.')) {
+              if (!error.message && error.message.includes('The port is already closed') && !error.message && error.message.includes('The device has been lost.')) {
                 console.log(error.message)
               }
             })
@@ -497,7 +589,11 @@ export default defineComponent({
           })
         this.firmwareFile = new Uint8Array(buffer)
         this.cropDFUFile()
-        this.gotoDFU()
+        if (this.mode === 'serial') {
+          this.gotoDFU()
+        } else if (this.mode === 'dfu') {
+          this.writeFirmware()
+        }
       } catch (error) {
         this.displaySerialMenu = false
         this.error.isError = true
@@ -580,10 +676,10 @@ export default defineComponent({
         this.displaySerialMenu = false
         this.error.isError = true
         this.error.button = 'connectDFU'
-        if (error.message.includes('No device selected')) {
+        if (error.message && error.message.includes('No device selected')) {
           this.error.msg = 'No device selected'
           this.status = 'No device selected'
-        } else if (error.message.includes('Access denied')) {
+        } else if (error.message && error.message.includes('Access denied')) {
           this.error.msg = 'Chrome can\'t access Flipper in DFU mode. This may be caused by using '
           this.status = 'The device was disconnected'
         } else {
@@ -595,19 +691,107 @@ export default defineComponent({
         this.displayArrows = false
       }
     },
+    async connectRecovery () {
+      try {
+        this.displayArrows = true
+        this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
+        const filters = [
+          { vendorId: 0x0483, productId: 0xdf11 }
+        ]
+        const selectedDevice = await navigator.usb.requestDevice({ filters })
+        this.webdfu = new WebDFU(
+          selectedDevice,
+          {
+            forceInterfacesName: true
+          },
+          {
+            progress: (done, total) => {
+              if (total !== this.progress.max && this.progress.max !== 0) {
+                this.progress.stage = 1
+              }
+              this.progress.max = total
+              this.progress.current = done
+            }
+          }
+        )
+        await this.webdfu.init()
+        if (this.webdfu.interfaces.length === 0) {
+          this.displaySerialMenu = false
+          this.displayRecoveryMenu = false
+          this.error.isError = true
+          this.error.msg = 'The selected device does not have any USB DFU interfaces'
+          this.error.button = 'connectDFU'
+          this.status = 'The selected device does not have any USB DFU interfaces'
+          this.displayArrows = false
+        }
+
+        await this.webdfu.connect(2)
+        this.status = 'Connected to Flipper in DFU mode'
+        this.error.isError = false
+        this.error.msg = ''
+        this.error.button = ''
+        this.displayArrows = false
+
+        const otp = await this.webdfu.read(1024, 32)
+          .then(blob => {
+            this.progress.max = 0
+            this.progress.current = 0
+            this.progress.stage = 0
+            return blob.arrayBuffer()
+          })
+          .then(buffer => {
+            return new Uint8Array(buffer)
+          })
+
+        if (otp[0] === 190 && otp[1] === 186) {
+          this.flipper.hardwareVer = otp[8]
+          this.flipper.target = otp[9]
+          this.flipper.bodyColor = otp[12] ? 'black' : 'white'
+          this.flipper.name = new TextDecoder().decode(otp.slice(16, 24).filter(e => e > 0))
+        } else {
+          this.flipper.hardwareVer = otp[0]
+          this.flipper.target = otp[1]
+          this.flipper.name = new TextDecoder().decode(otp.slice(8, 16).filter(e => e > 0))
+        }
+
+        this.displayRecoveryMenu = true
+      } catch (error) {
+        this.displaySerialMenu = false
+        this.error.isError = true
+        this.error.button = 'connectDFU'
+        if (error.message && error.message && error.message.includes('No device selected')) {
+          this.error.msg = 'No device selected'
+          this.status = 'No device selected'
+        } else if (error.message && error.message.includes('Access denied')) {
+          this.error.msg = 'Chrome can\'t access Flipper in DFU mode. This may be caused by using '
+          this.status = 'The device was disconnected'
+        } else {
+          console.log(error)
+          this.error.msg = 'The device was disconnected'
+          this.status = 'The device was disconnected'
+          this.error.button = 'connectSerial'
+        }
+        this.displayArrows = false
+      }
+    },
     async writeFirmware () {
       try {
+        if (this.mode === 'dfu') {
+          await this.webdfu.connect(0)
+        }
         this.status = 'Writing firmware'
         this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
         await this.webdfu.write(1024, this.firmwareFile)
         this.webdfu.close()
         this.status = 'OK'
         this.displaySerialMenu = false
+        this.displayRecoveryMenu = false
       } catch (error) {
         this.displaySerialMenu = false
+        this.displayRecoveryMenu = false
         this.error.isError = true
         console.log(error)
-        if (error.includes('Error: stall')) {
+        if (error.includes && error.includes('Error: stall')) {
           this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process. Close it and reload this page.'
         } else {
           this.error.msg = `Failed to write firmware (${error})`
@@ -714,9 +898,9 @@ export default defineComponent({
         const localPort = this.port
         this.port = undefined
         await localPort.close().catch(error => {
-          if (!error.message.includes('The port is already closed') &&
-            !error.message.includes('The device has been lost.') &&
-            !error.message.includes('locked stream')) {
+          if (!error.message && error.message.includes('The port is already closed') &&
+            !error.message && error.message.includes('The device has been lost.') &&
+            !error.message && error.message.includes('locked stream')) {
             console.log(error.message)
           }
         })
@@ -739,7 +923,11 @@ export default defineComponent({
     this.fwModel = this.fwOptions[0]
     this.fwOptions[1].version = this.rc.version
     this.fwOptions[2].version = this.dev.version
-    this.connectSerial()
+    if (this.mode === 'serial') {
+      this.connectSerial()
+    } else if (this.mode === 'dfu') {
+      this.connectRecovery()
+    }
   }
 })
 </script>
