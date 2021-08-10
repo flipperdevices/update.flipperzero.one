@@ -147,13 +147,28 @@
         <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
       </div>
 
+      <div v-if="firmwareFileName.length && !crc32Check" class="alert">
+        <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b></span>
+      </div>
       <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
-        <q-btn v-if="firmwareFileName.length" @click="gotoDFU" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
-        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
+        <q-btn
+          v-if="firmwareFileName.length && crc32Check"
+          @click="gotoDFU"
+          color="positive"
+          padding="12px 30px"
+        >Flash {{ firmwareFileName }}</q-btn>
+        <q-btn
+          v-if="firmwareFileName.length"
+          @click="cancelUpload"
+          flat
+          :class="crc32Check ? 'q-ml-lg' : ''"
+          padding="12px 30px"
+        >Cancel</q-btn>
       </div>
+
       <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
         <span>Information is valid on {{ disconnectTime }}</span>
       </div>
@@ -228,12 +243,26 @@
         <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
       </div>
 
-      <div v-if="status !== 'Writing firmware'" class="flex flex-center">
+      <div v-if="firmwareFileName.length && !crc32Check" class="alert">
+        <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b></span>
+      </div>
+      <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
-        <q-btn v-if="firmwareFileName.length" @click="writeFirmware" color="positive" padding="12px 30px">Flash {{ firmwareFileName }}</q-btn>
-        <q-btn v-if="firmwareFileName.length" @click="cancelUpload" flat class="q-ml-lg" padding="12px 30px">Cancel</q-btn>
+        <q-btn
+          v-if="firmwareFileName.length && crc32Check"
+          @click="gotoDFU"
+          color="positive"
+          padding="12px 30px"
+        >Flash {{ firmwareFileName }}</q-btn>
+        <q-btn
+          v-if="firmwareFileName.length"
+          @click="cancelUpload"
+          flat
+          :class="crc32Check ? 'q-ml-lg' : ''"
+          padding="12px 30px"
+        >Cancel</q-btn>
       </div>
 
       <!--
@@ -296,6 +325,7 @@
 import { defineComponent, ref } from 'vue'
 import { WebDFU } from 'dfu'
 import * as semver from 'semver'
+import * as crc32 from 'crc-32'
 import { mdiChevronDown } from '@quasar/extras/mdi-v5'
 import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline } from '@quasar/extras/eva-icons'
 
@@ -344,6 +374,7 @@ export default defineComponent({
       }),
       firmwareFile: ref(undefined),
       firmwareFileName: ref(''),
+      crc32Check: ref('true'),
       displayArrows: ref(false),
       loadingSerial: ref(false),
       displaySerialMenu: ref(false),
@@ -631,7 +662,7 @@ export default defineComponent({
     },
     cropDFUFile () {
       function toHex (f, s, e) {
-        return Array.from(f.slice(s, e), function (byte) {
+        return Array.from(f.slice(s, e), (byte) => {
           return ('0' + (byte & 0xFF).toString(16)).slice(-2)
         }).join(' ')
       }
@@ -639,7 +670,14 @@ export default defineComponent({
       this.startAddress = toHex(this.firmwareFile, 285, 289).split(' ').reverse().join('')
       const size = parseInt(toHex(this.firmwareFile, 289, 293).split(' ').reverse().join(''), 16)
       const binary = this.firmwareFile.slice(293, size + 293)
-      this.firmwareFile = binary
+      const parsedCrc32 = new Int32Array(this.firmwareFile.slice(this.firmwareFile.length - 4, this.firmwareFile.length).buffer)[0]
+      const calculatedCrc32 = crc32.buf(this.firmwareFile.slice(0, this.firmwareFile.length - 4))
+      if ((-parsedCrc32 - 1) !== calculatedCrc32) {
+        this.crc32Check = false
+      } else {
+        this.crc32Check = true
+        this.firmwareFile = binary
+      }
     },
     async gotoDFU () {
       this.write(['dfu'])
@@ -930,6 +968,7 @@ export default defineComponent({
     cancelUpload () {
       this.firmwareFile = undefined
       this.firmwareFileName = ''
+      this.crc32Check = true
     }
   },
   created () {
