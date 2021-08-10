@@ -124,7 +124,11 @@
         </p>
       </div>
 
-      <div v-if="!firmwareFileName.length && status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
+      <div v-if="!sha256Check" class="alert">
+        <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+        Please contact us ASAP!
+      </div>
+      <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <q-select
           v-model="fwModel"
           :options="fwOptions"
@@ -148,7 +152,7 @@
       </div>
 
       <div v-if="firmwareFileName.length && !crc32Check" class="alert">
-        <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b></span>
+        <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b>!</span>
       </div>
       <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
@@ -220,7 +224,11 @@
         </q-card-section>
       </q-card>
 
-      <div v-if="!firmwareFileName.length && status !== 'Writing firmware'" class="flex flex-center">
+      <div v-if="!sha256Check" class="alert">
+        <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+        Please contact us ASAP!
+      </div>
+      <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware'" class="flex flex-center">
         <q-select
           v-model="fwModel"
           :options="fwOptions"
@@ -326,6 +334,7 @@ import { defineComponent, ref } from 'vue'
 import { WebDFU } from 'dfu'
 import * as semver from 'semver'
 import * as crc32 from 'crc-32'
+import * as shajs from 'sha.js'
 import { mdiChevronDown } from '@quasar/extras/mdi-v5'
 import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline } from '@quasar/extras/eva-icons'
 
@@ -375,6 +384,7 @@ export default defineComponent({
       firmwareFile: ref(undefined),
       firmwareFileName: ref(''),
       crc32Check: ref('true'),
+      sha256Check: ref('true'),
       displayArrows: ref(false),
       loadingSerial: ref(false),
       displaySerialMenu: ref(false),
@@ -638,11 +648,17 @@ export default defineComponent({
             return response.arrayBuffer()
           })
         this.firmwareFile = new Uint8Array(buffer)
-        this.cropDFUFile()
-        if (this.mode === 'serial') {
-          this.gotoDFU()
-        } else if (this.mode === 'dfu') {
-          this.writeFirmware()
+        const calculatedSha256 = await shajs('sha256').update(this.firmwareFile).digest('hex')
+        if (file.sha256 === calculatedSha256) {
+          this.sha256Check = true
+          this.cropDFUFile()
+          if (this.mode === 'serial') {
+            this.gotoDFU()
+          } else if (this.mode === 'dfu') {
+            this.writeFirmware()
+          }
+        } else {
+          this.sha256Check = false
         }
       } catch (error) {
         this.displaySerialMenu = false
