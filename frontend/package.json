@@ -12,6 +12,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "core-js": "^3.6.5",
+    "crc-32": "^1.2.0",
     "dfu": "^0.1.4",
     "quasar": "^2.0.0",
     "semver": "^7.3.5"
