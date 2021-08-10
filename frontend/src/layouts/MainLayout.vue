@@ -5,7 +5,7 @@
         <q-btn
           flat
           type="a"
-          href="https://flipperzero.one/"
+          href="https://update.flipperzero.one/"
           align="left"
           :dense="$q.screen.xs"
         >
