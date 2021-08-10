@@ -46,7 +46,7 @@
       </q-card-actions>
     </q-card>
 
-    <div v-show="displaySerialMenu" class="connected">
+    <div v-show="displaySerialMenu && mode !== 'dfu'" class="connected">
       <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
@@ -180,7 +180,7 @@
       </div>
     </div>
 
-    <div v-show="displayRecoveryMenu" class="connected">
+    <div v-show="displayRecoveryMenu && mode === 'dfu'" class="connected">
       <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
@@ -272,6 +272,23 @@
         Reconnect
       </q-btn>
     </div>
+
+    <q-btn
+      v-if="mode !== 'dfu'"
+      flat
+      color="grey-8"
+      size="13px"
+      class="absolute-bottom-right q-ma-sm"
+      @click="mode = 'dfu'; gotoDFU()"
+    >Recovery mode</q-btn>
+    <q-btn
+      v-if="mode === 'dfu'"
+      flat
+      color="grey-8"
+      size="13px"
+      class="absolute-bottom-right q-ma-sm"
+      @click="mode = 'serial'; connectSerial()"
+    >Normal mode</q-btn>
   </div>
 </template>
 
@@ -306,7 +323,7 @@ export default defineComponent({
     release: Object,
     rc: Object,
     dev: Object,
-    mode: String
+    modeProp: String
   },
   setup () {
     return {
@@ -315,6 +332,7 @@ export default defineComponent({
         msg: '',
         button: ''
       }),
+      mode: 'serial',
       status: ref('Connect Flipper'),
       port: ref(undefined),
       webdfu: ref(undefined),
@@ -378,6 +396,7 @@ export default defineComponent({
   },
   methods: {
     async connectSerial () {
+      this.mode = 'serial'
       this.error.isError = false
       this.error.msg = ''
       this.error.button = ''
@@ -475,7 +494,7 @@ export default defineComponent({
       }
     },
     async write (lines) {
-      if (!this.port.writable.locked) {
+      if (this.port && !this.port.writable.locked) {
         // eslint-disable-next-line no-undef
         const textEncoder = new TextEncoderStream()
         textEncoder.readable.pipeTo(this.port.writable)
@@ -625,7 +644,7 @@ export default defineComponent({
     async gotoDFU () {
       this.write(['dfu'])
       this.status = 'Rebooted into DFU'
-      this.connectDFU()
+      this.mode === 'serial' ? this.connectDFU() : this.connectRecovery()
     },
     async connectDFU () {
       this.disconnectSerial()
@@ -692,6 +711,7 @@ export default defineComponent({
       }
     },
     async connectRecovery () {
+      this.mode = 'dfu'
       try {
         this.displayArrows = true
         this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
@@ -784,6 +804,7 @@ export default defineComponent({
         await this.webdfu.write(1024, this.firmwareFile)
         this.webdfu.close()
         this.status = 'OK'
+        this.mode = 'serial'
         this.displaySerialMenu = false
         this.displayRecoveryMenu = false
       } catch (error) {
@@ -923,9 +944,9 @@ export default defineComponent({
     this.fwModel = this.fwOptions[0]
     this.fwOptions[1].version = this.rc.version
     this.fwOptions[2].version = this.dev.version
-    if (this.mode === 'serial') {
+    if (this.modeProp === 'serial') {
       this.connectSerial()
-    } else if (this.mode === 'dfu') {
+    } else if (this.modeProp === 'dfu') {
       this.connectRecovery()
     }
   }
