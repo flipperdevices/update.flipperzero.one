@@ -43,6 +43,7 @@
       <q-card-actions v-if="error.button.length" align="right">
         <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
         <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
+        <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('dfu')">Recovery mode</q-btn>
       </q-card-actions>
     </q-card>
 
@@ -173,7 +174,10 @@
         >Cancel</q-btn>
       </div>
 
-      <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
+      <div v-if="status === 'Serial connection lost'" class="alert">
+        <span>Information is valid on {{ disconnectTime }}</span>
+      </div>
+      <div v-if="status === 'DFU connection lost'" class="alert">
         <span>Information is valid on {{ disconnectTime }}</span>
       </div>
 
@@ -211,7 +215,7 @@
           <div class="col-7 q-ml-xl" style="white-space: nowrap;">
             <h5>
               <b>{{ flipper.name }}&nbsp;</b>
-              <span v-if="status !== 'Serial connection lost'">connected<span v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'"> in recovery mode</span>!</span>
+              <span v-if="status !== 'DFU connection lost'">connected in recovery mode!</span>
               <span v-else class="text-accent">disconnected!</span>
             </h5>
             <p>
@@ -228,7 +232,7 @@
         <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
         Please contact us ASAP!
       </div>
-      <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware'" class="flex flex-center">
+      <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center">
         <q-select
           v-model="fwModel"
           :options="fwOptions"
@@ -254,7 +258,7 @@
       <div v-if="firmwareFileName.length && !crc32Check" class="alert">
         <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b></span>
       </div>
-      <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
+      <div v-if="status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
@@ -273,12 +277,9 @@
         >Cancel</q-btn>
       </div>
 
-      <!--
-        //! TODO
-        <div v-if="status === 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
-          <span class="text-accent">Information is valid on {{ disconnectTime }}</span>
-        </div>
-      -->
+      <div v-if="status === 'DFU connection lost'" class="alert">
+        <span>Information is valid on {{ disconnectTime }}</span>
+      </div>
 
       <div v-show="status === 'Writing firmware'">
         <div class="alert">
@@ -306,6 +307,11 @@
 
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
       <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline" flat>
+        Reconnect
+      </q-btn>
+    </div>
+    <div v-show="status === 'DFU connection lost' && status !== 'OK' && !error.isError" id="reconnect">
+      <q-btn @click="connectRecovery" :icon="evaRefreshOutline" flat>
         Reconnect
       </q-btn>
     </div>
@@ -817,6 +823,11 @@ export default defineComponent({
             return new Uint8Array(buffer)
           })
 
+        this.flipper.name = 'undefined'
+        this.flipper.hardwareVer = 'undefined'
+        this.flipper.target = 'undefined'
+        this.flipper.bodyColor = 'undefined'
+
         if (otp[0] === 190 && otp[1] === 186) {
           this.flipper.hardwareVer = otp[8]
           this.flipper.target = otp[9]
@@ -856,7 +867,11 @@ export default defineComponent({
         this.status = 'Writing firmware'
         this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
         await this.webdfu.write(1024, this.firmwareFile)
-        this.webdfu.close()
+        this.webdfu.close().catch(error => {
+          if (error.message && !error.message.includes('disconnected')) {
+            console.log(error)
+          }
+        })
         this.status = 'OK'
         this.mode = 'serial'
         this.displaySerialMenu = false
@@ -870,8 +885,8 @@ export default defineComponent({
           this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process. Close it and reload this page.'
         } else {
           this.error.msg = `Failed to write firmware (${error})`
+          this.error.button = 'connectRecovery'
         }
-        this.error.button = ''
         this.status = 'Failed to write firmware'
       }
     },
@@ -960,12 +975,16 @@ export default defineComponent({
         this.disconnectSerial()
         this.connectSerial()
       } else if (type === 'dfu') {
-        try {
-          if (this.webdfu) this.webdfu.close()
-        } catch (error) {
-          console.log(error.message)
+        if (this.mode === 'serial') {
+          try {
+            if (this.webdfu) this.webdfu.close()
+          } catch (error) {
+            console.log(error.message)
+          }
+          this.connectDFU()
+        } else {
+          this.connectRecovery()
         }
-        this.connectDFU()
       }
     },
     async disconnectSerial () {
@@ -979,6 +998,21 @@ export default defineComponent({
             console.log(error.message)
           }
         })
+      }
+    },
+    onDisconnectDfu () {
+      this.webdfu = undefined
+      this.firmwareFile = undefined
+      this.firmwareFileName = ''
+      this.progress = {
+        current: 0,
+        max: 0,
+        stage: 0
+      }
+      if (this.status !== 'OK') {
+        this.status = 'DFU connection lost'
+        const d = new Date(Date.now())
+        this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
       }
     },
     cancelUpload () {
@@ -1004,6 +1038,7 @@ export default defineComponent({
     } else if (this.modeProp === 'dfu') {
       this.connectRecovery()
     }
+    navigator.usb.addEventListener('disconnect', this.onDisconnectDfu)
   }
 })
 </script>
