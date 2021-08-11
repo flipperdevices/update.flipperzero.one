@@ -264,7 +264,7 @@
         </p>
         <q-btn
           v-if="firmwareFileName.length && crc32Check"
-          @click="gotoDFU"
+          @click="writeFirmware"
           color="positive"
           padding="12px 30px"
         >Flash {{ firmwareFileName }}</q-btn>
@@ -388,6 +388,7 @@ export default defineComponent({
         stage: 0
       }),
       firmwareFile: ref(undefined),
+      firmwareFileCropped: undefined,
       firmwareFileName: ref(''),
       crc32Check: ref('true'),
       sha256Check: ref('true'),
@@ -698,7 +699,7 @@ export default defineComponent({
         this.crc32Check = false
       } else {
         this.crc32Check = true
-        this.firmwareFile = binary
+        this.firmwareFileCropped = binary
       }
     },
     async gotoDFU () {
@@ -866,7 +867,7 @@ export default defineComponent({
         }
         this.status = 'Writing firmware'
         this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
-        await this.webdfu.write(1024, this.firmwareFile)
+        await this.webdfu.write(1024, this.firmwareFileCropped)
         this.webdfu.close().catch(error => {
           if (error.message && !error.message.includes('disconnected')) {
             console.log(error)
