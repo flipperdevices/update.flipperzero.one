@@ -2,6 +2,10 @@
   min-height: 350px;
 }
 
+.popup-overlay a {
+  color: $accent;
+}
+
 #arrow-1 {
   display: flex;
   align-items: center;

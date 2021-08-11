@@ -5,7 +5,7 @@
         flat
         round
         :icon="evaCloseOutline"
-        size="18px"
+        size="24px"
         class="absolute-top-right q-ma-md text-white"
         @click="displayOverlay = false"
       ></q-btn>
