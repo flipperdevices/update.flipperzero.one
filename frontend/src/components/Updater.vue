@@ -1,17 +1,40 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
-    <div v-show="displayArrows" class="arrows">
-      <div class="popup-overlay">
-        <div id="arrows-spinner">
-          <q-spinner
-            color="accent"
-            size="3em"
-          ></q-spinner>
-          <p class="text-white">
-            Waiting for connection...
-          </p>
-        </div>
+    <div v-show="displayOverlay" class="popup-overlay">
+      <q-btn
+        flat
+        round
+        :icon="evaCloseOutline"
+        size="18px"
+        class="absolute-top-right q-ma-md text-white"
+        @click="displayOverlay = false"
+      ></q-btn>
+      <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
+        <q-card-section class="text-white text-left">
+          <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
+          <div class="text-subtitle2">{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+        </q-card-section>
+
+        <q-separator dark v-if="error.button.length"></q-separator>
+
+        <q-card-actions v-if="error.button.length" align="right" class="text-white">
+          <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
+          <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
+          <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('dfu')">Recovery mode</q-btn>
+        </q-card-actions>
+      </q-card>
+      <div class="absolute-bottom-right q-mr-lg text-white">
+        <p v-if="userAgent.os === 'Windows'">
+          Can't find your Flipper?
+          Connect Flipper in DFU mode and install WinUSB driver. You can use our <a href="https://cdn.flipperzero.one/flipper_zadig.exe">driver installer</a>.
+        </p>
+        <p v-if="userAgent.os === 'Linux'" class="q-mb-sm">
+          Can't find your Flipper?
+          On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh" target="blank">this script</a>.
+        </p>
       </div>
+    </div>
+    <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
         <span class="q-pl-sm">1. {{ arrowText }}</span>
@@ -32,7 +55,7 @@
       </p>
     </div>
 
-    <q-card v-show="error.isError" id="error">
+    <q-card v-show="error.isError && !displayOverlay" id="error">
       <q-card-section class="bg-negative text-white text-left">
         <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
         <div class="text-subtitle2">{{ error.msg }}<a v-if="error.msg.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
@@ -47,7 +70,7 @@
       </q-card-actions>
     </q-card>
 
-    <div v-show="displaySerialMenu && mode !== 'dfu'" class="connected">
+    <div v-show="displaySerialMenu && mode !== 'dfu' && !error.isError && !loadingSerial" class="connected">
       <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
@@ -59,7 +82,11 @@
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
             <h5>
               <b>{{ flipper.name }}&nbsp;</b>
-              <span v-if="status !== 'Serial connection lost'">connected<span v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'"> in recovery mode</span>!</span>
+              <span v-if="status !== 'Serial connection lost'">connected
+                <span v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'">
+                  <br />in recovery mode
+                </span>!
+              </span>
               <span v-else class="text-accent">disconnected!</span>
             </h5>
             <h5 id="battery">Battery: {{ flipper.battery }}</h5>
@@ -203,7 +230,7 @@
       </div>
     </div>
 
-    <div v-show="displayRecoveryMenu && mode === 'dfu'" class="connected">
+    <div v-show="displayRecoveryMenu && mode === 'dfu' && !error.isError && !loadingSerial" class="connected">
       <h4>Flipper Zero Web Updater</h4>
 
       <q-card flat>
@@ -342,7 +369,7 @@ import * as semver from 'semver'
 import * as crc32 from 'crc-32'
 import * as shajs from 'sha.js'
 import { mdiChevronDown } from '@quasar/extras/mdi-v5'
-import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline } from '@quasar/extras/eva-icons'
+import { evaArrowBackOutline, evaArrowUpwardOutline, evaAlertCircleOutline, evaRefreshOutline, evaCloseOutline } from '@quasar/extras/eva-icons'
 
 class LineBreakTransformer {
   constructor () {
@@ -393,6 +420,7 @@ export default defineComponent({
       crc32Check: ref('true'),
       sha256Check: ref('true'),
       displayArrows: ref(false),
+      displayOverlay: ref(false),
       loadingSerial: ref(false),
       displaySerialMenu: ref(false),
       displayRecoveryMenu: ref(false),
@@ -445,10 +473,30 @@ export default defineComponent({
   methods: {
     async connectSerial () {
       this.mode = 'serial'
+      this.firmwareFile = undefined
+      this.firmwareFileName = ''
+      this.progress = {
+        current: 0,
+        max: 0,
+        stage: 0
+      }
+      for (const p in this.flipper) {
+        if (p === 'radioFusFirmware' || p === 'radioFirmware') {
+          this.flipper[p] = {
+            major: '',
+            minor: '',
+            sub: ''
+          }
+        } else {
+          this.flipper[p] = 'undefined'
+        }
+      }
+      this.newerThanLTS = false
       this.error.isError = false
       this.error.msg = ''
       this.error.button = ''
       this.displayArrows = true
+      this.displayOverlay = true
       this.arrowText = 'Find your Flipper in serial mode (Flipper <name>)'
       this.adjustArrows()
       try {
@@ -461,19 +509,19 @@ export default defineComponent({
         })
 
         this.displayArrows = false
+        this.displayOverlay = false
         this.status = 'Connected to Flipper in serial mode'
 
         this.getData()
       } catch (error) {
         if (error.message && error.message.includes('No port selected by the user.')) {
-          this.error.msg = 'No port selected.'
+          this.error.msg = 'No device selected.'
         } else if (!error.message && error.message.includes('Failed to open serial port.')) {
           console.log(error.message)
           this.error.msg = error.message
         } else {
           this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process.'
         }
-        this.displaySerialMenu = false
         this.error.isError = true
         this.error.button = 'connectSerial'
         this.status = 'No device selected'
@@ -668,7 +716,6 @@ export default defineComponent({
           this.sha256Check = false
         }
       } catch (error) {
-        this.displaySerialMenu = false
         this.error.isError = true
         if (isNaN(Number(this.flipper.target))) {
           this.error.msg = 'Unknown firmware target. Try repairing your Flipper via desktop app'
@@ -713,6 +760,7 @@ export default defineComponent({
       this.error.msg = ''
       this.error.button = ''
       this.displayArrows = true
+      this.displayOverlay = true
       this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
       try {
         const filters = [
@@ -736,12 +784,12 @@ export default defineComponent({
         )
         await this.webdfu.init()
         if (this.webdfu.interfaces.length === 0) {
-          this.displaySerialMenu = false
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
           this.error.button = 'connectDFU'
           this.status = 'The selected device does not have any USB DFU interfaces'
           this.displayArrows = false
+          this.displayOverlay = false
         }
 
         await this.webdfu.connect(0)
@@ -750,10 +798,10 @@ export default defineComponent({
         this.error.msg = ''
         this.error.button = ''
         this.displayArrows = false
+        this.displayOverlay = false
 
         this.writeFirmware()
       } catch (error) {
-        this.displaySerialMenu = false
         this.error.isError = true
         this.error.button = 'connectDFU'
         if (error.message && error.message.includes('No device selected')) {
@@ -773,9 +821,20 @@ export default defineComponent({
     },
     async connectRecovery () {
       this.mode = 'dfu'
+      this.firmwareFile = undefined
+      this.firmwareFileName = ''
+      this.progress = {
+        current: 0,
+        max: 0,
+        stage: 0
+      }
+      this.error.isError = false
+      this.error.msg = ''
+      this.error.button = ''
+      this.displayArrows = true
+      this.displayOverlay = true
+      this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
       try {
-        this.displayArrows = true
-        this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
         const filters = [
           { vendorId: 0x0483, productId: 0xdf11 }
         ]
@@ -797,8 +856,6 @@ export default defineComponent({
         )
         await this.webdfu.init()
         if (this.webdfu.interfaces.length === 0) {
-          this.displaySerialMenu = false
-          this.displayRecoveryMenu = false
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
           this.error.button = 'connectDFU'
@@ -812,6 +869,7 @@ export default defineComponent({
         this.error.msg = ''
         this.error.button = ''
         this.displayArrows = false
+        this.displayOverlay = false
 
         const otp = await this.webdfu.read(1024, 32)
           .then(blob => {
@@ -842,7 +900,6 @@ export default defineComponent({
 
         this.displayRecoveryMenu = true
       } catch (error) {
-        this.displaySerialMenu = false
         this.error.isError = true
         this.error.button = 'connectDFU'
         if (error.message && error.message && error.message.includes('No device selected')) {
@@ -878,8 +935,6 @@ export default defineComponent({
         this.displaySerialMenu = false
         this.displayRecoveryMenu = false
       } catch (error) {
-        this.displaySerialMenu = false
-        this.displayRecoveryMenu = false
         this.error.isError = true
         console.log(error)
         if (error.includes && error.includes('Error: stall')) {
@@ -953,25 +1008,6 @@ export default defineComponent({
       }
     },
     async reconnect (type) {
-      this.firmwareFile = undefined
-      this.firmwareFileName = ''
-      this.progress = {
-        current: 0,
-        max: 0,
-        stage: 0
-      }
-      for (const p in this.flipper) {
-        if (p === 'radioFusFirmware' || p === 'radioFirmware') {
-          this.flipper[p] = {
-            major: '',
-            minor: '',
-            sub: ''
-          }
-        } else {
-          this.flipper[p] = 'undefined'
-        }
-      }
-      this.newerThanLTS = false
       if (type === 'serial') {
         this.disconnectSerial()
         this.connectSerial()
@@ -1028,6 +1064,7 @@ export default defineComponent({
     this.evaArrowUpwardOutline = evaArrowUpwardOutline
     this.evaAlertCircleOutline = evaAlertCircleOutline
     this.evaRefreshOutline = evaRefreshOutline
+    this.evaCloseOutline = evaCloseOutline
   },
   mounted () {
     this.fwOptions[0].version = this.release.version
