@@ -24,11 +24,7 @@
         </q-card-actions>
       </q-card>
       <div class="absolute-bottom-right q-mr-lg text-white">
-        <div v-if="!error.isError && arrowText === 'Find your Flipper in recovery mode (DFU in FS Mode)'" class="flex justify-end flipper q-mb-md">
-          <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
-          <img src="../assets/flipper-transparent.png" />
-        </div>
-        <div v-else-if="error.isError" style="min-width: 200px">
+        <div v-if="error.isError" style="min-width: 200px">
           <q-btn
             v-if="mode !== 'dfu'"
             :disabled="status === 'Writing firmware'"
@@ -58,10 +54,17 @@
         </p>
       </div>
     </div>
+
     <div v-show="displayArrows" class="arrows">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
-        <span class="q-pl-sm">1. {{ arrowText }}</span>
+        <div>
+          <span class="q-pl-sm">1. {{ arrowText }}</span>
+          <div v-if="!error.isError && arrowText === 'Find your Flipper in recovery mode (DFU in FS Mode)'" class="flex flex-center flipper q-mt-lg">
+            <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
+            <img src="../assets/flipper-transparent.png" />
+          </div>
+        </div>
       </div>
       <div id="arrow-2">
         <q-icon :name="evaArrowUpwardOutline"></q-icon>
