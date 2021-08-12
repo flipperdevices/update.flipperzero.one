@@ -24,6 +24,30 @@
         </q-card-actions>
       </q-card>
       <div class="absolute-bottom-right q-mr-lg text-white">
+        <div v-if="!error.isError && arrowText === 'Find your Flipper in recovery mode (DFU in FS Mode)'" class="flex justify-end flipper q-mb-md">
+          <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
+          <img src="../assets/flipper-transparent.png" />
+        </div>
+        <div v-else-if="error.isError" style="min-width: 200px">
+          <q-btn
+            v-if="mode !== 'dfu'"
+            :disabled="status === 'Writing firmware'"
+            outline
+            color="white"
+            size="13px"
+            class="absolute-bottom-right q-ma-sm"
+            @click="mode = 'dfu'; gotoDFU()"
+          >Recovery mode</q-btn>
+          <q-btn
+            v-if="mode === 'dfu'"
+            :disabled="status === 'Writing firmware'"
+            outline
+            color="white"
+            size="13px"
+            class="absolute-bottom-right q-ma-sm"
+            @click="mode = 'serial'; connectSerial()"
+          >Normal mode</q-btn>
+        </div>
         <p v-if="userAgent.os === 'Windows'">
           Can't find your Flipper?
           Connect Flipper in DFU mode and install WinUSB driver. You can use our <a href="https://cdn.flipperzero.one/flipper_zadig.exe">driver installer</a>.
@@ -70,12 +94,11 @@
       </q-card-actions>
     </q-card>
 
-    <div v-show="displaySerialMenu && mode !== 'dfu' && !error.isError && !loadingSerial" class="connected">
-      <h4>Flipper Zero Web Updater</h4>
-
+    <div v-show="displaySerialMenu && mode !== 'dfu' && !error.isError && !loadingSerial" class="connected q-mt-sm">
       <q-card flat>
         <q-card-section horizontal class="text-left">
-          <div class="col-6 flex flex-center">
+          <div class="col-6 flex flex-center flipper">
+            <img v-if="status === 'Connected to Flipper in DFU mode' || status === 'Writing firmware'" src="../assets/flipper-dfu-overlay.png" class="absolute"/>
             <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
             <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
@@ -230,12 +253,11 @@
       </div>
     </div>
 
-    <div v-show="displayRecoveryMenu && mode === 'dfu' && !error.isError && !loadingSerial" class="connected">
-      <h4>Flipper Zero Web Updater</h4>
-
+    <div v-show="displayRecoveryMenu && mode === 'dfu' && !error.isError && !loadingSerial" class="connected q-mt-sm">
       <q-card flat>
         <q-card-section horizontal class="text-left">
           <div class="col-5 flex flex-center">
+            <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
             <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
             <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
@@ -345,6 +367,7 @@
 
     <q-btn
       v-if="mode !== 'dfu'"
+      :disabled="status === 'Writing firmware'"
       flat
       color="grey-8"
       size="13px"
@@ -353,6 +376,7 @@
     >Recovery mode</q-btn>
     <q-btn
       v-if="mode === 'dfu'"
+      :disabled="status === 'Writing firmware'"
       flat
       color="grey-8"
       size="13px"
@@ -751,7 +775,7 @@ export default defineComponent({
     },
     async gotoDFU () {
       this.write(['dfu'])
-      this.status = 'Rebooted into DFU'
+      this.status = 'Waiting for DFU connection'
       this.mode === 'serial' ? this.connectDFU() : this.connectRecovery()
     },
     async connectDFU () {
@@ -761,7 +785,7 @@ export default defineComponent({
       this.error.button = ''
       this.displayArrows = true
       this.displayOverlay = true
-      this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
+      this.arrowText = 'Find your Flipper in recovery mode (DFU in FS Mode)'
       try {
         const filters = [
           { vendorId: 0x0483, productId: 0xdf11 }
@@ -833,7 +857,8 @@ export default defineComponent({
       this.error.button = ''
       this.displayArrows = true
       this.displayOverlay = true
-      this.arrowText = 'Find your Flipper in DFU mode (DFU in FS Mode)'
+      this.arrowText = 'Find your Flipper in recovery mode (DFU in FS Mode)'
+      this.status = 'Waiting for DFU connection'
       try {
         const filters = [
           { vendorId: 0x0483, productId: 0xdf11 }
@@ -923,6 +948,10 @@ export default defineComponent({
           await this.webdfu.connect(0)
         }
         this.status = 'Writing firmware'
+        function preventTabClose (event) {
+          event.returnValue = ''
+        }
+        window.addEventListener('beforeunload', preventTabClose)
         this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
         await this.webdfu.write(1024, this.firmwareFileCropped)
         this.webdfu.close().catch(error => {
@@ -932,6 +961,7 @@ export default defineComponent({
         })
         this.status = 'OK'
         this.mode = 'serial'
+        window.removeEventListener('beforeunload', preventTabClose)
         this.displaySerialMenu = false
         this.displayRecoveryMenu = false
       } catch (error) {
