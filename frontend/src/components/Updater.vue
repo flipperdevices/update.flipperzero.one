@@ -208,23 +208,39 @@
       <div v-if="firmwareFileName.length && !crc32Check" class="alert">
         <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b>!</span>
       </div>
-      <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
+
+      <div v-if="firmwareFileName.length && !firmwareTargetCheck" class="alert">
+        <p>
+            <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmwareFileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+        </p>
+        This firmware might break your device!
+      </div>
+      <div v-if="status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center q-mt-md">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
         <q-btn
-          v-if="firmwareFileName.length && crc32Check"
-          @click="gotoDFU"
+          v-if="firmwareFileName.length && crc32Check && firmwareTargetCheck"
+          @click="writeFirmware"
           color="positive"
           padding="12px 30px"
         >Flash {{ firmwareFileName }}</q-btn>
         <q-btn
           v-if="firmwareFileName.length"
           @click="cancelUpload"
-          flat
+          :flat="firmwareTargetCheck"
+          :color="firmwareTargetCheck ? '' : 'positive'"
           :class="crc32Check ? 'q-ml-lg' : ''"
           padding="12px 30px"
         >Cancel</q-btn>
+        <q-btn
+          v-if="!firmwareTargetCheck"
+          flat
+          color="grey-8"
+          @click="writeFirmware"
+          padding="12px 30px"
+          class="q-ml-lg"
+        >Flash anyway</q-btn>
       </div>
 
       <div v-if="status === 'Serial connection lost'" class="alert">
@@ -310,12 +326,18 @@
       <div v-if="firmwareFileName.length && !crc32Check" class="alert">
         <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmwareFileName }}</b></span>
       </div>
-      <div v-if="status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center">
+      <div v-if="firmwareFileName.length && !firmwareTargetCheck" class="alert">
+        <p>
+            <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmwareFileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+        </p>
+        This firmware might break your device!
+      </div>
+      <div v-if="status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center q-mt-md">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
         <q-btn
-          v-if="firmwareFileName.length && crc32Check"
+          v-if="firmwareFileName.length && crc32Check && firmwareTargetCheck"
           @click="writeFirmware"
           color="positive"
           padding="12px 30px"
@@ -323,10 +345,19 @@
         <q-btn
           v-if="firmwareFileName.length"
           @click="cancelUpload"
-          flat
+          :flat="firmwareTargetCheck"
+          :color="firmwareTargetCheck ? '' : 'positive'"
           :class="crc32Check ? 'q-ml-lg' : ''"
           padding="12px 30px"
         >Cancel</q-btn>
+        <q-btn
+          v-if="!firmwareTargetCheck"
+          flat
+          color="grey-8"
+          @click="writeFirmware"
+          padding="12px 30px"
+          class="q-ml-lg"
+        >Flash anyway</q-btn>
       </div>
 
       <div v-if="status === 'DFU connection lost'" class="alert">
@@ -446,6 +477,7 @@ export default defineComponent({
       firmwareFileName: ref(''),
       crc32Check: ref('true'),
       sha256Check: ref('true'),
+      firmwareTargetCheck: ref('true'),
       displayArrows: ref(false),
       displayOverlay: ref(false),
       loadingSerial: ref(false),
@@ -764,9 +796,21 @@ export default defineComponent({
         }).join(' ')
       }
 
+      const parsedTarget = new TextDecoder().decode(this.firmwareFile.slice(22, 37))
+      if (parsedTarget.startsWith('Flipper Zero F')) {
+        if (parsedTarget.endsWith(this.flipper.target)) {
+          this.firmwareTargetCheck = true
+        } else {
+          this.firmwareTargetCheck = false
+        }
+      } else {
+        this.firmwareTargetCheck = undefined
+      }
+
       this.startAddress = toHex(this.firmwareFile, 285, 289).split(' ').reverse().join('')
       const size = parseInt(toHex(this.firmwareFile, 289, 293).split(' ').reverse().join(''), 16)
       const binary = this.firmwareFile.slice(293, size + 293)
+
       const parsedCrc32 = new Int32Array(this.firmwareFile.slice(this.firmwareFile.length - 4, this.firmwareFile.length).buffer)[0]
       const calculatedCrc32 = crc32.buf(this.firmwareFile.slice(0, this.firmwareFile.length - 4))
       if ((-parsedCrc32 - 1) !== calculatedCrc32) {
@@ -1089,6 +1133,7 @@ export default defineComponent({
       this.firmwareFile = undefined
       this.firmwareFileName = ''
       this.crc32Check = true
+      this.firmwareTargetCheck = true
     }
   },
   created () {
