@@ -54,12 +54,24 @@ code {
 }
 
 #header {
+  padding: 0.65rem 0;
   max-width: 1200px;
   .q-focus-helper {
     display: none;
   }
   a {
-    &:hover {
+    padding-right: 1rem;
+    font-size: 18px;
+    color: $accent;
+  }
+}
+
+.mobile-menu {
+  padding-bottom: 0.5rem;
+  p {
+    margin: 0.75rem 0;
+    a {
+      padding: 0 4rem;
       color: $accent;
     }
   }
@@ -67,11 +79,6 @@ code {
 
 .q-card {
   border-radius: 10px;
-}
-
-.q-item {
-  padding-left: 30px;
-  font-size: 14px;
 }
 
 .popup-overlay {
