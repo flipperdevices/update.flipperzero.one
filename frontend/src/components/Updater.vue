@@ -215,7 +215,7 @@
         </p>
         This firmware might break your device!
       </div>
-      <div v-if="status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center q-mt-md">
+      <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center q-mt-md">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
@@ -589,7 +589,8 @@ export default defineComponent({
     },
     async getData () {
       this.loadingSerial = true
-      await new Promise(resolve => {
+      const connectionStartTime = Date.now()
+      await new Promise((resolve, reject) => {
         const readInterval = setInterval(() => {
           if (this.flipper.firmwareVer !== 'undefined') {
             resolve()
@@ -597,7 +598,15 @@ export default defineComponent({
           }
           this.write(this.commands)
           this.read()
+          if (Date.now() - connectionStartTime > 5000) {
+            reject()
+            clearInterval(readInterval)
+          }
         }, 500)
+      }).catch(() => {
+        this.error.isError = true
+        this.error.msg = 'Connection timeout. Are you connecting to a Flipper?'
+        this.status = 'Connection timeout'
       })
       this.compareVersions()
       this.loadingSerial = false
