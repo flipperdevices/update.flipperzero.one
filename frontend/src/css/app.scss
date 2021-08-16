@@ -94,3 +94,47 @@ code {
   backdrop-filter: blur(10px);
   z-index: 2001;
 }
+
+.footer {
+  padding: 4rem 0 3rem 0;
+  .links-container {
+    display: flex;
+    justify-content: center;
+    & > div {
+      display: flex;
+      justify-content: center;
+      & > div {
+        margin: 0 2rem;
+        h6 {
+          margin: 1.5rem 0;
+        }
+        a {
+          display: block;
+          padding: 0.3rem 0;
+          color: $accent;
+        }
+      }
+    }
+  }
+  img.flipper-footer {
+    width: 200px;
+  }
+  .icons {
+    padding: 3rem 0 2rem 0;
+    & > a > img {
+      margin: 0 1rem;
+    }
+  }
+}
+
+@media (max-width: 800px) {
+  .footer {
+    padding-bottom: 150px;
+    .links-container > div {
+      flex-direction: column;
+    }
+    .icons > a > img {
+      margin: 0 0.75rem;
+    }
+  }
+}
