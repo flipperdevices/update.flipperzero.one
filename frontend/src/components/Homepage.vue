@@ -223,17 +223,20 @@ export default defineComponent({
       dropdown: ref([
         {
           text: 'Mac OS X Download',
-          href: 'https://update.flipperzero.one/qFlipper/qflipper.dmg'
+          href: ''
         },
         {
           text: 'Windows Download',
-          href: 'https://update.flipperzero.one/qFlipper/qFlipperSetup-64bit.exe'
+          href: ''
         },
         {
           text: 'Linux Download',
-          href: 'https://update.flipperzero.one/qFlipper/qFlipper-x86_64.AppImage'
+          href: ''
         }
       ]),
+      qFlipper: ref({
+        release: {}
+      }),
       versions: ref([]),
       rcVersions: ref([]),
       release: ref({
@@ -276,7 +279,7 @@ export default defineComponent({
       setTimeout(() => { this.copied = false }, 1500)
     },
     getDir () {
-      fetch('https://update.flipperzero.one/directory.json')
+      fetch('https://update.flipperzero.one/firmware/directory.json')
         .then((response) => {
           return response.json()
         })
@@ -324,6 +327,33 @@ export default defineComponent({
             else return -1
           })
           this.rc.changelog = rc.versions[0].changelog
+        })
+      fetch('https://update.flipperzero.one/qFlipper/directory.json')
+        .then((response) => {
+          return response.json()
+        })
+        .then(data => {
+          this.qFlipper.release = data.channels.find(e => e.id === 'release')
+          if (this.qFlipper.release) {
+            this.qFlipper.release.versions.sort((a, b) => {
+              if (semver.lt(a.version, b.version)) return 1
+              else return -1
+            })
+            const files = this.qFlipper.release.versions[0].files
+            this.dropdown.forEach(e => {
+              switch (e.text) {
+                case 'Mac OS X Download':
+                  e.href = files.find(f => f.target === 'macos/amd64').url
+                  break
+                case 'Windows Download':
+                  e.href = files.find(f => f.target === 'windows/amd64' && f.type === 'installer').url
+                  break
+                case 'Linux Download':
+                  e.href = files.find(f => f.target === 'linux/amd64').url
+                  break
+              }
+            })
+          }
         })
     }
   },
