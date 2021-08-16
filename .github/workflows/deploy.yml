@@ -18,7 +18,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/flipper-zero/update.flipperzero.one
+          images: ghcr.io/flipperdevices/update.flipperzero.one
           flavor: latest=${{ github.ref == 'refs/heads/main' }}
           tags: type=ref,event=branch
       - name: Set up QEMU
