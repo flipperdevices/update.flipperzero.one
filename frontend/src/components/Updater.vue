@@ -18,8 +18,8 @@
         <q-separator dark v-if="error.button.length"></q-separator>
 
         <q-card-actions v-if="error.button.length" align="right" class="text-white">
-          <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
-          <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
+          <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Reconnect</q-btn>
+          <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Reconnect</q-btn>
           <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('dfu')">Recovery mode</q-btn>
         </q-card-actions>
       </q-card>
@@ -91,8 +91,8 @@
       <q-separator v-if="error.button.length"></q-separator>
 
       <q-card-actions v-if="error.button.length" align="right">
-        <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Try again</q-btn>
-        <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Try again</q-btn>
+        <q-btn flat v-if="error.button === 'connectSerial'" @click="reconnect('serial')">Reconnect</q-btn>
+        <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('dfu')">Reconnect</q-btn>
         <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('dfu')">Recovery mode</q-btn>
       </q-card-actions>
     </q-card>
