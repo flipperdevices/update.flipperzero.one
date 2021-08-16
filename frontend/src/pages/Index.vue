@@ -28,7 +28,7 @@ export default defineComponent({
     if (navigator.userAgent.indexOf('YaBrowser') !== -1 || navigator.userAgent.indexOf('Yowser') !== -1) this.userAgent.browser = 'Yandex'
     if (navigator.userAgent.indexOf('Edg') !== -1) this.userAgent.browser = 'Edge'
 
-    if (navigator.userAgent.indexOf('Macintosh') !== -1) this.userAgent.os = 'Mac OS X'
+    if (navigator.userAgent.indexOf('Macintosh') !== -1) this.userAgent.os = 'macOS'
     else if (navigator.userAgent.indexOf('Linux') !== -1) this.userAgent.os = 'Linux'
     else if (navigator.userAgent.indexOf('Windows') !== -1) this.userAgent.os = 'Windows'
 

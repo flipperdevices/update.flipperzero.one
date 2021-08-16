@@ -35,7 +35,7 @@
               This script will install system rules that will enable communication with your Flipper Zero.
             </p>
           </div>
-          <p v-if="userAgent.os === 'Mac OS X'">
+          <p v-if="userAgent.os === 'macOS'">
             No drivers needed!
           </p>
           <p>
@@ -222,7 +222,7 @@ export default defineComponent({
       copied: ref(false),
       dropdown: ref([
         {
-          text: 'Mac OS X Download',
+          text: 'macOS Download',
           href: ''
         },
         {
@@ -342,7 +342,7 @@ export default defineComponent({
             const files = this.qFlipper.release.versions[0].files
             this.dropdown.forEach(e => {
               switch (e.text) {
-                case 'Mac OS X Download':
+                case 'macOS Download':
                   e.href = files.find(f => f.target === 'macos/amd64').url
                   break
                 case 'Windows Download':
