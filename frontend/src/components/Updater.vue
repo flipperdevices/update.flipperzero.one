@@ -1,14 +1,16 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
     <div v-show="showOverlay" class="popup-overlay">
-      <q-btn
-        flat
-        round
-        :icon="evaCloseOutline"
-        size="24px"
-        class="absolute-top-right q-ma-md text-white"
-        @click="showOverlay = false"
-      ></q-btn>
+      <div class="absolute-top-right q-ma-md text-white">
+        <q-btn
+          flat
+          round
+          :icon="evaCloseOutline"
+          size="24px"
+          @click="showOverlay = false"
+        ></q-btn>
+        <p>Close</p>
+      </div>
       <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
         <q-card-section class="text-white text-left">
           <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
