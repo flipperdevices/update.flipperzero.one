@@ -81,6 +81,7 @@
           :release="release"
           :rc="rc"
           :dev="dev"
+          :custom="custom"
           :modeProp="modeProp"
         />
       </q-card-section>
@@ -213,7 +214,8 @@ export default defineComponent({
     Updater
   },
   props: {
-    userAgent: Object
+    userAgent: Object,
+    customSource: Object
   },
   setup () {
     return {
@@ -259,7 +261,8 @@ export default defineComponent({
         url: '',
         files: [],
         changelog: ''
-      })
+      }),
+      custom: ref(null)
     }
   },
   methods: {
@@ -327,6 +330,20 @@ export default defineComponent({
             else return -1
           })
           this.rc.changelog = rc.versions[0].changelog
+
+          if (!this.customSource) {
+            return
+          }
+          this.custom = {
+            channel: this.customSource.channel,
+            version: this.customSource.version,
+            date: new Date().toISOString().slice(0, 10),
+            url: this.customSource.url,
+            files: [{
+              url: this.customSource.url,
+              type: 'full_dfu'
+            }]
+          }
         })
       fetch('https://update.flipperzero.one/qFlipper/directory.json')
         .then((response) => {

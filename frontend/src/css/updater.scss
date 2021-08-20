@@ -106,6 +106,9 @@ input[type=file] {
   padding: 0.2rem 0.4rem;
   color: #fff;
   border-radius: 5px;
+  &.custom {
+    background-color: $dark;
+  }
   &.release {
     background-color: $positive;
   }
