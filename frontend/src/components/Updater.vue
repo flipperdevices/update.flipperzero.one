@@ -186,8 +186,8 @@
       </div>
 
       <div v-if="fwModel.value === 'custom'" class="alert">
-        <p>
-          <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from {{ this['custom'].url }}!
+        <p class="ellipsis">
+          <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
         </p>
         This firmware might be <b>malicious</b> and might <b>break your device</b>!
       </div>
@@ -616,6 +616,7 @@ export default defineComponent({
       }).catch(() => {
         this.error.isError = true
         this.error.msg = 'Connection timeout. Are you connecting to a Flipper?'
+        this.error.button = 'connectSerial'
         this.status = 'Connection timeout'
       })
       this.compareVersions()
