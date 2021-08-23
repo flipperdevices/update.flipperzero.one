@@ -48,7 +48,7 @@
         </div>
         <p v-if="userAgent.os === 'Windows'">
           Can't find your Flipper?
-          Connect Flipper in DFU mode and install WinUSB driver. You can use our <a href="https://cdn.flipperzero.one/flipper_zadig.exe">driver installer</a>.
+          Connect Flipper in DFU mode and install WinUSB driver. You can use <a @click="route(dropdown[0].href)">qFlipper installer</a> for that..
         </p>
         <p v-if="userAgent.os === 'Linux'" class="q-mb-sm">
           Can't find your Flipper?

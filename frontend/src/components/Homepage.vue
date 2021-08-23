@@ -13,7 +13,7 @@
           <h4>Web updater</h4>
           <h5>Flash the latest firmware right in your browser using WebUSB.</h5>
           <p v-if="userAgent.os !== 'Windows'">
-            1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use our <a @click="route(dropdown[0].href)">qFlipper installer</a> for that.
+            1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use <a @click="route(dropdown[0].href)">qFlipper installer</a> for that.
           </p>
           <div v-if="userAgent.os === 'Linux'">
             <p class="q-mb-sm">
