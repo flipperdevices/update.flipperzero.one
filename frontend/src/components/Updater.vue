@@ -25,7 +25,7 @@
           <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('dfu')">Recovery mode</q-btn>
         </q-card-actions>
       </q-card>
-      <div class="absolute-bottom-right q-mr-lg text-white">
+      <div class="absolute-bottom-right q-mr-lg text-white text-right">
         <div v-if="error.isError" style="min-width: 200px">
           <q-btn
             v-if="mode !== 'dfu'"
@@ -33,7 +33,7 @@
             outline
             color="white"
             size="13px"
-            class="absolute-bottom-right q-ma-sm"
+            class="q-ma-sm"
             @click="mode = 'dfu'; gotoDFU()"
           >Recovery mode</q-btn>
           <q-btn
@@ -42,7 +42,7 @@
             outline
             color="white"
             size="13px"
-            class="absolute-bottom-right q-ma-sm"
+            class="q-ma-sm"
             @click="mode = 'serial'; connectSerial()"
           >Normal mode</q-btn>
         </div>
