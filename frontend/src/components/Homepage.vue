@@ -44,6 +44,9 @@
           <p>
             Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
           </p>
+          <p v-if="customSource">
+            <b>Found custom firmware, connect to flash it.</b>
+          </p>
           <div class="text-center q-mt-lg">
             <q-btn color="positive" padding="12px 30px" @click="clickConnect">Connect to Flipper</q-btn>
           </div>
