@@ -185,12 +185,13 @@
         Please contact us ASAP!
       </div>
 
-      <div v-if="fwModel.value === 'custom'" class="alert">
+      <div v-if="!firmwareFileName.length && fwModel.value === 'custom' && status !== 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
         <p class="ellipsis">
           <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
         </p>
         This firmware might be <b>malicious</b> and might <b>break your device</b>!
       </div>
+
       <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <q-select
           v-model="fwModel"
@@ -224,13 +225,14 @@
         </p>
         This firmware might break your device!
       </div>
+
       <div v-if="status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center q-mt-md">
         <p v-if="!firmwareFileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
         <q-btn
           v-if="firmwareFileName.length && crc32Check && firmwareTargetCheck"
-          @click="writeFirmware"
+          @click="gotoDFU"
           color="positive"
           padding="12px 30px"
         >Flash {{ firmwareFileName }}</q-btn>
@@ -246,7 +248,7 @@
           v-if="!firmwareTargetCheck"
           flat
           color="grey-8"
-          @click="writeFirmware"
+          @click="gotoDFU"
           padding="12px 30px"
           class="q-ml-lg"
         >Flash anyway</q-btn>
@@ -309,6 +311,14 @@
         <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
         Please contact us ASAP!
       </div>
+
+      <div v-if="!firmwareFileName.length && fwModel.value === 'custom' && status !== 'DFU connection lost' && status !== 'Writing firmware'" class="alert">
+        <p class="ellipsis">
+          <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+        </p>
+        This firmware might be <b>malicious</b> and might <b>break your device</b>!
+      </div>
+
       <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware' && status !== 'DFU connection lost'" class="flex flex-center">
         <q-select
           v-model="fwModel"
