@@ -4,7 +4,27 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') }
+      {
+        path: '',
+        props: (route) => {
+          if (!route.query.url) {
+            return null
+          }
+          try {
+            const url = new URL(route.query.url)
+            return {
+              customSource: {
+                url: url.toString(),
+                channel: route.query.channel,
+                version: route.query.version
+              }
+            }
+          } catch (e) {
+            console.log(e)
+          }
+        },
+        component: () => import('pages/Index.vue')
+      }
     ]
   },
 

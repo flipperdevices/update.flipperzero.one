@@ -176,13 +176,20 @@
           Your firmware is up to date.
         </p>
         <p v-if="!firmwareFileName.length && newerThanLTS">
-          Your fimware version is ahead of latest release.
+          Your firmware version is ahead of latest release.
         </p>
       </div>
 
       <div v-if="!sha256Check" class="alert">
         <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
         Please contact us ASAP!
+      </div>
+
+      <div v-if="fwModel.value === 'custom'" class="alert">
+        <p>
+          <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from {{ this['custom'].url }}!
+        </p>
+        This firmware might be <b>malicious</b> and might <b>break your device</b>!
       </div>
       <div v-if="!firmwareFileName.length && sha256Check && status !== 'Writing firmware' && status !== 'Serial connection lost'" class="flex flex-center">
         <q-select
@@ -455,6 +462,7 @@ export default defineComponent({
     release: Object,
     rc: Object,
     dev: Object,
+    custom: Object,
     modeProp: String
   },
   setup () {
@@ -765,7 +773,7 @@ export default defineComponent({
     async fetchFirmwareFile (type) {
       try {
         const file = this[type.toLowerCase()].files.find((e) => {
-          if (e.type === 'full_dfu' && e.target === 'f' + this.flipper.target) return e
+          if (e.type === 'full_dfu' && (e.target === 'f' + this.flipper.target || !e.target)) return e
           else return undefined
         })
         const buffer = await fetch(file.url)
@@ -774,7 +782,7 @@ export default defineComponent({
           })
         this.firmwareFile = new Uint8Array(buffer)
         const calculatedSha256 = await shajs('sha256').update(this.firmwareFile).digest('hex')
-        if (file.sha256 === calculatedSha256) {
+        if (!file.sha256 || file.sha256 === calculatedSha256) {
           this.sha256Check = true
           this.cropDFUFile()
           if (this.mode === 'serial') {
@@ -1157,9 +1165,14 @@ export default defineComponent({
   },
   mounted () {
     this.fwOptions[0].version = this.release.version
-    this.fwModel = this.fwOptions[0]
     this.fwOptions[1].version = this.rc.version
     this.fwOptions[2].version = this.dev.version
+    if (this.custom) {
+      this.fwOptions.unshift({
+        label: this.custom.channel || 'Custom', value: 'custom', version: this.custom.version || 'unknown'
+      })
+    }
+    this.fwModel = this.fwOptions[0]
     if (this.modeProp === 'serial') {
       this.connectSerial()
     } else if (this.modeProp === 'dfu') {

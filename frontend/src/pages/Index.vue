@@ -2,6 +2,7 @@
   <q-page class="flex flex-center">
     <Homepage
       :userAgent="userAgent"
+      :customSource="customSource"
     />
   </q-page>
 </template>
@@ -14,6 +15,9 @@ export default defineComponent({
   name: 'PageIndex',
   components: {
     Homepage
+  },
+  props: {
+    customSource: Object
   },
   setup () {
     return {
