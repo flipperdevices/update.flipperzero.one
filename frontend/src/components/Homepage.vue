@@ -86,6 +86,7 @@
           :dev="dev"
           :custom="custom"
           :modeProp="modeProp"
+          :qFlipperInstaller="dropdown[0].href"
         />
       </q-card-section>
     </q-card>
