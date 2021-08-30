@@ -47,7 +47,7 @@
           <p v-if="customSource">
             <b>Found custom firmware, connect to flash it.</b>
           </p>
-          <div class="text-center q-mt-lg">
+          <div class="text-center q-mt-lg" :class="$q.screen.xs ? 'q-pb-lg' : 'q-pb-sm'">
             <q-btn color="positive" padding="12px 30px" @click="clickConnect">Connect to Flipper</q-btn>
           </div>
           <q-btn

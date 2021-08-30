@@ -6,7 +6,7 @@
           flat
           round
           :icon="evaCloseOutline"
-          size="24px"
+          :size="!$q.screen.xs ? '24px' : '18px'"
           @click="showOverlay = false"
         ></q-btn>
         <p>Close</p>
@@ -28,7 +28,7 @@
       <div class="absolute-bottom-right q-mr-lg text-white text-right">
         <div v-if="error.isError" style="min-width: 200px">
           <q-btn
-            v-if="mode !== 'dfu'"
+            v-if="mode !== 'dfu' && userAgent.serial"
             :disabled="status === 'Writing firmware'"
             outline
             color="white"
@@ -37,7 +37,7 @@
             @click="mode = 'dfu'; gotoDFU()"
           >Recovery mode</q-btn>
           <q-btn
-            v-if="mode === 'dfu'"
+            v-if="mode === 'dfu' && userAgent.serial"
             :disabled="status === 'Writing firmware'"
             outline
             color="white"
@@ -415,7 +415,7 @@
     <h4 v-if="status === 'OK'" id="ok">Firmware successfully updated</h4>
 
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
-      <q-btn @click="reconnect('serial')" :icon="evaRefreshOutline" flat>
+      <q-btn @click="userAgent.serial ? reconnect('serial') : reconnect('dfu')" :icon="evaRefreshOutline" flat>
         Reconnect
       </q-btn>
     </div>
@@ -426,7 +426,7 @@
     </div>
 
     <q-btn
-      v-if="mode !== 'dfu'"
+      v-if="mode !== 'dfu' && userAgent.serial"
       :disabled="status === 'Writing firmware'"
       flat
       color="grey-8"
