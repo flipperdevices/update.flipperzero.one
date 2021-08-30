@@ -57,7 +57,7 @@
       </div>
     </div>
 
-    <div v-show="showArrows" class="arrows">
+    <div v-show="showArrows && !$q.screen.xs" class="arrows">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
         <div>
@@ -285,16 +285,16 @@
 
     <div v-show="showRecoveryMenu && mode === 'dfu' && !error.isError && !loadingSerial" class="connected q-mt-sm">
       <q-card flat>
-        <q-card-section horizontal class="text-left">
-          <div class="col-5 flex flex-center">
+        <q-card-section :horizontal="!$q.screen.xs" class="text-left">
+          <div class="flex flex-center" :class="!$q.screen.xs ? 'col-5' : 'fit'">
             <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
             <img v-if="flipper.bodyColor === 'white' || flipper.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
             <img v-if="flipper.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
-          <div class="col-7 q-ml-xl" style="white-space: nowrap;">
+          <div :class="!$q.screen.xs ? 'col-7 q-ml-xl' : 'fit text-center'" :style="!$q.screen.xs ? 'white-space: nowrap;' : ''">
             <h5>
               <b>{{ flipper.name }}&nbsp;</b>
-              <span v-if="status !== 'DFU connection lost'">connected in recovery mode!</span>
+              <span v-if="status !== 'DFU connection lost'">connected <br v-if="$q.screen.xs"/>in recovery mode!</span>
               <span v-else class="text-accent">disconnected!</span>
             </h5>
             <p>
@@ -326,7 +326,7 @@
           label="Choose firmware"
           :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
           id="fw-select"
-          style="width: 300px;"
+          :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
         >
           <template v-slot:option="scope">
             <q-item v-bind="scope.itemProps">
@@ -339,7 +339,14 @@
             </q-item>
           </template>
         </q-select>
-        <q-btn v-if="fwModel" @click="fetchFirmwareFile(fwModel.value)" color="positive" class="q-ml-lg" padding="12px 30px">Flash</q-btn>
+        <q-btn
+          v-if="fwModel"
+          @click="fetchFirmwareFile(fwModel.value)"
+          color="positive"
+          class="q-ml-lg"
+          :class="!$q.screen.xs ? '' : 'q-mt-sm'"
+          padding="12px 30px"
+        >Flash</q-btn>
       </div>
 
       <div v-if="firmwareFileName.length && !crc32Check" class="alert">
@@ -428,7 +435,7 @@
       @click="mode = 'dfu'; gotoDFU()"
     >Recovery mode</q-btn>
     <q-btn
-      v-if="mode === 'dfu'"
+      v-if="mode === 'dfu' && userAgent.serial"
       :disabled="status === 'Writing firmware'"
       flat
       color="grey-8"

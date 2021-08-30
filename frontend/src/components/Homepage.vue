@@ -42,7 +42,7 @@
             <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from browser prompt.
           </p>
           <p>
-            Currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.
+            Currently supports only Chrome-based browsers (except Opera).
           </p>
           <p v-if="customSource">
             <b>Found custom firmware, connect to flash it.</b>
@@ -69,9 +69,11 @@
           src="../assets/notsupported.svg"
           class="unsupported-img"
         />
-        <p class="q-pt-md">Your browser doesn’t support WebUSB/WebSerial.</p>
-        <p>Updater currently supports only Chrome-based browsers: Chrome, Edge, Yandex Browser.</p>
-        <div class="q-pb-sm">
+        <p class="q-pt-md">
+          Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Recovery Mode usage</a></span>.
+        </p>
+        <p>Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex Browser.</p>
+        <div :class="userAgent.usb ? 'q-pb-xl' : 'q-pb-sm'">
           <q-btn color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
         </div>
         <q-btn

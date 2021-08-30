@@ -79,6 +79,14 @@
   }
 }
 
+@media (max-width: 380px) {
+  .connected {
+    img {
+      max-width: 250px;
+    }
+  }
+}
+
 #up-to-date, #outdated {
   p:first-of-type {
     font-size: 120%;
