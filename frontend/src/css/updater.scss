@@ -79,14 +79,6 @@
   }
 }
 
-@media (max-width: 380px) {
-  .connected {
-    img {
-      max-width: 250px;
-    }
-  }
-}
-
 #up-to-date, #outdated {
   p:first-of-type {
     font-size: 120%;
@@ -94,6 +86,10 @@
   p:last-of-type {
     color: $dark-secondary;
   }
+}
+
+input[type=file] {
+  width: 230px;
 }
 
 #reconnect {
