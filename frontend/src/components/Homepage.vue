@@ -74,6 +74,14 @@
         <div class="q-pb-sm">
           <q-btn color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
         </div>
+        <q-btn
+          v-if="userAgent.usb"
+          flat
+          color="grey-8"
+          size="13px"
+          class="absolute-bottom-right q-ma-sm"
+          @click="showIntro = false; modeProp = 'dfu'"
+        >Recovery mode</q-btn>
       </q-card-section>
     </q-card>
 

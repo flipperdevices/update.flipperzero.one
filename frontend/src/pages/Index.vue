@@ -23,7 +23,9 @@ export default defineComponent({
     return {
       userAgent: {
         browser: 'Not supported',
-        os: 'Other'
+        os: 'Other',
+        usb: false,
+        serial: false
       }
     }
   },
@@ -36,7 +38,16 @@ export default defineComponent({
     else if (navigator.userAgent.indexOf('Linux') !== -1) this.userAgent.os = 'Linux'
     else if (navigator.userAgent.indexOf('Windows') !== -1) this.userAgent.os = 'Windows'
 
-    if (!('serial' in navigator) || !('usb' in navigator) || navigator.userAgent.indexOf('OPR') !== -1) this.userAgent.browser = 'Not supported'
+    if ('usb' in navigator) this.userAgent.usb = true
+    if ('serial' in navigator) this.userAgent.serial = true
+
+    if (!this.userAgent.serial || !this.userAgent.usb) this.userAgent.browser = 'Not supported'
+
+    if (navigator.userAgent.indexOf('OPR') !== -1) {
+      this.userAgent.browser = 'Not supported'
+      this.userAgent.usb = false
+      this.userAgent.serial = false
+    }
   }
 })
 </script>
