@@ -415,7 +415,7 @@
     <h4 v-if="status === 'OK'" id="ok">Firmware successfully updated</h4>
 
     <div v-show="status === 'Serial connection lost' || status === 'OK'" id="reconnect">
-      <q-btn @click="userAgent.serial ? reconnect('serial') : reconnect('dfu')" :icon="evaRefreshOutline" flat>
+      <q-btn @click="userAgent.serial ? reconnect('serial') : connectRecovery" :icon="evaRefreshOutline" flat>
         Reconnect
       </q-btn>
     </div>
