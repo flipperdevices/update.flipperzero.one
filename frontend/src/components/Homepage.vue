@@ -63,27 +63,27 @@
         v-if="userAgent.browser === 'Not supported'"
         class="fit flex column flex-center q-pa-md"
       >
-        <h4>Your browser doesn't support WebUSB updater :(</h4>
+        <h4>Your browser doesn't support Web Updater <span style="white-space: nowrap;">:(</span></h4>
         <img
-          v-if="userAgent.browser === 'Not supported'"
+          v-if="userAgent.os !== 'Android'"
           src="../assets/notsupported.svg"
           class="unsupported-img"
         />
+        <q-img v-else src="../assets/chrome.png" class="updater-img"></q-img>
         <p class="q-pt-md">
-          Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Recovery Mode usage</a></span>.
+          Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
         </p>
-        <p>Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex Browser.</p>
+        <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex Browser.</p>
+        <p v-if="userAgent.os === 'Android' && !userAgent.usb">Updater supports Recovery Mode in Chrome for Android. Install latest Chrome version or Chrome Beta.</p>
         <div :class="userAgent.usb ? 'q-pb-xl' : 'q-pb-sm'">
-          <q-btn color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
+          <q-btn v-if="!userAgent.usb" color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
+          <q-btn
+            v-if="userAgent.usb"
+            color="positive"
+            padding="12px 30px"
+            @click="showIntro = false; modeProp = 'dfu'"
+          >Recovery mode</q-btn>
         </div>
-        <q-btn
-          v-if="userAgent.usb"
-          flat
-          color="grey-8"
-          size="13px"
-          class="absolute-bottom-right q-ma-sm"
-          @click="showIntro = false; modeProp = 'dfu'"
-        >Recovery mode</q-btn>
       </q-card-section>
     </q-card>
 

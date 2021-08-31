@@ -30,20 +30,21 @@ export default defineComponent({
     }
   },
   created () {
-    if (navigator.userAgent.indexOf('Chrome') !== -1) this.userAgent.browser = 'Chrome'
-    if (navigator.userAgent.indexOf('YaBrowser') !== -1 || navigator.userAgent.indexOf('Yowser') !== -1) this.userAgent.browser = 'Yandex'
-    if (navigator.userAgent.indexOf('Edg') !== -1) this.userAgent.browser = 'Edge'
+    if (navigator.userAgent.includes('Chrome')) this.userAgent.browser = 'Chrome'
+    if (navigator.userAgent.includes('YaBrowser') || navigator.userAgent.includes('Yowser')) this.userAgent.browser = 'Yandex'
+    if (navigator.userAgent.includes('Edg')) this.userAgent.browser = 'Edge'
 
-    if (navigator.userAgent.indexOf('Macintosh') !== -1) this.userAgent.os = 'macOS'
-    else if (navigator.userAgent.indexOf('Linux') !== -1) this.userAgent.os = 'Linux'
-    else if (navigator.userAgent.indexOf('Windows') !== -1) this.userAgent.os = 'Windows'
+    if (navigator.userAgent.includes('Macintosh')) this.userAgent.os = 'macOS'
+    else if (navigator.userAgent.includes('Windows')) this.userAgent.os = 'Windows'
+    else if (navigator.userAgent.includes('Linux') && !navigator.userAgent.includes('Android')) this.userAgent.os = 'Linux'
+    else if (navigator.userAgent.includes('Android')) this.userAgent.os = 'Android'
 
     if ('usb' in navigator) this.userAgent.usb = true
     if ('serial' in navigator) this.userAgent.serial = true
 
     if (!this.userAgent.serial || !this.userAgent.usb) this.userAgent.browser = 'Not supported'
 
-    if (navigator.userAgent.indexOf('OPR') !== -1) {
+    if (navigator.userAgent.includes('OPR')) {
       this.userAgent.browser = 'Not supported'
       this.userAgent.usb = false
       this.userAgent.serial = false
