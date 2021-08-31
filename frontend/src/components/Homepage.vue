@@ -194,7 +194,7 @@
           color="grey-8"
           class="q-mt-lg"
           type="a"
-          :href="dev.url"
+          href="https://update.flipperzero.one/firmware/development/f6/full_dfu"
         >
           Dev Build ({{ dev.date }})
         </q-btn>

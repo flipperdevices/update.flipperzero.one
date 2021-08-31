@@ -795,7 +795,11 @@ export default defineComponent({
           if (e.type === 'full_dfu' && (e.target === 'f' + this.flipper.target || !e.target)) return e
           else return undefined
         })
-        const buffer = await fetch(file.url)
+        let url = file.url
+        if (type === 'dev') {
+          url = 'https://update.flipperzero.one/firmware/development/f6/full_dfu'
+        }
+        const buffer = await fetch(url)
           .then(response => {
             return response.arrayBuffer()
           })
