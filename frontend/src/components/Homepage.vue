@@ -75,7 +75,7 @@
         </p>
         <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex Browser.</p>
         <p v-if="userAgent.os === 'Android' && !userAgent.usb">Updater supports Recovery Mode in Chrome for Android. Install latest Chrome version or Chrome Beta.</p>
-        <div :class="userAgent.usb ? 'q-pb-xl' : 'q-pb-sm'">
+        <div>
           <q-btn v-if="!userAgent.usb" color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
           <q-btn
             v-if="userAgent.usb"
