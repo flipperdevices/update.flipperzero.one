@@ -947,6 +947,7 @@ export default defineComponent({
       this.showArrows = true
       this.showOverlay = true
       this.arrowText = 'Find your Flipper in recovery mode (DFU in FS Mode)'
+      this.adjustArrows()
       this.status = 'Waiting for DFU connection'
       try {
         const filters = [
