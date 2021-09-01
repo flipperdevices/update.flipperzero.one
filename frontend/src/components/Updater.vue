@@ -169,7 +169,7 @@
           Your firmware is outdated, latest release is <b>{{ release.version }}</b>
         </p>
       </div>
-      <div v-if="!isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware'" id="up-to-date">
+      <div v-if="!isOutdated && status !== 'Serial connection lost' && status !== 'Writing firmware' && this.flipper.firmwareVer !== 'unknown'" id="up-to-date">
         <p v-if="!firmwareFileName.length && !newerThanLTS">
           Your firmware is up to date.
         </p>
@@ -780,13 +780,15 @@ export default defineComponent({
       if (this.flipper.firmwareVer.includes('fw-')) {
         this.flipper.firmwareVer = this.flipper.firmwareVer.replace('fw-', '')
       }
-      if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
-        this.isOutdated = false
-      } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
-        this.isOutdated = false
-        this.newerThanLTS = true
-      } else {
-        this.isOutdated = true
+      if (this.flipper.firmwareVer !== 'unknown') {
+        if (semver.eq((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
+          this.isOutdated = false
+        } else if (semver.gt((this.flipper.firmwareVer === 'undefined' ? '0.0.0' : this.flipper.firmwareVer), this.release.version)) {
+          this.isOutdated = false
+          this.newerThanLTS = true
+        } else {
+          this.isOutdated = true
+        }
       }
     },
     async loadFirmwareFile (event) {
