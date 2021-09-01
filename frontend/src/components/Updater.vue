@@ -123,44 +123,42 @@
         <q-card-section horizontal class="text-left">
           <q-card flat class="col-6">
             <q-card-section horizontal>
-              <pre>
+<pre>
 <b>Device type:</b>
 <b>Device name:</b>
 <b>Stm32 serial:</b>
-<b>Color:</b>
 <b>Hardware revision:</b>
 <b>Firmware target:</b>
-              </pre>
-              <pre>
+<b>Bluetooth mac:</b>
+</pre>
+<pre>
   {{ flipper.type }}
   {{ flipper.name }}
   {{ flipper.stm32Serial }}
-  {{ flipper.bodyColor }}
   {{ flipper.hardwareVer }}
   {{ flipper.target }}
-              </pre>
+  {{ flipper.btMac }}
+</pre>
             </q-card-section>
           </q-card>
           <q-card flat class="col-6 q-ml-xl">
             <q-card-section horizontal>
-              <pre>
+<pre>
 <b>Firmware version:</b>
 <b>Firmware build:</b>
 <b>Bootloader version:</b>
 <b>Bootloader build:</b>
 <b>FUS version:</b>
 <b>Radio stack version:</b>
-<b>Bluetooth mac:</b>
-              </pre>
-              <pre>
-  {{ flipper.firmwareVer }}
+</pre>
+<pre>
+  {{ flipper.firmwareVer !== 'unknown' ? flipper.firmwareVer : flipper.firmwareCommit }}
   {{ flipper.firmwareBuild }}
-  {{ flipper.bootloaderVer }}
+  {{ flipper.bootloaderVer !== 'unknown' ? flipper.bootloaderVer : flipper.bootloaderCommit }}
   {{ flipper.bootloaderBuild }}
   {{ flipper.radioFusFirmware.major + '.' + flipper.radioFusFirmware.minor + '.' +flipper.radioFusFirmware.sub }}
   {{ flipper.radioFirmware.major + '.' + flipper.radioFirmware.minor + '.' +flipper.radioFirmware.sub }}
-  {{ flipper.btMac }}
-              </pre>
+</pre>
             </q-card-section>
           </q-card>
         </q-card-section>
@@ -522,8 +520,10 @@ export default defineComponent({
         hardwareVer: 'undefined',
         target: 'undefined',
         firmwareVer: 'undefined',
+        firmwareCommit: 'undefined',
         firmwareBuild: 'undefined',
         bootloaderVer: 'undefined',
+        bootloaderCommit: 'undefined',
         bootloaderBuild: 'undefined',
         radioFusFirmware: {
           major: '',
@@ -739,11 +739,17 @@ export default defineComponent({
       if (value.includes('firmware_version')) {
         this.flipper.firmwareVer = value.replace(/firmware_version\s*:\s/g, '').trim()
       }
+      if (value.includes('firmware_commit')) {
+        this.flipper.firmwareCommit = value.replace(/firmware_commit\s*:\s/g, '').trim()
+      }
       if (value.includes('firmware_build_date')) {
         this.flipper.firmwareBuild = value.replace(/firmware_build_date\s*:\s/g, '').trim()
       }
       if (value.includes('boot_version')) {
         this.flipper.bootloaderVer = value.replace(/boot_version\s*:\s/g, '').trim()
+      }
+      if (value.includes('boot_commit')) {
+        this.flipper.bootloaderCommit = value.replace(/boot_commit\s*:\s/g, '').trim()
       }
       if (value.includes('boot_build_date')) {
         this.flipper.bootloaderBuild = value.replace(/boot_build_date\s*:\s/g, '').trim()
