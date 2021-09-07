@@ -658,7 +658,6 @@ export default defineComponent({
         }
       }
     },
-
     cancelUpload () {
       this.firmwareFile = undefined
       this.firmware.fileName = ''
