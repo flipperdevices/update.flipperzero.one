@@ -180,7 +180,7 @@
 
       <div v-if="!sha256Check" class="alert">
         <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-        Please contact us ASAP!
+        Check your connection and try again.
       </div>
 
       <div v-if="!firmwareFileName.length && fwModel.value === 'custom' && status !== 'Serial connection lost' && status !== 'Writing firmware'" class="alert">
@@ -307,7 +307,7 @@
 
       <div v-if="!sha256Check" class="alert">
         <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-        Please contact us ASAP!
+        Check your connection and try again.
       </div>
 
       <div v-if="!firmwareFileName.length && fwModel.value === 'custom' && status !== 'DFU connection lost' && status !== 'Writing firmware'" class="alert">
@@ -892,18 +892,11 @@ export default defineComponent({
           selectedDevice,
           {
             forceInterfacesName: true
-          },
-          {
-            progress: (done, total) => {
-              if (total !== this.progress.max && this.progress.max !== 0) {
-                this.progress.stage = 1
-              }
-              this.progress.max = total
-              this.progress.current = done
-            }
           }
         )
+
         await this.webdfu.init()
+
         if (this.webdfu.interfaces.length === 0) {
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
@@ -914,6 +907,7 @@ export default defineComponent({
         }
 
         await this.webdfu.connect(0)
+
         this.status = 'Connected to Flipper in DFU mode'
         this.error.isError = false
         this.error.msg = ''
@@ -966,18 +960,11 @@ export default defineComponent({
           selectedDevice,
           {
             forceInterfacesName: true
-          },
-          {
-            progress: (done, total) => {
-              if (total !== this.progress.max && this.progress.max !== 0) {
-                this.progress.stage = 1
-              }
-              this.progress.max = total
-              this.progress.current = done
-            }
           }
         )
         await this.webdfu.init()
+        this.webdfu.dfuseStartAddress = Number('0x1fff7000')
+
         if (this.webdfu.interfaces.length === 0) {
           this.error.isError = true
           this.error.msg = 'The selected device does not have any USB DFU interfaces'
@@ -987,6 +974,7 @@ export default defineComponent({
         }
 
         await this.webdfu.connect(2)
+
         this.status = 'Connected to Flipper in DFU mode'
         this.error.isError = false
         this.error.msg = ''
@@ -994,34 +982,36 @@ export default defineComponent({
         this.showArrows = false
         this.showOverlay = false
 
-        const otp = await this.webdfu.read(1024, 32)
-          .then(blob => {
-            this.progress.max = 0
-            this.progress.current = 0
-            this.progress.stage = 0
-            return blob.arrayBuffer()
-          })
-          .then(buffer => {
-            return new Uint8Array(buffer)
-          })
+        const process = this.webdfu.read(128, 128)
 
-        this.flipper.name = 'undefined'
-        this.flipper.hardwareVer = 'undefined'
-        this.flipper.target = 'undefined'
-        this.flipper.bodyColor = 'undefined'
+        process.events.on('error', (error) => {
+          console.log(error)
+          this.error.isError = true
+          this.error.button = 'connectDFU'
+          this.error.msg = error.message || error
+        })
 
-        if (otp[0] === 190 && otp[1] === 186) {
-          this.flipper.hardwareVer = otp[8]
-          this.flipper.target = otp[9]
-          this.flipper.bodyColor = otp[12] ? 'black' : 'white'
-          this.flipper.name = new TextDecoder().decode(otp.slice(16, 24).filter(e => e > 0))
-        } else {
-          this.flipper.hardwareVer = otp[0]
-          this.flipper.target = otp[1]
-          this.flipper.name = new TextDecoder().decode(otp.slice(8, 16).filter(e => e > 0))
-        }
+        process.events.on('end', async (blob) => {
+          const otp = new Uint8Array(await blob.arrayBuffer())
 
-        this.showRecoveryMenu = true
+          this.flipper.name = 'undefined'
+          this.flipper.hardwareVer = 'undefined'
+          this.flipper.target = 'undefined'
+          this.flipper.bodyColor = 'undefined'
+
+          if (otp[0] === 190 && otp[1] === 186) {
+            this.flipper.hardwareVer = otp[8]
+            this.flipper.target = otp[9]
+            this.flipper.bodyColor = otp[12] ? 'black' : 'white'
+            this.flipper.name = new TextDecoder().decode(otp.slice(16, 24).filter(e => e > 0))
+          } else {
+            this.flipper.hardwareVer = otp[0]
+            this.flipper.target = otp[1]
+            this.flipper.name = new TextDecoder().decode(otp.slice(8, 16).filter(e => e > 0))
+          }
+
+          this.showRecoveryMenu = true
+        })
       } catch (error) {
         this.error.isError = true
         this.error.button = 'connectDFU'
@@ -1041,37 +1031,94 @@ export default defineComponent({
       }
     },
     async writeFirmware () {
-      try {
-        if (this.mode === 'dfu') {
-          await this.webdfu.connect(0)
-        }
-        this.status = 'Writing firmware'
-        function preventTabClose (event) {
-          event.returnValue = ''
-        }
-        window.addEventListener('beforeunload', preventTabClose)
-        this.webdfu.driver.startAddress = Number('0x' + this.startAddress)
-        await this.webdfu.write(1024, this.firmwareFileCropped)
-        this.webdfu.close().catch(error => {
-          if (error.message && !error.message.includes('disconnected')) {
-            console.log(error)
-          }
-        })
+      if (this.mode === 'dfu') {
+        await this.webdfu.connect(0)
+      }
+      this.status = 'Writing firmware'
+      function preventTabClose (event) {
+        event.returnValue = ''
+      }
+      window.addEventListener('beforeunload', preventTabClose)
+
+      this.webdfu.dfuseStartAddress = Number('0x' + this.startAddress)
+      const process = this.webdfu.write(1024, this.firmwareFileCropped, false)
+
+      process.events.on('erase/process', (bytesSent, expectedSize) => {
+        this.progress.current = bytesSent
+        this.progress.max = expectedSize
+      })
+
+      process.events.on('erase/end', () => {
+        this.progress.stage = 1
+      })
+
+      process.events.on('write/process', (bytesSent, expectedSize) => {
+        this.progress.current = bytesSent
+        this.progress.max = expectedSize
+      })
+
+      process.events.on('write/end', async bytesSent => {
+        await this.leave()
+
         this.status = 'OK'
         this.mode = 'serial'
         window.removeEventListener('beforeunload', preventTabClose)
         this.showSerialMenu = false
         this.showRecoveryMenu = false
-      } catch (error) {
-        this.error.isError = true
-        console.log(error)
-        if (error.includes && error.includes('Error: stall')) {
-          this.error.msg = 'Can\'t connect to Flipper. It may be used by another tab or process. Close it and reload this page.'
-        } else {
+      })
+
+      process.events.on('error', (error) => {
+        if (error.message && !error.message.includes('DFU GETSTATUS failed')) {
+          console.log(error)
+          this.status = 'Failed to write firmware'
+          this.error.isError = true
           this.error.msg = `Failed to write firmware (${error})`
+          window.removeEventListener('beforeunload', preventTabClose)
           this.error.button = 'connectRecovery'
         }
-        this.status = 'Failed to write firmware'
+      })
+    },
+    async leave () {
+      try {
+        const status = await this.webdfu.getStatus()
+        if (status.state !== 2) {
+          this.webdfu.abort()
+        }
+
+        const payload = new ArrayBuffer(4 + 1)
+        const view = new DataView(payload)
+        view.setUint8(0, 0x21)
+        view.setUint32(1, 0x080fffff, true)
+        await this.webdfu.device.controlTransferOut(
+          {
+            requestType: 'class',
+            recipient: 'interface',
+            request: 0x01,
+            value: 0,
+            index: 0
+          },
+          payload
+        )
+
+        await this.webdfu.poll_until((state) => state !== 4)
+
+        await this.webdfu.device.controlTransferOut(
+          {
+            requestType: 'class',
+            recipient: 'interface',
+            request: 0x01,
+            value: 0,
+            index: 0
+          },
+          new ArrayBuffer(0)
+        )
+        await this.webdfu.poll_until((state) => state !== 4)
+        this.webdfu.abort()
+        await this.webdfu.getStatus()
+      } catch (error) {
+        if (!error.includes('DFU GETSTATUS failed')) {
+          console.log(error)
+        }
       }
     },
     adjustArrows () {
@@ -1175,7 +1222,7 @@ export default defineComponent({
         stage: 0
       }
       if (this.status !== 'OK') {
-        this.status = 'DFU connection lost'
+        this.mode === 'serial' ? this.status = 'Serial connection lost' : this.status = 'DFU connection lost'
         const d = new Date(Date.now())
         this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
       }
