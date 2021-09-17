@@ -55,7 +55,7 @@
             color="grey-8"
             size="13px"
             class="absolute-bottom-right q-ma-sm"
-            @click="showIntro = false; modeProp = 'dfu'"
+            @click="showIntro = false; initialMode = 'dfu'"
           >Recovery mode</q-btn>
         </q-card-section>
       </q-card-section>
@@ -81,7 +81,7 @@
             v-if="userAgent.usb"
             color="positive"
             padding="12px 30px"
-            @click="showIntro = false; modeProp = 'dfu'"
+            @click="showIntro = false; initialMode = 'dfu'"
           >Recovery mode</q-btn>
         </div>
       </q-card-section>
@@ -95,7 +95,7 @@
           :rc="rc"
           :dev="dev"
           :custom="custom"
-          :modeProp="modeProp"
+          :initialMode="initialMode"
           :qFlipperInstaller="dropdown[0].href"
         />
       </q-card-section>
@@ -234,7 +234,7 @@ export default defineComponent({
   setup () {
     return {
       showIntro: ref(true),
-      modeProp: 'serial',
+      initialMode: 'serial',
       copied: ref(false),
       dropdown: ref([
         {

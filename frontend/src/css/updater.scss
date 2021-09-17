@@ -77,6 +77,14 @@
       margin-top: -2px;
     }
   }
+  .properties {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-column-gap: 10px;
+    & > div {
+      white-space: nowrap;
+    }
+  }
 }
 
 #up-to-date, #outdated {
