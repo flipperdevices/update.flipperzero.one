@@ -421,13 +421,16 @@ export default defineComponent({
     // Update sequence
     async update () {
       if (!this.firmware.fileName.length) {
+        console.log('fw file downloading')
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
         this.firmware.loading = false
+        console.log('fw file downloaded')
       }
 
       this.reconnecting = true
       if (this.mode === 'serial') {
+        console.log('rebooting flipper')
         await this.flipper.reboot()
           .catch(async error => {
             if (error.message.includes('No known')) {
