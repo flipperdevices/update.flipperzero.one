@@ -55,7 +55,7 @@
             color="grey-8"
             size="13px"
             class="absolute-bottom-right q-ma-sm"
-            @click="showIntro = false; initialMode = 'dfu'"
+            @click="showIntro = false; initialMode = 'usb'"
           >Recovery mode</q-btn>
         </q-card-section>
       </q-card-section>
@@ -81,7 +81,7 @@
             v-if="userAgent.usb"
             color="positive"
             padding="12px 30px"
-            @click="showIntro = false; initialMode = 'dfu'"
+            @click="showIntro = false; initialMode = 'usb'"
           >Recovery mode</q-btn>
         </div>
       </q-card-section>
@@ -280,6 +280,15 @@ export default defineComponent({
     }
   },
   methods: {
+    async lookForKnownDevices () {
+      const filters = [
+        { usbVendorId: 0x0483, usbProductId: 0x5740 }
+      ]
+      const ports = await navigator.serial.getPorts({ filters })
+      if (ports.length > 0) {
+        this.showIntro = false
+      }
+    },
     clickConnect () {
       this.showIntro = false
     },
@@ -359,6 +368,9 @@ export default defineComponent({
             }]
           }
         })
+        .then(() => {
+          this.lookForKnownDevices()
+        })
       fetch('https://update.flipperzero.one/qFlipper/directory.json')
         .then((response) => {
           return response.json()
@@ -397,6 +409,8 @@ export default defineComponent({
       if (e.text === this.userAgent.os + ' Download') return -1
       else return 1
     })
+  },
+  mounted () {
     this.getDir()
   }
 })

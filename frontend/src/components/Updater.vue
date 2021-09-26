@@ -20,9 +20,8 @@
         <q-separator dark v-if="error.button.length"></q-separator>
 
         <q-card-actions v-if="error.button.length" align="right" class="text-white">
-          <q-btn flat v-if="error.button === 'init'" @click="reconnect('serial')">Reconnect</q-btn>
-          <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('usb')">Reconnect</q-btn>
-          <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('usb')">Recovery mode</q-btn>
+        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connectAndGetData()">Reconnect</q-btn>
+        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connectAndGetData()">{{ this.mode === 'serial' ? 'Recovery mode' : 'Reconnect' }}</q-btn>
         </q-card-actions>
       </q-card>
       <div class="absolute-bottom-right q-mr-lg text-white text-right">
@@ -33,7 +32,7 @@
             color="white"
             size="13px"
             class="q-ma-sm"
-            @click="changeMode"
+            @click="error.isError = false; changeMode(false)"
           >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
         </div>
         <p v-if="userAgent.os === 'Windows'">
@@ -73,9 +72,8 @@
       <q-separator v-if="error.button.length"></q-separator>
 
       <q-card-actions v-if="error.button.length" align="right">
-        <q-btn flat v-if="error.button === 'init'" @click="reconnect('serial')">Reconnect</q-btn>
-        <q-btn flat v-if="error.button === 'connectDFU'" @click="reconnect('usb')">Reconnect</q-btn>
-        <q-btn flat v-if="error.button === 'connectRecovery'" @click="reconnect('usb')">Recovery mode</q-btn>
+        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connectAndGetData()">Reconnect</q-btn>
+        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connectAndGetData()">Recovery mode</q-btn>
       </q-card-actions>
     </q-card>
 
@@ -103,7 +101,7 @@
             </h5>
           </div>
         </q-card-section>
-        <q-card-section v-if="mode === 'serial'" horizontal class="text-left q-ma-md">
+        <q-card-section v-if="mode === 'serial' && flipper.state.connection !== 1" horizontal class="text-left q-ma-md">
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
@@ -166,53 +164,57 @@
         Check your connection and try again.
       </div>
 
-      <div v-if="!firmware.fileName.length && fwModel.value === 'custom' && flipper.state.status === 1" class="alert">
-        <p class="ellipsis">
-          <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
-        </p>
-        This firmware might be <b>malicious</b> and might <b>break your device</b>!
+      <div v-if="!firmware.fileName.length && flipper.state.status === 1">
+        <div v-if="fwModel.value === 'custom'" class="alert">
+          <p class="ellipsis">
+            <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+          </p>
+          This firmware might be <b>malicious</b> and might <b>break your device</b>!
+        </div>
+
+        <div v-if="checks.sha256 && flipper.state.connection !== 0" class="flex flex-center">
+          <q-select
+            v-model="fwModel"
+            :options="fwOptions"
+            label="Choose firmware"
+            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+            id="fw-select"
+            :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section class="items-start">
+                  <q-item-label v-html="scope.opt.label" />
+                </q-item-section>
+                <q-item-section class="items-end">
+                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-btn
+            :loading="firmware.loading"
+            v-if="fwModel"
+            @click="update"
+            color="positive"
+            class="q-ml-lg"
+            :class="!$q.screen.xs ? '' : 'q-mt-sm'"
+            padding="12px 30px"
+          >Flash</q-btn>
+        </div>
       </div>
 
-      <div v-if="!firmware.fileName.length && checks.sha256 && flipper.state.connection !== 0 && flipper.state.status === 1" class="flex flex-center">
-        <q-select
-          v-model="fwModel"
-          :options="fwOptions"
-          label="Choose firmware"
-          :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-          id="fw-select"
-          :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
-        >
-          <template v-slot:option="scope">
-            <q-item v-bind="scope.itemProps">
-              <q-item-section class="items-start">
-                <q-item-label v-html="scope.opt.label" />
-              </q-item-section>
-              <q-item-section class="items-end">
-                <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
-        <q-btn
-          :loading="firmware.loading"
-          v-if="fwModel"
-          @click="update"
-          color="positive"
-          class="q-ml-lg"
-          :class="!$q.screen.xs ? '' : 'q-mt-sm'"
-          padding="12px 30px"
-        >Flash</q-btn>
-      </div>
+      <div v-if="firmware.fileName.length">
+        <div v-if="!checks.crc32" class="alert">
+          <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
+        </div>
 
-      <div v-if="firmware.fileName.length && !checks.crc32" class="alert">
-        <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
-      </div>
-
-      <div v-if="firmware.fileName.length && !checks.target" class="alert">
-        <p>
-            <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
-        </p>
-        This firmware might break your device!
+        <div v-if="!checks.target" class="alert">
+          <p>
+              <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+          </p>
+          This firmware might break your device!
+        </div>
       </div>
 
       <div v-if="flipper.state.connection !== 0 && flipper.state.status === 1" class="flex flex-center q-mt-md">
@@ -249,8 +251,8 @@
           flat
           color="grey-8"
           size="13px"
-          class="absolute-bottom-right q-ma-sm"
-          @click="init()"
+          class="absolute-bottom q-ma-sm"
+          @click="connectAndGetData"
         >
           Reconnect
         </q-btn>
@@ -289,7 +291,7 @@
       color="grey-8"
       size="13px"
       class="absolute-bottom-right q-ma-sm"
-      @click="changeMode"
+      @click="changeMode(true)"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
   </div>
 </template>
@@ -302,8 +304,9 @@ import {
   loadFirmwareFile
 } from './updater/firmwareLoader'
 import semver from 'semver'
-import { mdiChevronDown } from '@quasar/extras/mdi-v5'
 import { waitForDevice } from './updater/util'
+
+import { mdiChevronDown } from '@quasar/extras/mdi-v5'
 import {
   evaArrowBackOutline,
   evaArrowUpwardOutline,
@@ -362,8 +365,7 @@ export default defineComponent({
       newerThanLTS: ref(false),
       reconnecting: ref(false),
       showArrows: ref(false),
-      showOverlay: ref(false),
-      showRecoveryMenu: ref(false)
+      showOverlay: ref(false)
     }
   },
   computed: {
@@ -383,24 +385,56 @@ export default defineComponent({
     }
   },
   methods: {
-    async init () {
-      await this.flipper.connect(this.mode)
-      await this.flipper.readProperties()
-      this.compareVersions()
+    async connectAndGetData () {
+      try {
+        this.init()
+
+        // Connect
+        await this.flipper.connect(this.mode)
+          .then(() => {
+            if (this.flipper.state.connection === 0) {
+              throw new Error('No device selected')
+            }
+          })
+          .catch(async error => {
+            if (error.message.includes('No known')) {
+              await this.recognizeDevice(this.mode)
+            }
+          })
+
+        // Get data
+        if (!this.error.isError) {
+          await this.flipper.readProperties()
+          this.compareVersions()
+        }
+      } catch (error) {
+        this.showArrows = false
+        this.error.isError = true
+        this.error.message = error.message || error
+        this.error.button = this.mode
+      }
     },
 
     async update () {
       if (!this.firmware.fileName.length) {
+        console.log('fw file downloading')
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
         this.firmware.loading = false
+        console.log('fw file downloaded')
       }
 
       this.reconnecting = true
       if (this.mode === 'serial') {
+        console.log('rebooting flipper')
         await this.flipper.reboot()
+        console.log('flipper rebooted')
       }
+      console.log('recognizing device')
+      await this.recognizeDevice('usb')
+      console.log('recognized device, waiting for device')
       await waitForDevice('rebooted to usb')
+      console.log('device ready')
       this.reconnecting = false
       function preventTabClose (event) {
         event.returnValue = ''
@@ -417,7 +451,7 @@ export default defineComponent({
       await waitForDevice('rebooted to serial')
       this.reconnecting = false
 
-      await this.init()
+      await this.connectAndGetData()
     },
 
     async fetchFirmwareFile (channel) {
@@ -441,17 +475,114 @@ export default defineComponent({
         })
     },
 
-    async changeMode () {
+    async changeMode (reboot) {
       if (this.mode === 'serial') {
         this.mode = 'usb'
       } else if (this.mode === 'usb') {
         this.mode = 'serial'
       }
-      this.reconnecting = true
-      await this.flipper.reboot()
-      await waitForDevice('rebooted to ' + this.mode)
+
+      if (reboot) {
+        this.reconnecting = true
+        await this.flipper.reboot()
+        await waitForDevice('rebooted to ' + this.mode)
+        this.reconnecting = false
+      }
+
+      if (await this.recognizeDevice(this.mode)) {
+        await this.connectAndGetData()
+      }
+    },
+
+    // Utils
+    async init () {
+      this.error.isError = false
+      this.firmware = {
+        fileName: '',
+        loading: false,
+        binary: undefined
+      }
+      this.flipper.state = {
+        connection: 0,
+        status: 1
+      }
+      this.flipper.properties = {
+        type: undefined,
+        battery: undefined,
+        name: undefined,
+        stm32Serial: undefined,
+        bodyColor: undefined,
+        region: undefined,
+        hardwareVer: undefined,
+        target: undefined,
+        firmwareVer: undefined,
+        firmwareCommit: undefined,
+        firmwareBuild: undefined,
+        bootloaderVer: undefined,
+        bootloaderCommit: undefined,
+        bootloaderBuild: undefined,
+        radioFusFirmware: {
+          major: undefined,
+          minor: undefined,
+          sub: undefined
+        },
+        radioFirmware: {
+          major: undefined,
+          minor: undefined,
+          sub: undefined
+        },
+        btMac: undefined
+      }
+      this.isOutdated = undefined
+      this.newerThanLTS = false
       this.reconnecting = false
-      await this.init()
+      this.showArrows = false
+      this.showOverlay = false
+    },
+
+    async recognizeDevice (mode) {
+      try {
+        if (mode === 'serial') {
+          const filters = [
+            { usbVendorId: 0x0483, usbProductId: 0x5740 }
+          ]
+          const ports = await navigator.serial.getPorts({ filters })
+          if (ports.length === 0) {
+            this.adjustArrows()
+            this.showArrows = true
+            this.showOverlay = true
+            await navigator.serial.requestPort({ filters })
+              .then(() => {
+                this.error.isError = false
+                this.showOverlay = false
+                this.showArrows = false
+                return true
+              })
+          }
+        } else if (mode === 'usb') {
+          const filters = [
+            { vendorId: 0x0483, productId: 0xdf11 }
+          ]
+          const ports = await navigator.usb.getDevices({ filters })
+          if (ports.length === 0) {
+            this.adjustArrows()
+            this.showOverlay = true
+            this.showArrows = true
+            await navigator.usb.requestDevice({ filters })
+              .then(() => {
+                this.error.isError = false
+                this.showOverlay = false
+                this.showArrows = false
+              })
+          }
+        }
+      } catch (error) {
+        this.showArrows = false
+        this.error.isError = true
+        this.error.message = error.message || error
+        this.error.button = this.mode
+        return false
+      }
     },
 
     compareVersions () {
@@ -534,6 +665,10 @@ export default defineComponent({
       const d = new Date(Date.now())
       this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
       this.flipper.state.connection = 0
+
+      if (this.mode === 'serial') {
+        this.flipper.disconnect()
+      }
     }
   },
   created () {
@@ -554,7 +689,12 @@ export default defineComponent({
       })
     }
     this.fwModel = this.fwOptions[0]
-    this.init()
+
+    if (this.initialMode) {
+      this.mode = this.initialMode
+    }
+    this.connectAndGetData()
+
     navigator.serial.addEventListener('disconnect', this.onDisconnect)
     navigator.usb.addEventListener('disconnect', this.onDisconnect)
   }

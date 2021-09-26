@@ -1,3 +1,4 @@
+import { waitForDevice } from './util'
 class Operation {
   constructor () {
     this.resolve = undefined
@@ -75,13 +76,10 @@ export class Flipper {
         { usbVendorId: 0x0483, usbProductId: 0x5740 }
       ]
       const ports = await navigator.serial.getPorts({ filters })
-      if (!ports[0]) {
-        await navigator.serial.requestPort({ filters })
-          .catch(error => {
-            this.state.connection = 0
-            this.state.status = 0
-            throw error
-          })
+      if (ports.length === 0) {
+        this.state.connection = 0
+        this.state.status = 0
+        throw new Error('No known serial devices')
       }
       const connectSerial = operation.create(serial, 'connect')
       await connectSerial
@@ -93,16 +91,13 @@ export class Flipper {
       this.state.connection = 2
     } else if (connectionType === 'usb') {
       const filters = [
-        { vendorId: 0x0483, productId: 0x5740 }
+        { vendorId: 0x0483, productId: 0xdf11 }
       ]
       const ports = await navigator.usb.getDevices({ filters })
-      if (!ports[0]) {
-        await navigator.usb.requestDevice({ filters })
-          .catch(error => {
-            this.state.connection = 0
-            this.state.status = 0
-            throw error
-          })
+      if (ports.length === 0) {
+        this.state.connection = 0
+        this.state.status = 0
+        throw new Error('No known usb devices')
       }
       const connectUSB = operation.create(usb, 'connect')
       await connectUSB
@@ -118,7 +113,7 @@ export class Flipper {
   }
 
   async disconnect () {
-    if (this.state.connection === 2) {
+    if (this.state.connection === 2 || this.state.connection === 0) {
       const disconnectSerial = operation.create(serial, 'disconnect')
       await disconnectSerial
         .catch(error => {
@@ -133,6 +128,8 @@ export class Flipper {
           this.state.status = 0
           throw error
         })
+      this.state.connection = 0
+    } else if (this.state.connection === 1) {
       this.state.connection = 0
     } else {
       throw new Error('Wrong connection state')
@@ -174,6 +171,9 @@ export class Flipper {
           this.state.status = 1
           return parseOTPData(blob)
         })
+        .then(properties => {
+          this.properties = properties
+        })
       return this.properties
     } else {
       throw new Error('Wrong connection state')
@@ -194,9 +194,8 @@ export class Flipper {
       this.state.status = 1
       await this.disconnect()
 
-      setTimeout(async () => {
-        await this.connect('usb')
-      }, 2000)
+      await waitForDevice('rebooted to usb')
+      await this.connect('usb')
     } else if (this.state.connection === 3) {
       this.disconnect()
     }
@@ -386,4 +385,5 @@ async function parseOTPData (blob) {
     properties.target = otp[1]
     properties.name = new TextDecoder().decode(otp.slice(8, 16).filter(e => e > 0))
   }
+  return properties
 }

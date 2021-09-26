@@ -15,11 +15,11 @@ async function waitForDevice (c) {
     } else if (c === 'rebooted to usb') {
       ports = await navigator.usb.getDevices({ usbFilters })
     }
-    if (ports.length) {
+    if (ports.length > 0) {
       await sleep(1800)
       return
     }
-    await sleep(500)
+    await sleep(350)
   }
 }
 

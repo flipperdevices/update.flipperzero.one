@@ -42,20 +42,24 @@ async function connect () {
 }
 
 function disconnect () {
-  port.close()
-    .then(() => {
-      self.postMessage({
-        operation: 'disconnect',
-        status: 1
+  if (port && !port.closed) {
+    port.close()
+      .then(() => {
+        self.postMessage({
+          operation: 'disconnect',
+          status: 1
+        })
       })
-    })
-    .catch(error => {
-      self.postMessage({
-        operation: 'disconnect',
-        status: 0,
-        error: error
+      .catch(error => {
+        if (!(error.message && error.message.includes('The port is already closed.'))) {
+          self.postMessage({
+            operation: 'disconnect',
+            status: 0,
+            error: error
+          })
+        }
       })
-    })
+  }
 }
 
 async function write (lines) {
