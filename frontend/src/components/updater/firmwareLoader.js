@@ -8,7 +8,7 @@ async function fetchFirmwareFile (channel, files, target) {
   })
   let url = file.url
   if (channel === 'dev') {
-    url = 'https://update.flipperzero.one/firmware/development/f6/full_dfu'
+    url = 'https://update.flipperzero.one/firmware/development/f' + target + '/full_dfu'
   }
 
   const buffer = await fetch(url)
