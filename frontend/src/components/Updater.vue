@@ -20,8 +20,7 @@
         <q-separator dark v-if="error.button.length"></q-separator>
 
         <q-card-actions v-if="error.button.length" align="right" class="text-white">
-        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connectAndGetData()">Reconnect</q-btn>
-        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connectAndGetData()">{{ this.mode === 'serial' ? 'Recovery mode' : 'Reconnect' }}</q-btn>
+        <q-btn flat @click="error.isError = false; connect()">Reconnect</q-btn>
         </q-card-actions>
       </q-card>
       <div class="absolute-bottom-right q-mr-lg text-white text-right">
@@ -50,8 +49,8 @@
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
         <div>
-          <span class="q-pl-sm">1. {{ arrowText }}</span>
-          <div v-if="!error.isError && arrowText === 'Find your Flipper in recovery mode (DFU in FS Mode)'" class="flex flex-center flipper q-mt-lg">
+          <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
+          <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
             <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
             <img src="../assets/flipper-transparent.png" />
           </div>
@@ -72,8 +71,8 @@
       <q-separator v-if="error.button.length"></q-separator>
 
       <q-card-actions v-if="error.button.length" align="right">
-        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connectAndGetData()">Reconnect</q-btn>
-        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connectAndGetData()">Recovery mode</q-btn>
+        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connect()">Reconnect</q-btn>
+        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connect()">Recovery mode</q-btn>
       </q-card-actions>
     </q-card>
 
@@ -252,7 +251,7 @@
           color="grey-8"
           size="13px"
           class="absolute-bottom q-ma-sm"
-          @click="connectAndGetData"
+          @click="connect"
         >
           Reconnect
         </q-btn>
@@ -328,7 +327,6 @@ export default defineComponent({
   },
   setup () {
     return {
-      arrowText: ref('Find your Flipper in dropdown menu'),
       checks: ref({
         crc32: true,
         sha256: true,
@@ -368,6 +366,7 @@ export default defineComponent({
       showOverlay: ref(false)
     }
   },
+
   computed: {
     batteryColor () {
       let color = ''
@@ -384,12 +383,13 @@ export default defineComponent({
       return color
     }
   },
+
   methods: {
-    async connectAndGetData () {
+    // Update sequence
+    async connect () {
       try {
         this.init()
 
-        // Connect
         await this.flipper.connect(this.mode)
           .then(() => {
             if (this.flipper.state.connection === 0) {
@@ -398,14 +398,12 @@ export default defineComponent({
           })
           .catch(async error => {
             if (error.message.includes('No known')) {
-              await this.recognizeDevice(this.mode)
+              return this.recognizeDevice(this.mode)
             }
           })
 
-        // Get data
         if (!this.error.isError) {
-          await this.flipper.readProperties()
-          this.compareVersions()
+          return this.readProperties()
         }
       } catch (error) {
         this.showArrows = false
@@ -413,6 +411,11 @@ export default defineComponent({
         this.error.message = error.message || error
         this.error.button = this.mode
       }
+    },
+
+    async readProperties () {
+      await this.flipper.readProperties()
+      this.compareVersions()
     },
 
     async update () {
@@ -451,7 +454,7 @@ export default defineComponent({
       await waitForDevice('rebooted to serial')
       this.reconnecting = false
 
-      await this.connectAndGetData()
+      await this.connect()
     },
 
     async fetchFirmwareFile (channel) {
@@ -475,25 +478,6 @@ export default defineComponent({
         })
     },
 
-    async changeMode (reboot) {
-      if (this.mode === 'serial') {
-        this.mode = 'usb'
-      } else if (this.mode === 'usb') {
-        this.mode = 'serial'
-      }
-
-      if (reboot) {
-        this.reconnecting = true
-        await this.flipper.reboot()
-        await waitForDevice('rebooted to ' + this.mode)
-        this.reconnecting = false
-      }
-
-      if (await this.recognizeDevice(this.mode)) {
-        await this.connectAndGetData()
-      }
-    },
-
     // Utils
     async init () {
       this.error.isError = false
@@ -501,10 +485,6 @@ export default defineComponent({
         fileName: '',
         loading: false,
         binary: undefined
-      }
-      this.flipper.state = {
-        connection: 0,
-        status: 1
       }
       this.flipper.properties = {
         type: undefined,
@@ -540,6 +520,31 @@ export default defineComponent({
       this.showOverlay = false
     },
 
+    async changeMode (reboot) {
+      if (this.mode === 'serial') {
+        this.mode = 'usb'
+      } else if (this.mode === 'usb') {
+        this.mode = 'serial'
+      }
+
+      if (reboot) {
+        this.reconnecting = true
+        await this.flipper.reboot()
+          .catch(async error => {
+            if (error.message.includes('No known')) {
+              this.recognizeDevice(this.mode)
+            }
+          })
+        await waitForDevice('rebooted to ' + this.mode)
+        this.reconnecting = false
+        if (this.mode === 'serial' && !this.flipper.properties.battery) {
+          await this.readProperties()
+        }
+      } else {
+        await this.connect()
+      }
+    },
+
     async recognizeDevice (mode) {
       try {
         if (mode === 'serial') {
@@ -556,7 +561,7 @@ export default defineComponent({
                 this.error.isError = false
                 this.showOverlay = false
                 this.showArrows = false
-                return true
+                return this.connect()
               })
           }
         } else if (mode === 'usb') {
@@ -573,6 +578,7 @@ export default defineComponent({
                 this.error.isError = false
                 this.showOverlay = false
                 this.showArrows = false
+                return this.connect()
               })
           }
         }
@@ -671,6 +677,7 @@ export default defineComponent({
       }
     }
   },
+
   created () {
     this.mdiChevronDown = mdiChevronDown
     this.evaArrowBackOutline = evaArrowBackOutline
@@ -679,6 +686,7 @@ export default defineComponent({
     this.evaRefreshOutline = evaRefreshOutline
     this.evaCloseOutline = evaCloseOutline
   },
+
   mounted () {
     this.fwOptions[0].version = this.release.version
     this.fwOptions[1].version = this.rc.version
@@ -693,7 +701,7 @@ export default defineComponent({
     if (this.initialMode) {
       this.mode = this.initialMode
     }
-    this.connectAndGetData()
+    this.connect()
 
     navigator.serial.addEventListener('disconnect', this.onDisconnect)
     navigator.usb.addEventListener('disconnect', this.onDisconnect)

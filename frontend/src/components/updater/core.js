@@ -197,7 +197,11 @@ export class Flipper {
       await waitForDevice('rebooted to usb')
       await this.connect('usb')
     } else if (this.state.connection === 3) {
-      this.disconnect()
+      this.state.status = 1
+      await this.disconnect()
+
+      await waitForDevice('rebooted to serial')
+      await this.connect('serial')
     }
   }
 
