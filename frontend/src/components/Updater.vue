@@ -385,12 +385,12 @@ export default defineComponent({
   },
 
   methods: {
-    // Update sequence
-    async connect () {
+    // Startup
+    async connect (mode) {
       try {
         this.init()
 
-        await this.flipper.connect(this.mode)
+        await this.flipper.connect(mode || this.mode)
           .then(() => {
             if (this.flipper.state.connection === 0) {
               throw new Error('No device selected')
@@ -402,7 +402,7 @@ export default defineComponent({
             }
           })
 
-        if (!this.error.isError) {
+        if (!this.error.isError && !this.reconnecting) {
           return this.readProperties()
         }
       } catch (error) {
@@ -418,26 +418,25 @@ export default defineComponent({
       this.compareVersions()
     },
 
+    // Update sequence
     async update () {
       if (!this.firmware.fileName.length) {
-        console.log('fw file downloading')
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
         this.firmware.loading = false
-        console.log('fw file downloaded')
       }
 
       this.reconnecting = true
       if (this.mode === 'serial') {
-        console.log('rebooting flipper')
         await this.flipper.reboot()
-        console.log('flipper rebooted')
+          .catch(async error => {
+            if (error.message.includes('No known')) {
+              await this.recognizeDevice('usb')
+            }
+          })
       }
-      console.log('recognizing device')
-      await this.recognizeDevice('usb')
-      console.log('recognized device, waiting for device')
-      await waitForDevice('rebooted to usb')
-      console.log('device ready')
+      await this.flipper.connect('usb')
+      // await waitForDevice('rebooted to usb')
       this.reconnecting = false
       function preventTabClose (event) {
         event.returnValue = ''
@@ -537,9 +536,7 @@ export default defineComponent({
           })
         await waitForDevice('rebooted to ' + this.mode)
         this.reconnecting = false
-        if (this.mode === 'serial' && !this.flipper.properties.battery) {
-          await this.readProperties()
-        }
+        await this.readProperties()
       } else {
         await this.connect()
       }
@@ -578,7 +575,9 @@ export default defineComponent({
                 this.error.isError = false
                 this.showOverlay = false
                 this.showArrows = false
-                return this.connect()
+                if (this.mode === mode) {
+                  return this.connect()
+                }
               })
           }
         }

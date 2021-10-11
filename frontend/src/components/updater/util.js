@@ -16,7 +16,7 @@ async function waitForDevice (c) {
       ports = await navigator.usb.getDevices({ usbFilters })
     }
     if (ports.length > 0) {
-      await sleep(1800)
+      await sleep(2000)
       return
     }
     await sleep(350)

@@ -31,7 +31,7 @@ let progress = {
   stage: 0
 }
 const title = {
-  string: document.title,
+  string: 'Flipper Zero Update Page',
   progress: 0
 }
 
@@ -43,8 +43,10 @@ usb.onmessage = (event) => {
   if (event.data.operation === 'log progress') {
     progress = event.data.data
     if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
-      title.progress = Math.floor(progress.current / (progress.max / 100) / 5) * 5
+      title.progress = Math.floor(progress.current / (progress.max / 100))
       document.title = '(' + title.progress + '%) ' + title.string
+    } else if (progress.stage === 0) {
+      document.title = '(erasing) ' + title.string
     }
   } else {
     operation.terminate(event.data)
@@ -206,6 +208,7 @@ export class Flipper {
   }
 
   async writeFirmware (firmware) {
+    document.title = title.string
     const writeFirmware = operation.create(usb, 'write', firmware)
 
     this.state.status = 3
@@ -221,6 +224,7 @@ export class Flipper {
     clearInterval(logProgress)
     this.writeProgress.current = this.writeProgress.max
     document.title = '(100%) ' + title.string
+    title.progress = 0
   }
 }
 
