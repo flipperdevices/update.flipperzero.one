@@ -365,6 +365,7 @@ export default defineComponent({
       mode: ref('serial'),
       newerThanLTS: ref(false),
       reconnecting: ref(false),
+      reconnectLoop: ref(undefined),
       showArrows: ref(false),
       showOverlay: ref(false)
     }
@@ -550,6 +551,9 @@ export default defineComponent({
     },
 
     async recognizeDevice (mode) {
+      if (this.reconnectLoop) {
+        clearInterval(this.reconnectLoop)
+      }
       try {
         if (mode === 'serial') {
           const filters = [
@@ -683,12 +687,12 @@ export default defineComponent({
       }
 
       if (!this.reconnecting) {
-        setTimeout(this.autoReconnect, 3000)
+        this.autoReconnect()
       }
     },
 
     autoReconnect () {
-      const reconnectLoop = setInterval(async () => {
+      this.reconnectLoop = setInterval(async () => {
         let ports, filters
         if (this.mode === 'serial') {
           filters = [
@@ -702,7 +706,7 @@ export default defineComponent({
           ports = await navigator.usb.getDevices({ filters })
         }
         if (ports.length > 0) {
-          clearInterval(reconnectLoop)
+          clearInterval(this.reconnectLoop)
           return this.connect()
         }
       }, 1000)
