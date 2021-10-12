@@ -1,5 +1,5 @@
 <template>
-  <div id="updater-container" class="flex column flex-center">
+  <div id="updater-container" class="flex column flex-center"> {{flipper.state.connection}} {{mode}}
     <div v-show="showOverlay" class="popup-overlay">
       <div class="absolute-top-right q-ma-md text-white">
         <q-btn
@@ -302,6 +302,9 @@ import {
   fetchFirmwareFile,
   loadFirmwareFile
 } from './updater/firmwareLoader'
+import {
+  fetchResources
+} from './updater/resourceLoader'
 import semver from 'semver'
 import { waitForDevice } from './updater/util'
 
@@ -386,11 +389,11 @@ export default defineComponent({
 
   methods: {
     // Startup
-    async connect (mode) {
+    async connect () {
       try {
         this.init()
 
-        await this.flipper.connect(mode || this.mode)
+        await this.flipper.connect(this.mode)
           .then(() => {
             if (this.flipper.state.connection === 0) {
               throw new Error('No device selected')
@@ -401,6 +404,8 @@ export default defineComponent({
               return this.recognizeDevice(this.mode)
             }
           })
+
+        console.log('connected', this.flipper)
 
         if (!this.error.isError && !this.reconnecting) {
           return this.readProperties()
@@ -423,6 +428,7 @@ export default defineComponent({
       if (!this.firmware.fileName.length) {
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
+        await this.fetchResources(this.fwModel.value)
         this.firmware.loading = false
       }
 
@@ -436,7 +442,6 @@ export default defineComponent({
           })
       }
       await this.flipper.connect('usb')
-      // await waitForDevice('rebooted to usb')
       this.reconnecting = false
       function preventTabClose (event) {
         event.returnValue = ''
@@ -475,6 +480,10 @@ export default defineComponent({
           this.checks.target = targetCheck
           this.checks.crc32 = crc32Check
         })
+    },
+
+    async fetchResources (channel) {
+      await fetchResources(channel, this[channel.toLowerCase()].files)
     },
 
     // Utils
@@ -658,6 +667,7 @@ export default defineComponent({
         }
       }
     },
+
     cancelUpload () {
       this.firmwareFile = undefined
       this.firmware.fileName = ''
