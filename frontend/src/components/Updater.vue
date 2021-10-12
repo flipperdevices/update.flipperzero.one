@@ -196,9 +196,9 @@
             v-if="fwModel"
             @click="update"
             color="positive"
+            padding="12px 30px"
             class="q-ml-lg"
             :class="!$q.screen.xs ? '' : 'q-mt-sm'"
-            padding="12px 30px"
           >Flash</q-btn>
         </div>
       </div>
@@ -244,13 +244,13 @@
         >Flash anyway</q-btn>
       </div>
 
-      <div v-if="flipper.state.connection === 0 && !reconnecting" class="alert">
+      <div v-if="flipper.state.connection === 0 && !reconnecting" class="flex column flex-center alert">
         <span>Information is valid on {{ disconnectTime }}</span>
         <q-btn
-          flat
-          color="grey-8"
+          color="positive"
+          padding="12px 30px"
           size="13px"
-          class="absolute-bottom q-ma-sm"
+          class="q-ma-sm"
           @click="connect"
         >
           Reconnect
