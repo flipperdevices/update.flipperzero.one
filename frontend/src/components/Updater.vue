@@ -290,7 +290,7 @@
       color="grey-8"
       size="13px"
       class="absolute-bottom-right q-ma-sm"
-      @click="changeMode(true)"
+      @click="changeMode(!!(true * this.flipper.state.connection))"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
   </div>
 </template>
@@ -716,6 +716,12 @@ export default defineComponent({
     this.evaAlertCircleOutline = evaAlertCircleOutline
     this.evaRefreshOutline = evaRefreshOutline
     this.evaCloseOutline = evaCloseOutline
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.showOverlay = false
+      }
+    })
   },
 
   mounted () {
