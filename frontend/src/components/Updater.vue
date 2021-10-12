@@ -1,5 +1,5 @@
 <template>
-  <div id="updater-container" class="flex column flex-center"> {{flipper.state.connection}} {{mode}}
+  <div id="updater-container" class="flex column flex-center">
     <div v-show="showOverlay" class="popup-overlay">
       <div class="absolute-top-right q-ma-md text-white">
         <q-btn
@@ -405,8 +405,6 @@ export default defineComponent({
             }
           })
 
-        console.log('connected', this.flipper)
-
         if (!this.error.isError && !this.reconnecting) {
           return this.readProperties()
         }
@@ -683,6 +681,31 @@ export default defineComponent({
       if (this.mode === 'serial') {
         this.flipper.disconnect()
       }
+
+      if (!this.reconnecting) {
+        setTimeout(this.autoReconnect, 3000)
+      }
+    },
+
+    autoReconnect () {
+      const reconnectLoop = setInterval(async () => {
+        let ports, filters
+        if (this.mode === 'serial') {
+          filters = [
+            { usbVendorId: 0x0483, usbProductId: 0x5740 }
+          ]
+          ports = await navigator.serial.getPorts({ filters })
+        } else if (this.mode === 'usb') {
+          filters = [
+            { vendorId: 0x0483, productId: 0xdf11 }
+          ]
+          ports = await navigator.usb.getDevices({ filters })
+        }
+        if (ports.length > 0) {
+          clearInterval(reconnectLoop)
+          return this.connect()
+        }
+      }, 1000)
     }
   },
 
