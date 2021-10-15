@@ -194,7 +194,7 @@
           color="grey-8"
           class="q-mt-lg"
           type="a"
-          href="https://update.flipperzero.one/firmware/development/f6/full_dfu"
+          href="https://update.flipperzero.one/firmware/development/f7/full_dfu"
         >
           Dev Build ({{ dev.date }})
         </q-btn>
@@ -329,7 +329,7 @@ export default defineComponent({
 
           this.release.version = latest.version
           this.release.date = new Date(latest.timestamp * 1000).toISOString().slice(0, 10)
-          this.release.url = latest.files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
+          this.release.url = latest.files.find(file => file.target === 'f7' && file.type === 'full_dfu').url
           this.release.files = latest.files.sort((a, b) => {
             if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
             else return -1
@@ -338,7 +338,7 @@ export default defineComponent({
 
           this.dev.version = dev.versions[0].version
           this.dev.date = new Date(dev.versions[0].timestamp * 1000).toISOString().slice(0, 10)
-          this.dev.url = dev.versions[0].files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
+          this.dev.url = dev.versions[0].files.find(file => file.target === 'f7' && file.type === 'full_dfu').url
           this.dev.files = dev.versions[0].files.sort((a, b) => {
             if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
             else return -1
@@ -347,7 +347,7 @@ export default defineComponent({
 
           this.rc.version = rc.versions[0].version
           this.rc.date = new Date(rc.versions[0].timestamp * 1000).toISOString().slice(0, 10)
-          this.rc.url = rc.versions[0].files.find(file => file.target === 'f6' && file.type === 'full_dfu').url
+          this.rc.url = rc.versions[0].files.find(file => file.target === 'f7' && file.type === 'full_dfu').url
           this.rc.files = rc.versions[0].files.sort((a, b) => {
             if (a.url.match(/[\w.]+$/g)[0] > b.url.match(/[\w.]+$/g)[0]) return 1
             else return -1
