@@ -257,7 +257,7 @@
         </q-btn>
       </div>
 
-      <div v-if="reconnecting" class="flex column flex-center q-ma-lg">
+      <div v-if="reconnecting && flipper.state.connection < 2" class="flex column flex-center q-ma-lg">
         <q-spinner
           color="accent"
           size="3em"
