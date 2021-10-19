@@ -81,7 +81,7 @@
         <q-card-section horizontal class="text-left">
           <div class="col-6 flex flex-center flipper">
             <img v-if="flipper.state.connection === 3" src="../assets/flipper-dfu-overlay.png" class="absolute"/>
-            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'undefined'" src="../assets/flipper-white.png" />
+            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper-white.png" />
             <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
@@ -110,6 +110,7 @@
                 <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
                 <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
                 <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
+                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -122,6 +123,7 @@
                 <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloaderBuild }}</div>
                 <div><b>FUS version:</b></div><div>{{ flipper.properties.radioFusFirmware }}</div>
                 <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radioFirmware }}</div>
+                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -131,6 +133,7 @@
             <q-card-section horizontal>
               <div class="properties">
                 <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
+                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -138,6 +141,7 @@
             <q-card-section horizontal>
               <div class="properties">
                 <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
+                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -521,7 +525,8 @@ export default defineComponent({
           minor: undefined,
           sub: undefined
         },
-        btMac: undefined
+        btMac: undefined,
+        otpVer: undefined
       }
       this.isOutdated = undefined
       this.newerThanLTS = false

@@ -53,7 +53,8 @@ function parseOutputText (text) {
       minor: undefined,
       sub: undefined
     },
-    btMac: undefined
+    btMac: undefined,
+    otpVer: undefined
   }
 
   lines.forEach(line => {
@@ -75,15 +76,7 @@ function parseOutputText (text) {
       return
     }
     if (line.includes('hardware_color')) {
-      const color = line.replace(/hardware_color\s*:\s/g, '').trim()
-      switch (color) {
-        case '0':
-          properties.bodyColor = 'white'
-          break
-        case '1':
-          properties.bodyColor = 'black'
-          break
-      }
+      properties.bodyColor = line.replace(/hardware_color\s*:\s/g, '').trim()
       return
     }
     if (line.includes('hardware_region')) {
@@ -149,7 +142,14 @@ function parseOutputText (text) {
     if (line.includes('radio_ble_mac')) {
       properties.btMac = line.replace(/radio_ble_mac\s*:\s/g, '').trim()
     }
+    if (line.includes('hardware_otp_ver')) {
+      properties.otpVer = line.replace(/hardware_otp_ver\s*:\s/g, '').trim()
+    }
   })
+
+  if (!properties.otpVer) {
+    properties.otpVer = 1
+  }
 
   properties.radioFusFirmware = properties.radioFusFirmware.major + '.' +
     properties.radioFusFirmware.minor + '.' +
@@ -159,7 +159,7 @@ function parseOutputText (text) {
     properties.radioFirmware.minor + '.' +
     properties.radioFirmware.sub
 
-  return properties
+  return parseEnums(properties)
 }
 
 // USB utils
@@ -221,10 +221,15 @@ async function parseOTPData (blob) {
     hardwareVer: otp.boardInfo.version,
     target: otp.boardInfo.target,
     bodyColor: otp.deviceInfo.color,
+    otpVer: otp.header.version,
     region: otp.deviceInfo.region
   }
 
-  switch (properties.bodyColor) {
+  return parseEnums(properties)
+}
+
+function parseEnums (properties) {
+  switch (Number(properties.bodyColor)) {
     case 1:
       properties.bodyColor = 'black'
       break
@@ -232,11 +237,11 @@ async function parseOTPData (blob) {
       properties.bodyColor = 'white'
       break
     default:
-      properties.bodyColor = 'undefined'
+      properties.bodyColor = 'unknown'
       break
   }
 
-  switch (properties.region) {
+  switch (Number(properties.region)) {
     case 1:
       properties.region = 'EuRu'
       break
@@ -247,7 +252,7 @@ async function parseOTPData (blob) {
       properties.region = 'Jp'
       break
     default:
-      properties.region = 'undefined'
+      properties.region = 'unknown'
       break
   }
 
