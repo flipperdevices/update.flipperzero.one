@@ -251,8 +251,6 @@ async function parseOTPData (blob) {
       break
   }
 
-  console.log(properties)
-
   return properties
 }
 
