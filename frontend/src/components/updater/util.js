@@ -165,29 +165,95 @@ function parseOutputText (text) {
 // USB utils
 
 async function parseOTPData (blob) {
-  const otp = new Uint8Array(await blob.arrayBuffer())
+  const otp = {
+    data: new Uint8Array(await blob.arrayBuffer()),
+    header: {
+      magic: undefined,
+      version: undefined,
+      reserved: undefined,
+      timestamp: undefined
+    },
+    boardInfo: {
+      version: undefined,
+      target: undefined,
+      body: undefined,
+      connect: undefined,
+      display: undefined
+    },
+    deviceInfo: {
+      color: undefined,
+      region: undefined
+    },
+    name: undefined
+  }
+
+  if (otp.data[0] === 190 && otp.data[1] === 186) {
+    otp.header.magic = otp.data.slice(0, 2)
+    otp.header.version = otp.data[2]
+    otp.header.reserved = otp.data[3]
+    otp.header.timestamp = otp.data.slice(4, 8).join('')
+
+    otp.boardInfo.version = otp.data[8]
+    otp.boardInfo.target = otp.data[9]
+    otp.boardInfo.body = otp.data[10]
+    otp.boardInfo.connect = otp.data[11]
+
+    if (otp.header.version === 1) {
+      otp.boardInfo.display = 0
+      otp.deviceInfo.color = otp.data[12]
+      otp.deviceInfo.region = otp.data[13]
+      otp.name = new TextDecoder().decode(otp.data.slice(16, 24).filter(e => e > 0))
+    } else if (otp.header.version === 2) {
+      otp.boardInfo.display = otp.data[12]
+      otp.deviceInfo.color = otp.data[16]
+      otp.deviceInfo.region = otp.data[17]
+      otp.name = new TextDecoder().decode(otp.data.slice(24, 32).filter(e => e > 0))
+    }
+  } else {
+    otp.header.version = 0
+    otp.boardInfo.version = otp.data[0]
+    otp.boardInfo.target = otp.data[1]
+    otp.name = new TextDecoder().decode(otp.data.slice(8, 16).filter(e => e > 0))
+  }
 
   const properties = {
-    name: undefined,
-    hardwareVer: undefined,
-    target: undefined,
-    bodyColor: undefined
+    name: otp.name,
+    hardwareVer: otp.boardInfo.version,
+    target: otp.boardInfo.target,
+    bodyColor: otp.deviceInfo.color,
+    region: otp.deviceInfo.region
   }
-  properties.name = 'undefined'
-  properties.hardwareVer = 'undefined'
-  properties.target = 'undefined'
-  properties.bodyColor = 'undefined'
+  console.log(otp)
 
-  if (otp[0] === 190 && otp[1] === 186) {
-    properties.hardwareVer = otp[8]
-    properties.target = otp[9]
-    properties.bodyColor = otp[12] ? 'black' : 'white'
-    properties.name = new TextDecoder().decode(otp.slice(16, 24).filter(e => e > 0))
-  } else {
-    properties.hardwareVer = otp[0]
-    properties.target = otp[1]
-    properties.name = new TextDecoder().decode(otp.slice(8, 16).filter(e => e > 0))
+  switch (properties.bodyColor) {
+    case 1:
+      properties.bodyColor = 'black'
+      break
+    case 2:
+      properties.bodyColor = 'white'
+      break
+    default:
+      properties.bodyColor = 'undefined'
+      break
   }
+
+  switch (properties.region) {
+    case 1:
+      properties.region = 'EuRu'
+      break
+    case 2:
+      properties.region = 'UsCaAu'
+      break
+    case 3:
+      properties.region = 'Jp'
+      break
+    default:
+      properties.region = 'undefined'
+      break
+  }
+
+  console.log(properties)
+
   return properties
 }
 
