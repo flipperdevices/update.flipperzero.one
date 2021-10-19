@@ -391,6 +391,9 @@ export default defineComponent({
   methods: {
     // Startup
     async connect () {
+      if (this.reconnectLoop) {
+        clearInterval(this.reconnectLoop)
+      }
       try {
         this.init()
 
@@ -692,6 +695,10 @@ export default defineComponent({
     },
 
     autoReconnect () {
+      if (this.reconnectLoop) {
+        clearInterval(this.reconnectLoop)
+        this.reconnectLoop = undefined
+      }
       this.reconnectLoop = setInterval(async () => {
         let ports, filters
         if (this.mode === 'serial') {
@@ -707,9 +714,10 @@ export default defineComponent({
         }
         if (ports.length > 0) {
           clearInterval(this.reconnectLoop)
-          return this.connect()
+          this.reconnectLoop = undefined
+          return await this.connect()
         }
-      }, 1000)
+      }, 3000)
     }
   },
 
