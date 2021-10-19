@@ -223,7 +223,6 @@ async function parseOTPData (blob) {
     bodyColor: otp.deviceInfo.color,
     region: otp.deviceInfo.region
   }
-  console.log(otp)
 
   switch (properties.bodyColor) {
     case 1:
