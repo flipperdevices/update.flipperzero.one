@@ -295,8 +295,10 @@
       :color="showTerminal ? 'grey-2' : 'grey-7'"
       :icon="showTerminal ? evaCloseOutline : mdiConsole"
       size="16px"
-      class="absolute-top-right q-ma-sm z-top"
-      @click="showTerminal = !showTerminal"
+      class="absolute-top-right q-ma-sm"
+      :class="showTerminal ? 'z-max' : 'z-top'"
+      :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
+      @click="toggleTerminal"
     ></q-btn>
 
     <q-btn
@@ -750,6 +752,11 @@ export default defineComponent({
           return await this.connect()
         }
       }, 3000)
+    },
+
+    toggleTerminal () {
+      this.showTerminal = !this.showTerminal
+      document.querySelector('body').style.overflowY = this.showTerminal ? 'hidden' : 'auto'
     }
   },
 

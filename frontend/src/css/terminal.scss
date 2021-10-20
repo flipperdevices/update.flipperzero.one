@@ -1,14 +1,14 @@
 #terminal-wrapper {
-  background-color: black;
-  border-radius: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 .xterm {
-  height: 100% !important;
+  height: 100vh !important;
   padding-left: 10px;
   .xterm-viewport {
-    border-radius: 10px;
-    width: 100% !important;
-    overflow: hidden !important;
+    width: 100vw !important;
+    overflow-y: hidden;
   }
 }

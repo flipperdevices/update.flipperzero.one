@@ -1,5 +1,5 @@
 <template>
-  <div id="terminal-wrapper" class="card absolute fit">
+  <div id="terminal-wrapper" class="z-top fit">
     <div id="terminal-container" class="fit"></div>
   </div>
 </template>
@@ -88,6 +88,9 @@ export default defineComponent({
 
       if (this.input.length && text.startsWith(this.input)) {
         text = text.slice(this.input.length, text.length)
+      }
+      if (text.endsWith('\r\n')) {
+        text = text.slice(0, text.length - 2)
       }
       text = text.replaceAll('\x07', '')
       text = trimPrompts(text)
