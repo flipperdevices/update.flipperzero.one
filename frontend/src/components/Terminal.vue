@@ -36,7 +36,6 @@ export default defineComponent({
       const fitAddon = new FitAddon()
       this.terminal.loadAddon(fitAddon)
       this.terminal.open(document.getElementById('terminal-container'))
-      document.querySelector('#updater-wrapper').setAttribute('style', 'height:' + getComputedStyle(document.querySelector('#updater-wrapper')).height + ' !important')
       document.querySelector('.xterm').setAttribute('style', 'height:' + getComputedStyle(document.querySelector('.xterm')).height + ' !important')
       this.terminal.focus()
       fitAddon.fit()
