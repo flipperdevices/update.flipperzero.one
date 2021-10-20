@@ -1,6 +1,6 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
-    <div v-show="showOverlay" class="popup-overlay">
+    <div v-show="showOverlay" class="popup-overlay z-max">
       <div class="absolute-top-right q-ma-md text-white">
         <q-btn
           flat
@@ -289,6 +289,17 @@
     </div>
 
     <q-btn
+      v-if="flipper.state.connection === 2"
+      flat
+      dense
+      :color="showTerminal ? 'grey-2' : 'grey-7'"
+      :icon="showTerminal ? evaCloseOutline : mdiConsole"
+      size="16px"
+      class="absolute-top-right q-ma-sm z-top"
+      @click="showTerminal = !showTerminal"
+    ></q-btn>
+
+    <q-btn
       :disabled="flipper.state.connection === 3 && flipper.state.status === 3"
       flat
       color="grey-8"
@@ -296,11 +307,17 @@
       class="absolute-bottom-right q-ma-sm"
       @click="changeMode(!!(true * this.flipper.state.connection))"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
+
+    <Terminal
+      v-if="showTerminal"
+      :flipper="flipper"
+    />
   </div>
 </template>
 
 <script>
 import { defineComponent, ref } from 'vue'
+import Terminal from './Terminal.vue'
 import { Flipper } from './updater/core'
 import {
   fetchFirmwareFile,
@@ -312,7 +329,10 @@ import {
 import semver from 'semver'
 import { waitForDevice } from './updater/util'
 
-import { mdiChevronDown } from '@quasar/extras/mdi-v5'
+import {
+  mdiChevronDown,
+  mdiConsole
+} from '@quasar/extras/mdi-v5'
 import {
   evaArrowBackOutline,
   evaArrowUpwardOutline,
@@ -323,6 +343,11 @@ import {
 
 export default defineComponent({
   name: 'Updater',
+
+  components: {
+    Terminal
+  },
+
   props: {
     custom: Object,
     dev: Object,
@@ -332,6 +357,7 @@ export default defineComponent({
     rc: Object,
     userAgent: Object
   },
+
   setup () {
     return {
       checks: ref({
@@ -371,7 +397,8 @@ export default defineComponent({
       reconnecting: ref(false),
       reconnectLoop: ref(undefined),
       showArrows: ref(false),
-      showOverlay: ref(false)
+      showOverlay: ref(false),
+      showTerminal: ref(false)
     }
   },
 
@@ -728,6 +755,7 @@ export default defineComponent({
 
   created () {
     this.mdiChevronDown = mdiChevronDown
+    this.mdiConsole = mdiConsole
     this.evaArrowBackOutline = evaArrowBackOutline
     this.evaArrowUpwardOutline = evaArrowUpwardOutline
     this.evaAlertCircleOutline = evaAlertCircleOutline
@@ -737,6 +765,7 @@ export default defineComponent({
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.showOverlay = false
+        this.showTerminal = false
       }
     })
   },

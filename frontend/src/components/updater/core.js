@@ -114,7 +114,7 @@ export class Flipper {
         })
       this.state.connection = 3
     } else {
-      throw new Error('Wrong connection type')
+      throw new Error("Wrong connection type (flipper.connect): expected 'serial' or 'usb', got " + connectionType)
     }
   }
 
@@ -182,7 +182,44 @@ export class Flipper {
         })
       return this.properties
     } else {
-      throw new Error('Wrong connection state')
+      throw new Error('Wrong connection state (flipper.readProperties): expected 2 or 3, got ' + this.state.connection)
+    }
+  }
+
+  async write (data) {
+    if (this.state.connection === 2) {
+      const write = operation.create(serial, 'write', [data])
+
+      this.state.status = 3
+      await write
+        .catch(error => {
+          this.state.status = 0
+          throw error
+        })
+    } else {
+      throw new Error('Wrong connection state (flipper.write): expected 2, got ' + this.state.connection)
+    }
+  }
+
+  async read () {
+    if (this.state.connection === 2) {
+      const read = operation.create(serial, 'read')
+
+      this.state.status = 2
+      const text = await read
+        .then(data => {
+          this.state.status = 1
+          const decoder = new TextDecoder()
+          return decoder.decode(data)
+        })
+        .catch(error => {
+          this.state.status = 0
+          throw error
+        })
+
+      return text
+    } else {
+      throw new Error('Wrong connection state (flipper.read): expected 2, got ' + this.state.connection)
     }
   }
 

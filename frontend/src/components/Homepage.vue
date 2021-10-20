@@ -87,7 +87,7 @@
       </q-card-section>
     </q-card>
 
-    <q-card v-else class="shadow-4">
+    <q-card v-else id="updater-wrapper" class="shadow-4">
       <q-card-section>
         <Updater
           :userAgent="userAgent"
