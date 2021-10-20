@@ -224,13 +224,16 @@ import { evaArrowDownwardOutline, evaClipboardOutline } from '@quasar/extras/eva
 
 export default defineComponent({
   name: 'Homepage',
+
   components: {
     Updater
   },
+
   props: {
     userAgent: Object,
     customSource: Object
   },
+
   setup () {
     return {
       showIntro: ref(true),
@@ -279,6 +282,7 @@ export default defineComponent({
       custom: ref(null)
     }
   },
+
   methods: {
     async lookForKnownDevices () {
       const filters = [
@@ -401,6 +405,7 @@ export default defineComponent({
         })
     }
   },
+
   created () {
     this.mdiChevronDown = mdiChevronDown
     this.evaArrowDownwardOutline = evaArrowDownwardOutline
@@ -410,6 +415,7 @@ export default defineComponent({
       else return 1
     })
   },
+
   mounted () {
     this.getDir()
   }
