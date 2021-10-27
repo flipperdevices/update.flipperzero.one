@@ -30,7 +30,7 @@ export default defineComponent({
   },
 
   methods: {
-    async init () {
+    init () {
       this.terminal = new Terminal({
         scrollback: 10_000
       })
@@ -41,44 +41,25 @@ export default defineComponent({
       this.terminal.focus()
       fitAddon.fit()
 
-      await this.write('\x01')
+      this.write('\x01')
       this.read()
 
       this.terminal.onData(async data => {
-        await this.write(data)
+        this.write(data)
       })
     },
 
-    async write (data) {
+    write (data) {
       this.flipper.cliWrite(data)
     },
 
     read () {
       this.flipper.cliRead()
-      window.addEventListener('new cli output', (e) => {
-        this.terminal.write(e.detail.replaceAll('\x7F', ''))
-      })
+      window.addEventListener('new cli output', this.print)
     },
 
-    clearOutput (text) {
-      function trimPrompts (text) {
-        if (text.endsWith('>: \r\n>: ')) {
-          text = text.slice(0, text.length - 5)
-          return trimPrompts(text)
-        } else {
-          return text
-        }
-      }
-
-      if (this.input.length && text.startsWith(this.input)) {
-        text = text.slice(this.input.length, text.length)
-      }
-      if (text.endsWith('\r\n')) {
-        text = text.slice(0, text.length - 2)
-      }
-      text = text.replaceAll('\x07', '')
-      text = trimPrompts(text)
-      return text
+    print (e) {
+      this.terminal.write(e.detail.replaceAll('\x7F', ''))
     }
   },
 
@@ -88,6 +69,10 @@ export default defineComponent({
 
   mounted () {
     this.init()
+  },
+
+  beforeUnmount () {
+    window.removeEventListener('new cli output', this.print)
   }
 })
 </script>

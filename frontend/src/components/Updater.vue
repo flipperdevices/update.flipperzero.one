@@ -310,8 +310,10 @@
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
 
     <Terminal
-      v-if="showTerminal"
+      v-if="terminalEnabled"
+      v-show="showTerminal"
       :flipper="flipper"
+      ref="Terminal"
     />
   </div>
 </template>
@@ -399,7 +401,8 @@ export default defineComponent({
       reconnectLoop: ref(undefined),
       showArrows: ref(false),
       showOverlay: ref(false),
-      showTerminal: ref(false)
+      showTerminal: ref(false),
+      terminalEnabled: ref(false)
     }
   },
 
@@ -774,6 +777,15 @@ export default defineComponent({
       if (this.flipper.state.connection === 2 && this.flipper.state.status === 2) {
         await this.flipper.closeReadingSession()
       }
+
+      if (!this.terminalEnabled) {
+        this.terminalEnabled = true
+      } else {
+        if (!this.showTerminal) {
+          this.$refs.Terminal.read()
+        }
+      }
+
       this.showTerminal = !this.showTerminal
       document.querySelector('body').style.overflowY = this.showTerminal ? 'hidden' : 'auto'
     }
