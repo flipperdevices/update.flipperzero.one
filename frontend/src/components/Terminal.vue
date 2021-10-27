@@ -50,11 +50,11 @@ export default defineComponent({
     },
 
     async write (data) {
-      this.flipper.write(data)
+      this.flipper.cliWrite(data)
     },
 
     read () {
-      this.flipper.read()
+      this.flipper.cliRead()
       window.addEventListener('new cli output', (e) => {
         this.terminal.write(e.detail.replaceAll('\x7F'))
       })

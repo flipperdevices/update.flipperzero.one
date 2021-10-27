@@ -193,7 +193,7 @@ export class Flipper {
     }
   }
 
-  async write (data) {
+  async cliWrite (data) {
     if (this.state.connection === 2) {
       const write = operation.create(serial, 'write', ['cli', [data]])
 
@@ -207,7 +207,7 @@ export class Flipper {
     }
   }
 
-  async read () {
+  async cliRead () {
     if (this.state.connection === 2) {
       serial.postMessage({ operation: 'read', data: 'cli' })
       this.state.status = 2
