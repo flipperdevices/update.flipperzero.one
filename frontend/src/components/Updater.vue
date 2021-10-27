@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div v-show="showArrows && !$q.screen.xs" class="arrows">
+    <div v-show="showArrows && !$q.screen.xs" class="arrows z-max">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
         <div>
