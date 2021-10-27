@@ -1,6 +1,5 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
-    <b class="z-max">{{ flipper.state }}</b>
     <div v-show="showOverlay" class="popup-overlay z-max">
       <div class="absolute-top-right q-ma-md text-white">
         <q-btn
