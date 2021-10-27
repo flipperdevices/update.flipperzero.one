@@ -40,12 +40,19 @@ const title = {
 }
 
 const serial = new Worker(new URL('./webSerial.js', import.meta.url))
-serial.onmessage = (event) => operation.terminate(event.data)
+serial.onmessage = (e) => {
+  if (e.data.operation === 'log cli output') {
+    const event = new CustomEvent('new cli output', { detail: e.data.data })
+    window.dispatchEvent(event)
+  } else {
+    operation.terminate(e.data)
+  }
+}
 
 const usb = new Worker(new URL('./webUSB.js', import.meta.url))
-usb.onmessage = (event) => {
-  if (event.data.operation === 'log progress') {
-    progress = event.data.data
+usb.onmessage = (e) => {
+  if (e.data.operation === 'log progress') {
+    progress = e.data.data
     if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
       title.progress = Math.floor(progress.current / (progress.max / 100))
       document.title = '(' + title.progress + '%) ' + title.string
@@ -53,7 +60,7 @@ usb.onmessage = (event) => {
       document.title = '(erasing) ' + title.string
     }
   } else {
-    operation.terminate(event.data)
+    operation.terminate(e.data)
   }
 }
 
@@ -153,7 +160,7 @@ export class Flipper {
           throw error
         })
 
-      const readPropertiesData = operation.create(serial, 'read')
+      const readPropertiesData = operation.create(serial, 'read', 'async')
 
       this.state.status = 2
       this.properties = await readPropertiesData
@@ -188,9 +195,8 @@ export class Flipper {
 
   async write (data) {
     if (this.state.connection === 2) {
-      const write = operation.create(serial, 'write', [data])
+      const write = operation.create(serial, 'write', ['cli', [data]])
 
-      this.state.status = 3
       await write
         .catch(error => {
           this.state.status = 0
@@ -203,23 +209,28 @@ export class Flipper {
 
   async read () {
     if (this.state.connection === 2) {
-      const read = operation.create(serial, 'read')
-
+      serial.postMessage({ operation: 'read', data: 'cli' })
       this.state.status = 2
-      const text = await read
+    } else {
+      throw new Error('Wrong connection state (flipper.read): expected 2, got ' + this.state.connection)
+    }
+  }
+
+  async closeReadingSession () {
+    if (this.state.connection === 2) {
+      /* const close = operation.create(serial, 'stop reading')
+      await close
         .then(data => {
-          this.state.status = 1
-          const decoder = new TextDecoder()
-          return decoder.decode(data)
+          console.log(data)
         })
         .catch(error => {
           this.state.status = 0
           throw error
-        })
-
-      return text
+        }) */
+      serial.postMessage({ operation: 'stop reading' })
+      this.state.status = 1
     } else {
-      throw new Error('Wrong connection state (flipper.read): expected 2, got ' + this.state.connection)
+      throw new Error('Wrong connection state (flipper.closeReadingSession): expected 2, got ' + this.state.connection)
     }
   }
 

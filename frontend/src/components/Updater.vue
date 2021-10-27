@@ -1,5 +1,6 @@
 <template>
   <div id="updater-container" class="flex column flex-center">
+    <b class="z-max">{{ flipper.state }}</b>
     <div v-show="showOverlay" class="popup-overlay z-max">
       <div class="absolute-top-right q-ma-md text-white">
         <q-btn
@@ -715,6 +716,10 @@ export default defineComponent({
     },
 
     onDisconnect () {
+      if (this.showTerminal) {
+        this.toggleTerminal()
+      }
+
       const d = new Date(Date.now())
       this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
       this.flipper.state.connection = 0
@@ -754,7 +759,10 @@ export default defineComponent({
       }, 3000)
     },
 
-    toggleTerminal () {
+    async toggleTerminal () {
+      if (this.flipper.state.connection === 2 && this.flipper.state.status === 2) {
+        await this.flipper.closeReadingSession()
+      }
       this.showTerminal = !this.showTerminal
       document.querySelector('body').style.overflowY = this.showTerminal ? 'hidden' : 'auto'
     }

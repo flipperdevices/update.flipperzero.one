@@ -7,7 +7,10 @@ onmessage = function (event) {
       disconnect()
       break
     case 'read':
-      read()
+      read(event.data.data)
+      break
+    case 'stop reading':
+      reader.cancel()
       break
     case 'write':
       write(event.data.data)
@@ -15,7 +18,7 @@ onmessage = function (event) {
   }
 }
 
-let port
+let port, reader, readComplete = false
 
 async function connect () {
   const filters = [
@@ -63,13 +66,22 @@ function disconnect () {
 }
 
 async function write (lines) {
-  if (lines[lines.length - 1] !== ('dfu' || 'reboot')) {
-    lines.push('')
+  let isCli = false
+  if (lines[0] === 'cli') {
+    isCli = true
+    lines = lines[1]
+  }
+  if (!isCli) {
+    lines.push('\r\n')
   }
   const encoder = new TextEncoder()
   const writer = port.writable.getWriter()
-  lines.forEach(async line => {
-    await writer.write(encoder.encode(line + '\r\n').buffer)
+  lines.forEach(async (line, i) => {
+    let message = line
+    if (lines[i + 1]) {
+      message = line + '\r\n'
+    }
+    await writer.write(encoder.encode(message).buffer)
   })
   writer.close()
     .then(() => {
@@ -87,24 +99,31 @@ async function write (lines) {
     })
 }
 
-async function read () {
-  const reader = port.readable.getReader()
+async function read (mode) {
+  reader = port.readable.getReader()
   const decoder = new TextDecoder()
   let buffer = new Uint8Array(0)
-  let readComplete = false
+  readComplete = false
 
   while (!readComplete) {
     await reader.read().then(({ done, value }) => {
       if (done) {
         readComplete = true
       } else {
-        const newBuffer = new Uint8Array(buffer.length + value.length)
-        newBuffer.set(buffer)
-        newBuffer.set(value, buffer.length)
-        buffer = newBuffer
+        if (mode === 'cli') {
+          self.postMessage({
+            operation: 'log cli output',
+            data: decoder.decode(value)
+          })
+        } else {
+          const newBuffer = new Uint8Array(buffer.length + value.length)
+          newBuffer.set(buffer)
+          newBuffer.set(value, buffer.length)
+          buffer = newBuffer
 
-        if (decoder.decode(buffer.slice(-12)).replace(/\s/g, '').endsWith('>:\x07>:\x07')) {
-          readComplete = true
+          if (decoder.decode(buffer.slice(-12)).replace(/\s/g, '').endsWith('>:\x07>:\x07')) {
+            readComplete = true
+          }
         }
       }
     })

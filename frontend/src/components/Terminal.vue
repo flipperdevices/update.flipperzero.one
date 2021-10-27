@@ -24,6 +24,7 @@ export default defineComponent({
   setup () {
     return {
       terminal: ref(undefined),
+      readInterval: undefined,
       input: ref('')
     }
   },
@@ -36,43 +37,27 @@ export default defineComponent({
       const fitAddon = new FitAddon()
       this.terminal.loadAddon(fitAddon)
       this.terminal.open(document.getElementById('terminal-container'))
-      document.querySelector('.xterm').setAttribute('style', 'height:' + getComputedStyle(document.querySelector('.xterm')).height + ' !important')
+      document.querySelector('.xterm').setAttribute('style', 'height:' + getComputedStyle(document.querySelector('.xterm')).height)
       this.terminal.focus()
       fitAddon.fit()
 
-      await this.write('\x01\r\n')
-      await this.read()
+      await this.write('\x01')
+      this.read()
 
       this.terminal.onData(async data => {
-        if (data === '\x7F') {
-          if (this.input.length) {
-            this.input = this.input.slice(0, this.input.length - 1)
-            this.terminal.write('\b \b')
-          }
-        } else if (data === '\r') {
-          await this.write(this.input)
-          await this.read()
-          this.input = ''
-        } else {
-          this.input += data
-          this.terminal.writeUtf8(data)
-        }
+        await this.write(data)
       })
     },
 
     async write (data) {
-      await this.flipper.write(data)
+      this.flipper.write(data)
     },
 
-    async read () {
-      await this.flipper.read()
-        .then(text => {
-          text = this.clearOutput(text)
-          this.terminal.writeUtf8(text)
-        })
-        .catch(error => {
-          this.terminal.writeUtf8(error)
-        })
+    read () {
+      this.flipper.read()
+      window.addEventListener('new cli output', (e) => {
+        this.terminal.write(e.detail)
+      })
     },
 
     clearOutput (text) {
