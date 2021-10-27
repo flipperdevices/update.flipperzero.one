@@ -71,8 +71,7 @@
       <q-separator v-if="error.button.length"></q-separator>
 
       <q-card-actions v-if="error.button.length" align="right">
-        <q-btn flat v-if="error.button === 'serial'" @click="error.isError = false; connect()">Reconnect</q-btn>
-        <q-btn flat v-if="error.button === 'usb'" @click="error.isError = false; connect()">Recovery mode</q-btn>
+        <q-btn flat @click="error.isError = false; connect()">Reconnect</q-btn>
       </q-card-actions>
     </q-card>
 
@@ -429,6 +428,7 @@ export default defineComponent({
       }
       try {
         this.init()
+        console.log(this.mode)
 
         await this.flipper.connect(this.mode)
           .then(() => {
@@ -483,17 +483,30 @@ export default defineComponent({
       }
       window.addEventListener('beforeunload', preventTabClose)
 
-      await this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
+      this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
+        .then(async () => {
+          window.removeEventListener('beforeunload', preventTabClose)
+          if (this.mode === 'usb') {
+            this.mode = 'serial'
+          }
+          this.reconnecting = true
+          await waitForDevice('rebooted to serial')
+          this.reconnecting = false
 
-      window.removeEventListener('beforeunload', preventTabClose)
-      if (this.mode === 'usb') {
-        this.mode = 'serial'
-      }
-      this.reconnecting = true
-      await waitForDevice('rebooted to serial')
-      this.reconnecting = false
-
-      await this.connect()
+          await this.connect()
+        })
+        .catch(async error => {
+          this.error.isError = true
+          if (error.message.includes('stall')) {
+            this.error.message = 'Flipper USB port is occupied by another process. Close it and try again.'
+          } else {
+            this.error.message = error.message
+          }
+          this.error.button = 'dfu'
+          await this.flipper.disconnect()
+          this.mode = 'serial'
+          this.reconnecting = true
+        })
     },
 
     async fetchFirmwareFile (channel) {
@@ -750,7 +763,7 @@ export default defineComponent({
           ]
           ports = await navigator.usb.getDevices({ filters })
         }
-        if (ports.length > 0) {
+        if (ports && ports.length > 0) {
           clearInterval(this.reconnectLoop)
           this.reconnectLoop = undefined
           return await this.connect()

@@ -218,15 +218,6 @@ export class Flipper {
 
   async closeReadingSession () {
     if (this.state.connection === 2) {
-      /* const close = operation.create(serial, 'stop reading')
-      await close
-        .then(data => {
-          console.log(data)
-        })
-        .catch(error => {
-          this.state.status = 0
-          throw error
-        }) */
       serial.postMessage({ operation: 'stop reading' })
       this.state.status = 1
     } else {
@@ -271,6 +262,7 @@ export class Flipper {
       .catch(error => {
         clearInterval(logProgress)
         this.state.status = 0
+        document.title = title.string
         throw error
       })
     clearInterval(logProgress)
