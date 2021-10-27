@@ -428,7 +428,6 @@ export default defineComponent({
       }
       try {
         this.init()
-        console.log(this.mode)
 
         await this.flipper.connect(this.mode)
           .then(() => {
