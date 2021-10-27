@@ -103,16 +103,17 @@ function parseOutputText (text) {
       properties.firmwareBuild = line.replace(/firmware_build_date\s*:\s/g, '').trim()
       return
     }
-    if (line.includes('boot_version')) {
-      properties.bootloaderVer = line.replace(/boot_version\s*:\s/g, '').trim()
+    // Legacy hell with boot/bootloader in different device_info versions
+    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('version')) {
+      properties.bootloaderVer = line.replace(/boot(loader)?_version\s*:\s/g, '').trim()
       return
     }
-    if (line.includes('boot_commit')) {
-      properties.bootloaderCommit = line.replace(/boot_commit\s*:\s/g, '').trim()
+    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('commit')) {
+      properties.bootloaderCommit = line.replace(/boot(loader)?_commit\s*:\s/g, '').trim()
       return
     }
-    if (line.includes('boot_build_date')) {
-      properties.bootloaderBuild = line.replace(/boot_build_date\s*:\s/g, '').trim()
+    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('build_date')) {
+      properties.bootloaderBuild = line.replace(/boot(loader)?_build_date\s*:\s/g, '').trim()
       return
     }
     if (line.includes('radio_fus_major')) {
