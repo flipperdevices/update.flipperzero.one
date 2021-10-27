@@ -56,7 +56,7 @@ export default defineComponent({
     read () {
       this.flipper.read()
       window.addEventListener('new cli output', (e) => {
-        this.terminal.write(e.detail)
+        this.terminal.write(e.detail.replaceAll('\x7F'))
       })
     },
 

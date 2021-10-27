@@ -777,9 +777,8 @@ export default defineComponent({
     this.evaCloseOutline = evaCloseOutline
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+      if (!this.showTerminal && e.key === 'Escape') {
         this.showOverlay = false
-        this.showTerminal = false
       }
     })
   },
