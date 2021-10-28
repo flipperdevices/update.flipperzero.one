@@ -4,10 +4,11 @@
 
     <q-card class="shadow-4" v-if="showIntro">
       <q-card-section :horizontal="$q.screen.gt.xs" class="q-pa-none">
-        <q-card-section v-if="userAgent.browser !== 'Not supported'" class="col-5 flex content-center justify-center">
-          <q-img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.png" class="updater-img"></q-img>
-          <q-img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.png" class="updater-img"></q-img>
-          <q-img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.png" class="updater-img"></q-img>
+        <q-card-section v-if="userAgent.browser !== 'Not supported'" class="col-5 flex items-center justify-center images">
+          <img src="../assets/connect_to_browser.svg" class="updater-img absolute" />
+          <img v-if="userAgent.browser === 'Chrome'" src="../assets/chrome.svg" class="updater-img absolute" />
+          <img v-else-if="userAgent.browser === 'Edge'" src="../assets/edge.svg" class="updater-img absolute" />
+          <img v-else-if="userAgent.browser === 'Yandex'" src="../assets/yandex.svg" class="updater-img absolute" />
         </q-card-section>
         <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
           <h4>Web updater</h4>
@@ -69,7 +70,10 @@
           src="../assets/notsupported.svg"
           class="unsupported-img"
         />
-        <q-img v-else src="../assets/chrome.png" class="updater-img"></q-img>
+        <div v-else class="relative">
+          <q-img src="../assets/connect_to_browser.svg" class="updater-img"></q-img>
+          <q-img src="../assets/chrome.svg" class="updater-img absolute"></q-img>
+        </div>
         <p class="q-pt-md">
           Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
         </p>

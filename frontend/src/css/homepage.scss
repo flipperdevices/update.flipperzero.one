@@ -3,6 +3,13 @@
   padding-bottom: 3rem;
 }
 
+.images {
+  min-height: 280px;
+  img {
+    max-width: 390px;
+  }
+}
+
 .unsupported-img {
   width: 500px;
 }
@@ -71,13 +78,16 @@
       border-radius: 0;
     }
   }
-  .updater-img {
-    max-width: 200px;
+  .images > img {
+    max-width: 280px;
   }
   .unsupported-img {
     max-width: 250px;
   }
   .qflippa-desc, .updater-desc {
-    padding: 2rem;
+    padding: 0 1.5rem 2rem 1.5rem;
+  }
+  .updater-desc h4 {
+    margin-top: 1rem;
   }
 }
