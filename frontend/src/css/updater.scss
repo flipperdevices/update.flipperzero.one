@@ -6,11 +6,11 @@
   color: $accent;
 }
 
-.flipper{
-  width: 280px !important;
+.flipper {
   position: relative;
   img, .led {
-    width: 280px;
+    width: 100%;
+    max-width: 280px;
   }
 }
 
