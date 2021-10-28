@@ -48,11 +48,18 @@
     <div v-show="showArrows && !$q.screen.xs" class="arrows z-max">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
-        <div>
+        <div :class="mode === 'usb' ? 'flipper' : ''">
           <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
           <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
-            <img src="../assets/flipper-dfu-overlay.png" class="absolute"/>
-            <img src="../assets/flipper-transparent.png" />
+            <img src="../assets/screens/dfu.svg" class="absolute"/>
+            <img src="../assets/flipper_w.svg" />
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+              viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
+              <g>
+                <path style="opacity: 0.5; fill: #007eff;" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
+              </g>
+              <circle style="fill: #007eff;" cx="238.5" cy="94.5" r="2.5"/>
+            </svg>
           </div>
         </div>
       </div>
@@ -79,9 +86,16 @@
       <q-card flat>
         <q-card-section horizontal class="text-left">
           <div class="col-6 flex flex-center flipper">
-            <img v-if="flipper.state.connection === 3" src="../assets/flipper-dfu-overlay.png" class="absolute"/>
-            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper-white.png" />
-            <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper-black.png" />
+            <img v-if="flipper.state.connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+              viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
+              <g>
+                <path :style="'opacity: 0.5; fill:' + ledColor" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
+              </g>
+              <circle :style="'fill:' + ledColor" cx="238.5" cy="94.5" r="2.5"/>
+            </svg>
+            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper_w.svg" />
+            <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper_b.svg" />
           </div>
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
             <h5 class="q-mb-none">
@@ -427,10 +441,26 @@ export default defineComponent({
       if (!isNaN(b)) {
         if (b > 50) {
           color = '#49c74a'
-        } else if (b < 50 && b > 20) {
+        } else if (b <= 50 && b > 20) {
           color = '#ff9e29'
         } else {
           color = '#e23e3e'
+        }
+      }
+      return color
+    },
+    ledColor () {
+      let color = ''
+      if (this.flipper.state.connection === 3) {
+        color = '#007eff'
+      } else {
+        const b = parseInt(this.flipper.properties.battery)
+        if (!isNaN(b)) {
+          if (b === 100) {
+            color = '#49c74a'
+          } else {
+            color = '#e23e3e'
+          }
         }
       }
       return color
