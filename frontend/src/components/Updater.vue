@@ -48,7 +48,7 @@
     <div v-show="showArrows && !$q.screen.xs" class="arrows z-max">
       <div id="arrow-1">
         <q-icon :name="evaArrowBackOutline"></q-icon>
-        <div :class="mode === 'usb' ? 'flipper' : ''">
+        <div>
           <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
           <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
             <img src="../assets/screens/dfu.svg" class="absolute"/>
@@ -719,7 +719,7 @@ export default defineComponent({
       let bar = false
       if (diff > 89 && diff <= 120) {
         bar = true
-        document.getElementById('arrow-2').style.top = '397px'
+        document.getElementById('arrow-2').style.top = '399px'
       }
       if (this.userAgent.os !== 'Windows') {
         document.getElementById('arrow-2').style.left = '470px'
