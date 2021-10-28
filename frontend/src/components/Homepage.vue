@@ -90,6 +90,7 @@
     <q-card v-else id="updater-wrapper" class="shadow-4">
       <q-card-section>
         <Updater
+          v-if="!showIntro"
           :userAgent="userAgent"
           :release="release"
           :rc="rc"
@@ -289,7 +290,8 @@ export default defineComponent({
         { usbVendorId: 0x0483, usbProductId: 0x5740 }
       ]
       const ports = await navigator.serial.getPorts({ filters })
-      if (ports.length > 0) {
+      const autoReconnectEnabled = !!parseInt(localStorage.getItem('autoReconnectEnabled'))
+      if (ports.length > 0 && autoReconnectEnabled) {
         this.showIntro = false
       }
     },

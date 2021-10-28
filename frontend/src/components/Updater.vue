@@ -84,7 +84,7 @@
             <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper-black.png" />
           </div>
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
-            <h5>
+            <h5 class="q-mb-none">
               <b>{{ flipper.properties.name }}&nbsp;</b>
               <span v-if="flipper.state.connection">connected
                 <span v-if="flipper.state.connection === 3">
@@ -94,6 +94,12 @@
               <span v-else-if="reconnecting">reconnecting...</span>
               <span v-else class="text-accent">disconnected</span>
             </h5>
+            <q-toggle
+              v-model="autoReconnectEnabled"
+              color="positive"
+              label="Auto-reconnect"
+              left-label
+            ></q-toggle>
             <h5 v-if="mode === 'serial'">
               Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery }}</span>
             </h5>
@@ -319,7 +325,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
 import Terminal from './Terminal.vue'
 import { Flipper } from './updater/core'
 import {
@@ -362,7 +368,15 @@ export default defineComponent({
   },
 
   setup () {
+    const autoReconnectEnabled = ref(false)
+    watch(
+      () => autoReconnectEnabled.value,
+      (state) => {
+        localStorage.setItem('autoReconnectEnabled', Number(state))
+      }
+    )
     return {
+      autoReconnectEnabled,
       checks: ref({
         crc32: true,
         sha256: true,
@@ -752,25 +766,27 @@ export default defineComponent({
         clearInterval(this.reconnectLoop)
         this.reconnectLoop = undefined
       }
-      this.reconnectLoop = setInterval(async () => {
-        let ports, filters
-        if (this.mode === 'serial') {
-          filters = [
-            { usbVendorId: 0x0483, usbProductId: 0x5740 }
-          ]
-          ports = await navigator.serial.getPorts({ filters })
-        } else if (this.mode === 'usb') {
-          filters = [
-            { vendorId: 0x0483, productId: 0xdf11 }
-          ]
-          ports = await navigator.usb.getDevices({ filters })
-        }
-        if (ports && ports.length > 0) {
-          clearInterval(this.reconnectLoop)
-          this.reconnectLoop = undefined
-          return await this.connect()
-        }
-      }, 3000)
+      if (this.autoReconnectEnabled) {
+        this.reconnectLoop = setInterval(async () => {
+          let ports, filters
+          if (this.mode === 'serial') {
+            filters = [
+              { usbVendorId: 0x0483, usbProductId: 0x5740 }
+            ]
+            ports = await navigator.serial.getPorts({ filters })
+          } else if (this.mode === 'usb') {
+            filters = [
+              { vendorId: 0x0483, productId: 0xdf11 }
+            ]
+            ports = await navigator.usb.getDevices({ filters })
+          }
+          if (ports && ports.length > 0) {
+            clearInterval(this.reconnectLoop)
+            this.reconnectLoop = undefined
+            return await this.connect()
+          }
+        }, 3000)
+      }
     },
 
     async toggleTerminal () {
@@ -821,6 +837,15 @@ export default defineComponent({
     if (this.initialMode) {
       this.mode = this.initialMode
     }
+
+    const stored = parseInt(localStorage.getItem('autoReconnectEnabled'))
+    if (!isNaN(stored)) {
+      this.autoReconnectEnabled = !!stored
+    } else {
+      this.autoReconnectEnabled = true
+      localStorage.setItem('autoReconnectEnabled', '1')
+    }
+
     this.connect()
 
     navigator.serial.addEventListener('disconnect', this.onDisconnect)
