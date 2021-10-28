@@ -752,7 +752,7 @@ export default defineComponent({
       this.disconnectTime = d.toTimeString().slice(0, 5) + ' ' + d.toLocaleDateString('en-US')
       this.flipper.state.connection = 0
 
-      if (this.mode === 'serial') {
+      if (this.mode === 'serial' && !this.reconnecting) {
         this.flipper.disconnect()
       }
 
