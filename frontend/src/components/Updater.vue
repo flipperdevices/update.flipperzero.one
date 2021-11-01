@@ -26,7 +26,7 @@
       <div class="absolute-bottom-right q-mr-lg text-white text-right">
         <div v-if="error.isError" style="min-width: 200px">
           <q-btn
-            :disabled="flipper.state.connection === 3 && flipper.state.status === 3"
+            :disabled="connection === 3 && status === 3"
             outline
             color="white"
             size="13px"
@@ -86,7 +86,7 @@
       <q-card flat>
         <q-card-section horizontal class="text-left">
           <div class="col-6 flex flex-center flipper">
-            <img v-if="flipper.state.connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
+            <img v-if="connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
               viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
               <g>
@@ -100,8 +100,8 @@
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
             <h5 class="q-mb-none">
               <b>{{ flipper.properties.name }}&nbsp;</b>
-              <span v-if="flipper.state.connection">connected
-                <span v-if="flipper.state.connection === 3">
+              <span v-if="connection">connected
+                <span v-if="connection === 3">
                   <br />in recovery mode
                 </span>
               </span>
@@ -119,7 +119,7 @@
             </h5>
           </div>
         </q-card-section>
-        <q-card-section v-if="mode === 'serial' && flipper.state.connection !== 1" horizontal class="text-left q-ma-md">
+        <q-card-section v-if="mode === 'serial' && connection !== 1" horizontal class="text-left q-ma-md">
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
@@ -147,7 +147,7 @@
             </q-card-section>
           </q-card>
         </q-card-section>
-        <q-card-section v-if="mode === 'usb' && flipper.state.connection === 3" horizontal class="text-left q-ma-md">
+        <q-card-section v-if="mode === 'usb' && connection === 3" horizontal class="text-left q-ma-md">
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
@@ -167,12 +167,12 @@
         </q-card-section>
       </q-card>
 
-      <div v-if="isOutdated && flipper.state.connection === 2" id="outdated">
+      <div v-if="isOutdated && connection === 2" id="outdated">
         <p v-if="!firmware.fileName.length">
           Your firmware is outdated, latest release is <b>{{ release.version }}</b>
         </p>
       </div>
-      <div v-if="isOutdated === false && flipper.state.connection === 2" id="up-to-date">
+      <div v-if="isOutdated === false && connection === 2" id="up-to-date">
         <p v-if="!firmware.fileName.length && !newerThanLTS">
           Your firmware is up to date.
         </p>
@@ -186,7 +186,7 @@
         Check your connection and try again.
       </div>
 
-      <div v-if="!firmware.fileName.length && flipper.state.status === 1">
+      <div v-if="!firmware.fileName.length && status === 1">
         <div v-if="fwModel.value === 'custom'" class="alert">
           <p class="ellipsis">
             <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
@@ -194,7 +194,7 @@
           This firmware might be <b>malicious</b> and might <b>break your device</b>!
         </div>
 
-        <div v-if="checks.sha256 && flipper.state.connection !== 0" class="flex flex-center">
+        <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
           <q-select
             v-model="fwModel"
             :options="fwOptions"
@@ -239,7 +239,7 @@
         </div>
       </div>
 
-      <div v-if="flipper.state.connection !== 0 && flipper.state.status === 1" class="flex flex-center q-mt-md">
+      <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
         <p v-if="!firmware.fileName.length" class="q-mt-xl">
           Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
         </p>
@@ -267,7 +267,7 @@
         >Flash anyway</q-btn>
       </div>
 
-      <div v-if="flipper.state.connection === 0 && !reconnecting" class="flex column flex-center alert">
+      <div v-if="connection === 0 && !reconnecting" class="flex column flex-center alert">
         <span>Information is valid on {{ disconnectTime }}</span>
         <q-btn
           color="positive"
@@ -280,7 +280,7 @@
         </q-btn>
       </div>
 
-      <div v-if="reconnecting && flipper.state.connection < 2" class="flex column flex-center q-ma-lg">
+      <div v-if="reconnecting && connection < 2" class="flex column flex-center q-ma-lg">
         <q-spinner
           color="accent"
           size="3em"
@@ -288,7 +288,7 @@
         <p class="q-ma-sm">Preparing Flipper...</p>
       </div>
 
-      <div v-show="flipper.state.connection === 3 && flipper.state.status === 3">
+      <div v-show="connection === 3 && status === 3">
         <div class="alert">
           <h5>Flashing firmware</h5>
           <p class="q-mb-md">Don't disconnect your Flipper</p>
@@ -308,7 +308,7 @@
     </div>
 
     <q-btn
-      v-if="flipper.state.connection === 2"
+      v-if="connection === 2"
       flat
       dense
       :color="showTerminal ? 'grey-2' : 'grey-7'"
@@ -321,7 +321,7 @@
     ></q-btn>
 
     <q-btn
-      :disabled="flipper.state.connection === 3 && flipper.state.status === 3"
+      :disabled="connection === 3 && status === 3"
       flat
       color="grey-8"
       size="13px"
@@ -464,6 +464,12 @@ export default defineComponent({
         }
       }
       return color
+    },
+    connection () {
+      return this.flipper.state.connection
+    },
+    status () {
+      return this.flipper.state.status
     }
   },
 
