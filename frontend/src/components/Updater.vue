@@ -524,7 +524,14 @@ export default defineComponent({
       window.addEventListener('new raw output', readOutput)
       const req = rpc.createRequest(this.commandId, requestType, args)
       await this.flipper.write('raw', req)
-      await sleep(1000)
+
+      let oldLength = 0, newLength = 1
+      while (oldLength < newLength) {
+        await sleep(250)
+        oldLength = newLength
+        newLength = buffer.length
+      }
+
       if (buffer.length) {
         const res = rpc.parseResponse(buffer)
         console.log(res)
