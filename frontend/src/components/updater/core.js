@@ -39,7 +39,7 @@ const title = {
   progress: 0
 }
 
-const serial = new Worker(new URL('./webSerial.js', import.meta.url))
+const serial = new Worker(new URL('./workers/webSerial.js', import.meta.url))
 serial.onmessage = (e) => {
   if (e.data.operation === 'log cli output') {
     const event = new CustomEvent('new cli output', { detail: e.data.data })
@@ -49,7 +49,7 @@ serial.onmessage = (e) => {
   }
 }
 
-const usb = new Worker(new URL('./webUSB.js', import.meta.url))
+const usb = new Worker(new URL('./workers/webUSB.js', import.meta.url))
 usb.onmessage = (e) => {
   if (e.data.operation === 'log progress') {
     progress = e.data.data
