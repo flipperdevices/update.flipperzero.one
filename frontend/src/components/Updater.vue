@@ -845,7 +845,7 @@ export default defineComponent({
 
     async toggleTerminal () {
       if (this.flipper.state.connection === 2 && this.flipper.state.status === 2) {
-        await this.flipper.closeReadingSession()
+        await this.flipper.closeReader()
       }
 
       if (!this.terminalEnabled) {

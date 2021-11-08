@@ -50,11 +50,11 @@ export default defineComponent({
     },
 
     write (data) {
-      this.flipper.cliWrite(data)
+      this.flipper.write('cli', data)
     },
 
     read () {
-      this.flipper.cliRead()
+      this.flipper.read('cli')
       window.addEventListener('new cli output', this.print)
     },
 

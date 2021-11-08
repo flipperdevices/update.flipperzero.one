@@ -67,15 +67,15 @@ usb.onmessage = (e) => {
 export class Flipper {
   constructor () {
     this.state = {
-      // 0: not connected
-      // 1: waiting for connection
-      // 2: connected to serial
-      // 3: connected to usb
+      /* 0: not connected
+         1: waiting for connection
+         2: connected to serial
+         3: connected to usb */
       connection: 0,
-      // 0: error
-      // 1: idle
-      // 2: reading data
-      // 3: writing data
+      /* 0: error
+         1: idle
+         2: reading data
+         3: writing data */
       status: 1
     }
     this.properties = {}
@@ -151,7 +151,7 @@ export class Flipper {
 
   async readProperties () {
     if (this.state.connection === 2) {
-      const writePropertiesData = operation.create(serial, 'write', ['power_info', 'device_info'])
+      const writePropertiesData = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['power_info', 'device_info'] })
 
       this.state.status = 3
       await writePropertiesData
@@ -193,9 +193,9 @@ export class Flipper {
     }
   }
 
-  async cliWrite (data) {
+  async write (mode, data) {
     if (this.state.connection === 2) {
-      const write = operation.create(serial, 'write', ['cli', [data]])
+      const write = operation.create(serial, 'write', { mode: mode, data: [data] })
 
       await write
         .catch(error => {
@@ -207,21 +207,21 @@ export class Flipper {
     }
   }
 
-  async cliRead () {
+  async read (mode) {
     if (this.state.connection === 2) {
-      serial.postMessage({ operation: 'read', data: 'cli' })
+      serial.postMessage({ operation: 'read', data: mode })
       this.state.status = 2
     } else {
       throw new Error('Wrong connection state (flipper.read): expected 2, got ' + this.state.connection)
     }
   }
 
-  async closeReadingSession () {
+  async closeReader () {
     if (this.state.connection === 2) {
       serial.postMessage({ operation: 'stop reading' })
       this.state.status = 1
     } else {
-      throw new Error('Wrong connection state (flipper.closeReadingSession): expected 2, got ' + this.state.connection)
+      throw new Error('Wrong connection state (flipper.closeReader): expected 2, got ' + this.state.connection)
     }
   }
 

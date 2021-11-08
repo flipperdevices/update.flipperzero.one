@@ -65,24 +65,27 @@ function disconnect () {
   }
 }
 
-async function write (lines) {
-  let isCli = false
-  if (lines[0] === 'cli') {
-    isCli = true
-    lines = lines[1]
-  }
-  if (!isCli) {
-    lines.push('\r\n')
-  }
-  const encoder = new TextEncoder()
+async function write ({ mode, data }) {
   const writer = port.writable.getWriter()
-  lines.forEach(async (line, i) => {
-    let message = line
-    if (lines[i + 1]) {
-      message = line + '\r\n'
+
+  if (mode.startsWith('cli')) {
+    if (mode === 'cli/delimited') {
+      data.push('\r\n')
     }
-    await writer.write(encoder.encode(message).buffer)
-  })
+    const encoder = new TextEncoder()
+    data.forEach(async (line, i) => {
+      let message = line
+      if (data[i + 1]) {
+        message = line + '\r\n'
+      }
+      await writer.write(encoder.encode(message).buffer)
+    })
+  } else if (mode === 'raw') {
+    await writer.write(data.buffer)
+  } else {
+    throw new Error('Unknown write mode:', mode)
+  }
+
   writer.close()
     .then(() => {
       self.postMessage({
