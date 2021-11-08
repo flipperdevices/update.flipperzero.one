@@ -329,7 +329,13 @@
       @click="changeMode(!!(true * this.flipper.state.connection))"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
 
-    <div class="flex">
+    <q-btn
+      color="pink-8"
+      size="13px"
+      class="q-ma-sm"
+      @click="toggleRpcSession"
+    >{{ isRpcSession ? 'Close' : 'Start' }} rpc session</q-btn>
+    <div v-if="isRpcSession" class="flex">
       <q-input v-model="path" label="path" />
       <q-btn
         color="pink-8"
@@ -337,6 +343,12 @@
         class="q-ma-sm"
         @click="rpcRequest('storageReadRequest', { path: path })"
       >Read</q-btn>
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="rpcRequest('storageListRequest', { path: path })"
+      >List</q-btn>
     </div>
 
     <Terminal
@@ -361,7 +373,7 @@ import {
 } from './updater/resourceLoader'
 import * as rpc from './updater/rpc'
 import semver from 'semver'
-import { waitForDevice } from './updater/util'
+import { sleep, waitForDevice } from './updater/util'
 
 import {
   mdiChevronDown,
@@ -403,6 +415,8 @@ export default defineComponent({
     return {
       commandId: ref(1),
       path: ref('/ext/Manifest'),
+      isRpcSession: ref(false),
+
       autoReconnectEnabled,
       checks: ref({
         crc32: true,
@@ -487,9 +501,38 @@ export default defineComponent({
   },
 
   methods: {
-    rpcRequest (requestType, args) {
+    async toggleRpcSession () {
+      if (!this.isRpcSession) {
+        await this.flipper.write('cli', 'start_rpc_session\r')
+        this.flipper.read('raw')
+      } else {
+        await this.flipper.closeReader()
+        await this.rpcRequest('stopSession', {})
+      }
+      this.isRpcSession = !this.isRpcSession
+    },
+    async rpcRequest (requestType, args) {
+      let buffer = new Uint8Array(0)
+
+      function readOutput (e) {
+        const newBuffer = new Uint8Array(buffer.length + e.detail.length)
+        newBuffer.set(buffer)
+        newBuffer.set(e.detail, buffer.length)
+        buffer = newBuffer
+      }
+
+      window.addEventListener('new raw output', readOutput)
       const req = rpc.createRequest(this.commandId, requestType, args)
-      console.log(req)
+      await this.flipper.write('raw', req)
+      await sleep(1000)
+      if (buffer.length) {
+        const res = rpc.parseResponse(buffer)
+        console.log(res)
+        buffer = new Uint8Array(0)
+      } else {
+        console.log('No response for', requestType)
+      }
+      window.removeEventListener('new raw output', readOutput)
       this.commandId++
     },
     // Startup

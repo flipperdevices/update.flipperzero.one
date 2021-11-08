@@ -230,7 +230,7 @@ export class Flipper {
 
   async reboot () {
     if (this.state.connection === 2) {
-      const writeDFUCommand = operation.create(serial, 'write', ['dfu'])
+      const writeDFUCommand = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['dfu'] })
 
       this.state.status = 3
       await writeDFUCommand
