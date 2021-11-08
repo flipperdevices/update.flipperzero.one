@@ -508,6 +508,7 @@ export default defineComponent({
       } else {
         await this.flipper.closeReader()
         await this.rpcRequest('stopSession', {})
+        rpc.flushCommandQueue()
       }
       this.isRpcSession = !this.isRpcSession
     },
@@ -522,25 +523,23 @@ export default defineComponent({
       }
 
       window.addEventListener('new raw output', readOutput)
-      const req = rpc.createRequest(this.commandId, requestType, args)
+      const req = rpc.createRequest(requestType, args)
       await this.flipper.write('raw', req)
 
       let oldLength = 0, newLength = 1
       while (oldLength < newLength) {
-        await sleep(250)
+        await sleep(350)
         oldLength = newLength
         newLength = buffer.length
       }
 
       if (buffer.length) {
-        const res = rpc.parseResponse(buffer)
-        console.log(res)
+        console.log(rpc.parseResponse(buffer))
         buffer = new Uint8Array(0)
       } else {
         console.log('No response for', requestType)
       }
       window.removeEventListener('new raw output', readOutput)
-      this.commandId++
     },
     // Startup
     async connect () {
