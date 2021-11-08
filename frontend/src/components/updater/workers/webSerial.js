@@ -81,7 +81,7 @@ async function write ({ mode, data }) {
       await writer.write(encoder.encode(message).buffer)
     })
   } else if (mode === 'raw') {
-    await writer.write(data.buffer)
+    await writer.write(data[0].buffer)
   } else {
     throw new Error('Unknown write mode:', mode)
   }
@@ -117,6 +117,11 @@ async function read (mode) {
           self.postMessage({
             operation: 'log cli output',
             data: decoder.decode(value)
+          })
+        } else if (mode === 'raw') {
+          self.postMessage({
+            operation: 'log raw output',
+            data: value
           })
         } else {
           const newBuffer = new Uint8Array(buffer.length + value.length)

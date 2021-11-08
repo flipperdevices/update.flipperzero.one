@@ -44,6 +44,9 @@ serial.onmessage = (e) => {
   if (e.data.operation === 'log cli output') {
     const event = new CustomEvent('new cli output', { detail: e.data.data })
     window.dispatchEvent(event)
+  } else if (e.data.operation === 'log raw output') {
+    const event = new CustomEvent('new raw output', { detail: e.data.data })
+    window.dispatchEvent(event)
   } else {
     operation.terminate(e.data)
   }
