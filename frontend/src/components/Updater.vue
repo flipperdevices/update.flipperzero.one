@@ -329,6 +329,16 @@
       @click="changeMode(!!(true * this.flipper.state.connection))"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
 
+    <div class="flex">
+      <q-input v-model="path" label="path" />
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="rpcRequest('storageReadRequest', { path: path })"
+      >Read</q-btn>
+    </div>
+
     <Terminal
       v-if="terminalEnabled"
       v-show="showTerminal"
@@ -349,6 +359,7 @@ import {
 import {
   fetchResources
 } from './updater/resourceLoader'
+import * as rpc from './updater/rpc'
 import semver from 'semver'
 import { waitForDevice } from './updater/util'
 
@@ -390,6 +401,8 @@ export default defineComponent({
       }
     )
     return {
+      commandId: ref(1),
+      path: ref('/ext/Manifest'),
       autoReconnectEnabled,
       checks: ref({
         crc32: true,
@@ -474,6 +487,11 @@ export default defineComponent({
   },
 
   methods: {
+    rpcRequest (requestType, args) {
+      const req = rpc.createRequest(this.commandId, requestType, args)
+      console.log(req)
+      this.commandId++
+    },
     // Startup
     async connect () {
       if (this.reconnectLoop) {
