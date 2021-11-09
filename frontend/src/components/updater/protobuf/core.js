@@ -2,7 +2,7 @@ import * as rpc from './rpc'
 import { emitter } from '../updater/core'
 import { sleep } from './updater/util'
 
-async function sendRpcRequest (flipper, requestType, args, isIncremental) {
+async function sendRpcRequest (flipper, requestType, args, hasNext) {
   let buffer = new Uint8Array(0)
 
   const unbind = emitter.on('raw output', data => {
@@ -12,7 +12,7 @@ async function sendRpcRequest (flipper, requestType, args, isIncremental) {
     buffer = newBuffer
   })
 
-  const req = rpc.createRequest(requestType, args, isIncremental)
+  const req = rpc.createRequest(requestType, args, hasNext)
   await flipper.write('raw', req)
 
   let oldLength = 0, newLength = 1

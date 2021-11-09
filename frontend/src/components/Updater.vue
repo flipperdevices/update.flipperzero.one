@@ -516,7 +516,7 @@ export default defineComponent({
       }
       this.isRpcSession = !this.isRpcSession
     },
-    async rpcRequest (requestType, args, isIncremental) {
+    async rpcRequest (requestType, args, hasNext) {
       let buffer = new Uint8Array(0)
 
       const unbind = emitter.on('raw output', data => {
@@ -526,7 +526,7 @@ export default defineComponent({
         buffer = newBuffer
       })
 
-      const req = rpc.createRequest(requestType, args, isIncremental)
+      const req = rpc.createRequest(requestType, args, hasNext)
       await this.flipper.write('raw', req)
 
       let oldLength = 0, newLength = 1

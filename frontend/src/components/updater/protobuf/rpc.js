@@ -9,13 +9,13 @@ const commandQueue = [
   }
 ]
 
-function createRequest (requestType, args, isIncremental) {
+function createRequest (requestType, args, hasNext) {
   const options = {
     commandId: commandQueue.length
   }
   options[requestType] = args
 
-  if (isIncremental || (!isIncremental && commandQueue[commandQueue.length - 1].requestType === requestType)) {
+  if (!hasNext || (hasNext && commandQueue[commandQueue.length - 1].requestType === requestType)) {
     commandQueue.push({
       commandId: options.commandId,
       requestType: requestType,
