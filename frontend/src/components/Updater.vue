@@ -371,7 +371,7 @@ import {
 import {
   fetchResources
 } from './updater/resourceLoader'
-import * as rpc from './updater/rpc'
+import * as rpc from './updater/protobuf/rpc'
 import semver from 'semver'
 import { sleep, waitForDevice } from './updater/util'
 
