@@ -296,12 +296,12 @@
         <q-linear-progress
           rounded
           size="2.25rem"
-          :value="flipper.writeProgress.current / flipper.writeProgress.max"
+          :value="progress.current / progress.max"
           color="positive"
           class="q-mt-sm q-mb-lg"
         >
           <div class="absolute-full flex flex-center">
-            <q-badge color="white" text-color="positive" :label="flipper.writeProgress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+            <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
           </div>
         </q-linear-progress>
       </div>
@@ -363,7 +363,7 @@
 <script>
 import { defineComponent, ref, watch } from 'vue'
 import Terminal from './Terminal.vue'
-import { Flipper } from './updater/core'
+import { Flipper, emitter } from './updater/core'
 import {
   fetchFirmwareFile,
   loadFirmwareFile
@@ -413,7 +413,6 @@ export default defineComponent({
       }
     )
     return {
-      commandId: ref(1),
       path: ref('/ext/Manifest'),
       isRpcSession: ref(false),
 
@@ -452,6 +451,11 @@ export default defineComponent({
       isOutdated: ref(false),
       mode: ref('serial'),
       newerThanLTS: ref(false),
+      progress: ref({
+        current: 0,
+        max: 1,
+        stage: 0
+      }),
       reconnecting: ref(false),
       reconnectLoop: ref(undefined),
       showArrows: ref(false),
@@ -515,14 +519,13 @@ export default defineComponent({
     async rpcRequest (requestType, args) {
       let buffer = new Uint8Array(0)
 
-      function readOutput (e) {
-        const newBuffer = new Uint8Array(buffer.length + e.detail.length)
+      const unbind = emitter.on('raw output', data => {
+        const newBuffer = new Uint8Array(buffer.length + data.length)
         newBuffer.set(buffer)
-        newBuffer.set(e.detail, buffer.length)
+        newBuffer.set(data, buffer.length)
         buffer = newBuffer
-      }
+      })
 
-      window.addEventListener('new raw output', readOutput)
       const req = rpc.createRequest(requestType, args)
       await this.flipper.write('raw', req)
 
@@ -539,7 +542,8 @@ export default defineComponent({
       } else {
         console.log('No response for', requestType)
       }
-      window.removeEventListener('new raw output', readOutput)
+
+      unbind()
     },
     // Startup
     async connect () {
@@ -602,6 +606,10 @@ export default defineComponent({
       }
       window.addEventListener('beforeunload', preventTabClose)
 
+      const unbind = emitter.on('log progress', progress => {
+        this.progress = progress
+      })
+
       this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
         .then(async () => {
           window.removeEventListener('beforeunload', preventTabClose)
@@ -611,6 +619,8 @@ export default defineComponent({
           this.reconnecting = true
           await waitForDevice('rebooted to serial')
           this.reconnecting = false
+
+          unbind()
 
           await this.connect()
         })

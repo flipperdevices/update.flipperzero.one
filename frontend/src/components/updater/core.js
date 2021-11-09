@@ -3,6 +3,19 @@ import {
   parseOutputText,
   parseOTPData
 } from './util'
+import { createNanoEvents } from 'nanoevents'
+
+export const emitter = createNanoEvents()
+export let progress = {
+  current: 0,
+  max: 1,
+  stage: 0
+}
+const title = {
+  string: 'Flipper Zero Update Page',
+  progress: 0
+}
+
 class Operation {
   constructor () {
     this.resolve = undefined
@@ -25,28 +38,14 @@ class Operation {
     }
   }
 }
-
 const operation = new Operation()
-
-// Firmware erasing/writing progress
-let progress = {
-  current: 0,
-  max: 1,
-  stage: 0
-}
-const title = {
-  string: 'Flipper Zero Update Page',
-  progress: 0
-}
 
 const serial = new Worker(new URL('./workers/webSerial.js', import.meta.url))
 serial.onmessage = (e) => {
-  if (e.data.operation === 'log cli output') {
-    const event = new CustomEvent('new cli output', { detail: e.data.data })
-    window.dispatchEvent(event)
-  } else if (e.data.operation === 'log raw output') {
-    const event = new CustomEvent('new raw output', { detail: e.data.data })
-    window.dispatchEvent(event)
+  if (e.data.operation === 'cli output') {
+    emitter.emit('cli output', e.data.data)
+  } else if (e.data.operation === 'raw output') {
+    emitter.emit('raw output', e.data.data)
   } else {
     operation.terminate(e.data)
   }
@@ -55,6 +54,7 @@ serial.onmessage = (e) => {
 const usb = new Worker(new URL('./workers/webUSB.js', import.meta.url))
 usb.onmessage = (e) => {
   if (e.data.operation === 'log progress') {
+    emitter.emit('log progress', e.data.data)
     progress = e.data.data
     if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
       title.progress = Math.floor(progress.current / (progress.max / 100))
@@ -82,7 +82,6 @@ export class Flipper {
       status: 1
     }
     this.properties = {}
-    this.writeProgress = progress
   }
 
   async connect (connectionType) {
@@ -258,18 +257,13 @@ export class Flipper {
     const writeFirmware = operation.create(usb, 'write', firmware)
 
     this.state.status = 3
-    const logProgress = setInterval(() => {
-      this.writeProgress = progress
-    }, 50)
     await writeFirmware
       .catch(error => {
-        clearInterval(logProgress)
         this.state.status = 0
         document.title = title.string
         throw error
       })
-    clearInterval(logProgress)
-    this.writeProgress.current = this.writeProgress.max
+    progress.current = progress.max
     document.title = '(100%) ' + title.string
     title.progress = 0
   }
