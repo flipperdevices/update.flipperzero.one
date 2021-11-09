@@ -341,13 +341,13 @@
         color="pink-8"
         size="13px"
         class="q-ma-sm"
-        @click="rpcRequest('storageReadRequest', { path: path }, true)"
+        @click="read(path)"
       >Read</q-btn>
       <q-btn
         color="pink-8"
         size="13px"
         class="q-ma-sm"
-        @click="rpcRequest('storageListRequest', { path: path }, true)"
+        @click="list(path)"
       >List</q-btn>
     </div>
 
@@ -371,9 +371,9 @@ import {
 import {
   fetchResources
 } from './updater/resourceLoader'
-import * as rpc from './updater/protobuf/rpc'
+import * as pbCommands from './updater/protobuf/commands'
 import semver from 'semver'
-import { sleep, waitForDevice } from './updater/util'
+import { waitForDevice } from './updater/util'
 
 import {
   mdiChevronDown,
@@ -413,7 +413,7 @@ export default defineComponent({
       }
     )
     return {
-      path: ref('/ext/Manifest'),
+      path: ref('/int'),
       isRpcSession: ref(false),
 
       autoReconnectEnabled,
@@ -507,43 +507,17 @@ export default defineComponent({
   methods: {
     async toggleRpcSession () {
       if (!this.isRpcSession) {
-        await this.flipper.write('cli', 'start_rpc_session\r')
-        this.flipper.read('raw')
+        await pbCommands.startRpcSession(this.flipper)
       } else {
-        await this.flipper.closeReader()
-        await this.rpcRequest('stopSession', {})
-        rpc.flushCommandQueue()
+        await pbCommands.stopRpcSession()
       }
       this.isRpcSession = !this.isRpcSession
     },
-    async rpcRequest (requestType, args, hasNext) {
-      let buffer = new Uint8Array(0)
-
-      const unbind = emitter.on('raw output', data => {
-        const newBuffer = new Uint8Array(buffer.length + data.length)
-        newBuffer.set(buffer)
-        newBuffer.set(data, buffer.length)
-        buffer = newBuffer
-      })
-
-      const req = rpc.createRequest(requestType, args, hasNext)
-      await this.flipper.write('raw', req)
-
-      let oldLength = 0, newLength = 1
-      while (oldLength < newLength) {
-        await sleep(350)
-        oldLength = newLength
-        newLength = buffer.length
-      }
-
-      if (buffer.length) {
-        console.log(rpc.parseResponse(buffer))
-        buffer = new Uint8Array(0)
-      } else {
-        console.log('No response for', requestType)
-      }
-
-      unbind()
+    async list (path) {
+      console.log(await pbCommands.storageList(path))
+    },
+    async read (path) {
+      console.log(await pbCommands.storageRead(path))
     },
     // Startup
     async connect () {
