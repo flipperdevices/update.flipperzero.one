@@ -560,7 +560,7 @@ export default defineComponent({
       if (!this.firmware.fileName.length) {
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
-        // await this.fetchResources(this.fwModel.value)
+        await this.fetchResources(this.fwModel.value)
         this.firmware.loading = false
       }
 
@@ -635,6 +635,9 @@ export default defineComponent({
 
     async fetchResources (channel) {
       await fetchResources(channel, this[channel.toLowerCase()].files)
+        .catch(error => {
+          console.log(error.message)
+        })
     },
 
     // Utils

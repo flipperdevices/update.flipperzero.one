@@ -14,8 +14,12 @@ async function fetchResources (channel, files) {
 
   await fetch(url)
     .then(async response => {
-      const buffer = await response.arrayBuffer()
-      return unpackResources(buffer)
+      if (response.status < 400) {
+        const buffer = await response.arrayBuffer()
+        return unpackResources(buffer)
+      } else {
+        throw new Error('Failed to fetch resources: ' + response.status)
+      }
     })
 }
 
