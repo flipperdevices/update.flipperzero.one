@@ -341,13 +341,13 @@
         color="pink-8"
         size="13px"
         class="q-ma-sm"
-        @click="rpcRequest('storageReadRequest', { path: path })"
+        @click="rpcRequest('storageReadRequest', { path: path }, true)"
       >Read</q-btn>
       <q-btn
         color="pink-8"
         size="13px"
         class="q-ma-sm"
-        @click="rpcRequest('storageListRequest', { path: path })"
+        @click="rpcRequest('storageListRequest', { path: path }, true)"
       >List</q-btn>
     </div>
 
@@ -516,7 +516,7 @@ export default defineComponent({
       }
       this.isRpcSession = !this.isRpcSession
     },
-    async rpcRequest (requestType, args) {
+    async rpcRequest (requestType, args, isIncremental) {
       let buffer = new Uint8Array(0)
 
       const unbind = emitter.on('raw output', data => {
@@ -526,7 +526,7 @@ export default defineComponent({
         buffer = newBuffer
       })
 
-      const req = rpc.createRequest(requestType, args)
+      const req = rpc.createRequest(requestType, args, isIncremental)
       await this.flipper.write('raw', req)
 
       let oldLength = 0, newLength = 1

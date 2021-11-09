@@ -9,20 +9,22 @@ const commandQueue = [
   }
 ]
 
-function createRequest (requestType, args) {
+function createRequest (requestType, args, isIncremental) {
   const options = {
     commandId: commandQueue.length
   }
   options[requestType] = args
 
-  commandQueue.push({
-    commandId: options.commandId,
-    requestType: requestType,
-    args: args,
-    chunks: [],
-    resolved: false,
-    error: undefined
-  })
+  if (isIncremental || (!isIncremental && commandQueue[commandQueue.length - 1].requestType === requestType)) {
+    commandQueue.push({
+      commandId: options.commandId,
+      requestType: requestType,
+      args: args,
+      chunks: [],
+      resolved: false,
+      error: undefined
+    })
+  }
 
   const message = PB.Main.create(options)
   return new Uint8Array(PB.Main.encodeDelimited(message).finish())
