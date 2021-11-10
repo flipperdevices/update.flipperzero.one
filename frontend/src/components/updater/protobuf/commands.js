@@ -42,6 +42,8 @@ async function startRpcSession (f) {
   flipper = f
   await flipper.write('cli', 'start_rpc_session\r')
   flipper.read('raw')
+  await sleep(450)
+  return sendRpcRequest('pingRequest', {})
 }
 
 async function stopRpcSession () {
@@ -70,11 +72,14 @@ async function storageRead (path) {
     return res.error
   }
   if (res.chunks.length) {
-    let buffer = []
+    let buffer = new Uint8Array(0)
     res.chunks.forEach(c => {
-      buffer = buffer.concat(c.file)
+      const newBuffer = new Uint8Array(buffer.length + c.file.data.length)
+      newBuffer.set(buffer)
+      newBuffer.set(c.file.data, buffer.length)
+      buffer = newBuffer
     })
-    return buffer[0].data
+    return buffer
   }
   console.log(res)
 }

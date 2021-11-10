@@ -335,6 +335,12 @@
       class="q-ma-sm"
       @click="toggleRpcSession"
     >{{ isRpcSession ? 'Close' : 'Start' }} rpc session</q-btn>
+    <q-btn
+      color="pink-8"
+      size="13px"
+      class="q-ma-sm"
+      @click="updateResources"
+    >update resources</q-btn>
     <div v-if="isRpcSession" class="flex">
       <q-input v-model="path" label="path" />
       <q-btn
@@ -369,7 +375,9 @@ import {
   loadFirmwareFile
 } from './updater/firmwareLoader'
 import {
-  fetchResources
+  fetchResources,
+  parseManifest,
+  compareManifests
 } from './updater/resourceLoader'
 import * as pbCommands from './updater/protobuf/commands'
 import semver from 'semver'
@@ -413,7 +421,7 @@ export default defineComponent({
       }
     )
     return {
-      path: ref('/int'),
+      path: ref('/ext/Manifest'),
       isRpcSession: ref(false),
 
       autoReconnectEnabled,
@@ -428,6 +436,7 @@ export default defineComponent({
         message: '',
         button: ''
       }),
+      fetchedManifest: ref(undefined),
       firmware: ref({
         fileName: '',
         loading: false,
@@ -458,6 +467,7 @@ export default defineComponent({
       }),
       reconnecting: ref(false),
       reconnectLoop: ref(undefined),
+      resources: ref(undefined),
       showArrows: ref(false),
       showOverlay: ref(false),
       showTerminal: ref(false),
@@ -518,6 +528,24 @@ export default defineComponent({
     },
     async read (path) {
       console.log(await pbCommands.storageRead(path))
+    },
+    // Resourses update sequence
+    async updateResources () {
+      //!
+      await this.fetchResources('dev')
+      //!
+      const startPing = await pbCommands.startRpcSession(this.flipper)
+      if (!startPing.resolved || startPing.error) {
+        console.log('Couldn\'t start rpc session:', startPing.error)
+        return
+      }
+
+      this.flipper.manifest = await pbCommands.storageRead('/ext/Manifest')
+        .then(file => {
+          return parseManifest(file)
+        })
+
+      compareManifests(this.flipper.manifest, this.fetchedManifest)
     },
     // Startup
     async connect () {
@@ -635,8 +663,15 @@ export default defineComponent({
 
     async fetchResources (channel) {
       await fetchResources(channel, this[channel.toLowerCase()].files)
+        .then(files => {
+          this.resources = files
+          return parseManifest(files.find(e => e.name === 'resources/Manifest').buffer)
+        })
+        .then(manifest => {
+          this.fetchedManifest = manifest
+        })
         .catch(error => {
-          console.log(error.message)
+          console.log(error)
         })
     },
 

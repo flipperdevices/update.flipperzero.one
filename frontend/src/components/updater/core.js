@@ -82,6 +82,7 @@ export class Flipper {
       status: 1
     }
     this.properties = {}
+    this.manifest = undefined
   }
 
   async connect (connectionType) {
