@@ -259,6 +259,9 @@ async function writeQueue (queue) {
     delays.push(delays[i] + 750)
     if (e.buffer) {
       delays[i + 1] += Math.ceil((e.buffer.byteLength / 512) * 450)
+      if (e.path === '/ext/Manifest') {
+        delays[i + 1] += 3000
+      }
     }
   })
 }
