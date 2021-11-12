@@ -13,12 +13,13 @@ onmessage = function (event) {
       reader.cancel()
       break
     case 'write':
-      write(event.data.data)
+      enqueue(event.data.data)
       break
   }
 }
 
-let port, reader, readComplete = false
+let port, reader, readComplete = false, writerIdle = true
+const writeQueue = []
 
 async function connect () {
   const filters = [
@@ -65,41 +66,54 @@ function disconnect () {
   }
 }
 
-async function write ({ mode, data }) {
-  const writer = port.writable.getWriter()
-
-  if (mode.startsWith('cli')) {
-    if (mode === 'cli/delimited') {
-      data.push('\r\n')
-    }
-    const encoder = new TextEncoder()
-    data.forEach(async (line, i) => {
-      let message = line
-      if (data[i + 1]) {
-        message = line + '\r\n'
-      }
-      await writer.write(encoder.encode(message).buffer)
-    })
-  } else if (mode === 'raw') {
-    await writer.write(data[0].buffer)
-  } else {
-    throw new Error('Unknown write mode:', mode)
+async function enqueue (entry) {
+  writeQueue.push(entry)
+  if (writerIdle) {
+    write()
   }
+}
 
-  writer.close()
-    .then(() => {
-      self.postMessage({
-        operation: 'write',
-        status: 1
+async function write () {
+  writerIdle = false
+  while (writeQueue.length) {
+    const entry = writeQueue[0]
+    const writer = port.writable.getWriter()
+
+    if (entry.mode.startsWith('cli')) {
+      if (entry.mode === 'cli/delimited') {
+        entry.data.push('\r\n')
+      }
+      const encoder = new TextEncoder()
+      entry.data.forEach(async (line, i) => {
+        let message = line
+        if (entry.data[i + 1]) {
+          message = line + '\r\n'
+        }
+        await writer.write(encoder.encode(message).buffer)
       })
-    })
-    .catch(error => {
-      self.postMessage({
-        operation: 'write',
-        status: 0,
-        error: error
+    } else if (entry.mode === 'raw') {
+      await writer.write(entry.data[0].buffer)
+    } else {
+      throw new Error('Unknown write mode:', entry.mode)
+    }
+
+    await writer.close()
+      .then(() => {
+        writeQueue.shift()
+        self.postMessage({
+          operation: 'write',
+          status: 1
+        })
       })
-    })
+      .catch(error => {
+        self.postMessage({
+          operation: 'write',
+          status: 0,
+          error: error
+        })
+      })
+  }
+  writerIdle = true
 }
 
 async function read (mode) {
