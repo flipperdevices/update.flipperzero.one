@@ -1,9 +1,6 @@
 import * as rpc from './rpc'
 import { emitter } from '../core'
 import { sleep } from '../util'
-import { createNanoEvents } from 'nanoevents'
-
-const command = createNanoEvents()
 
 let flipper, rpcIdle = true
 const commandQueue = []
@@ -45,10 +42,10 @@ async function sendRpcRequest () {
         buffer = new Uint8Array(0)
       }
       unbind()
-      command.emit('response', res)
+      emitter.emit('response', res)
     } else {
       const unbind = emitter.on('write/end', () => {
-        command.emit('response', res)
+        emitter.emit('response', res)
         unbind()
       })
     }
@@ -72,7 +69,7 @@ function stopRpcSession () {
       requestType: 'stopSession',
       args: {}
     })
-    const unbind = command.on('response', async () => {
+    const unbind = emitter.on('response', async () => {
       await flipper.closeReader()
       rpc.flushCommandQueue()
       resolve()
@@ -87,7 +84,7 @@ function ping () {
       requestType: 'pingRequest',
       args: {}
     })
-    const unbind = command.on('response', res => {
+    const unbind = emitter.on('response', res => {
       if (res && res.error) {
         reject(res.error, res)
       } else {
@@ -104,7 +101,7 @@ function storageList (path) {
       requestType: 'storageListRequest',
       args: { path: path }
     })
-    const unbind = command.on('response', res => {
+    const unbind = emitter.on('response', res => {
       if (res && res.error) {
         reject(res.error, res)
       } else {
@@ -128,7 +125,7 @@ function storageRead (path) {
       requestType: 'storageReadRequest',
       args: { path: path }
     })
-    const unbind = command.on('response', res => {
+    const unbind = emitter.on('response', res => {
       if (res && res.error) {
         reject(res.error, res)
       } else {
@@ -161,7 +158,7 @@ async function storageWrite (path, buffer) {
         hasNext: chunk.byteLength === 512,
         commandId: commandId
       })
-      const unbind = command.on('response', res => {
+      const unbind = emitter.on('response', res => {
         if (res && res.error) {
           reject(res.error, res)
         } else {
@@ -185,7 +182,7 @@ function storageMkdir (path) {
       requestType: 'storageMkdirRequest',
       args: { path: path }
     })
-    const unbind = command.on('response', res => {
+    const unbind = emitter.on('response', res => {
       if (res && res.error) {
         reject(res.error, res)
       } else {
@@ -202,7 +199,7 @@ function storageDelete (path, isRecursive) {
       requestType: 'storageDeleteRequest',
       args: { path: path, recursive: isRecursive }
     })
-    const unbind = command.on('response', res => {
+    const unbind = emitter.on('response', res => {
       if (res && res.error) {
         reject(res.error, res)
       } else {
