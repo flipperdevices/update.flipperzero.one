@@ -99,52 +99,31 @@ function parseManifest (manifestFile) {
 }
 
 function compareManifests (flipperManifest, fetchedManifest, resources) {
-  console.log('flipperManifest', flipperManifest)
-  console.log('fetchedManifest', fetchedManifest)
-
   const queue = []
 
   function lookup (fetchedLevel, flipperLevel) {
     Object.keys(fetchedLevel).forEach(k => {
       if (k !== 'type' && k !== 'fullPath') {
         if (flipperLevel[k] === undefined) {
-          // path not found, check type on *fetched*
           if (fetchedLevel[k].type === 0) {
-            // !-> storageWriteRequest
-            console.log(fetchedLevel[k].fullName, '-> storageWriteRequest')
-
             const file = resources.find(e => e.name === fetchedLevel[k].fullName)
-            // !await pbCommands.storageWrite('/ext/' + fetchedLevel[k].fullName, file.buffer)
             queue.push({
               command: 'storageWrite',
               path: '/ext/' + fetchedLevel[k].fullName,
               buffer: file.buffer
             })
           } else {
-            // !-> storageMkdirRequest
-            console.log(fetchedLevel[k].fullPath, '-> storageMkdirRequest')
-
-            // !await pbCommands.storageMkdir('/ext/' + fetchedLevel[k].fullPath)
             queue.push({
               command: 'storageMkdir',
               path: '/ext/' + fetchedLevel[k].fullPath
             })
-
             flipperLevel[k] = {}
-            // created directory, go deeper
-            console.log(fetchedLevel[k].fullPath, 'created directory, go deeper')
             lookup(fetchedLevel[k], flipperLevel[k])
           }
         } else {
-          // path found, check that types match
           if (flipperLevel[k].type === fetchedLevel[k].type) {
             if (fetchedLevel[k].type === 0) {
-              // it's a file, now check for md5
               if (flipperLevel[k].md5 !== fetchedLevel[k].md5) {
-                // !file changed -> storageDeleteRequest & storageWriteRequest
-                console.log(fetchedLevel[k].fullName, 'file changed -> storageDeleteRequest & storageWriteRequest')
-
-                // !await pbCommands.storageDelete('/ext/' + fetchedLevel[k].fullName, false)
                 queue.push({
                   command: 'storageDelete',
                   path: '/ext/' + fetchedLevel[k].fullName,
@@ -152,7 +131,6 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
                 })
 
                 const file = resources.find(e => e.name === fetchedLevel[k].fullName)
-                // !await pbCommands.storageWrite('/ext/' + fetchedLevel[k].fullName, file.buffer)
                 queue.push({
                   command: 'storageWrite',
                   path: '/ext/' + fetchedLevel[k].fullName,
@@ -160,24 +138,16 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
                 })
               }
             } else {
-              // it's a directory, go deeper
               lookup(fetchedLevel[k], flipperLevel[k])
             }
           } else {
-            // !type mismatch -> storageDeleteRequest
-            console.log(k, 'type mismatch -> storageDeleteRequest')
-
             if (flipperLevel[k].type === 0) {
-              console.log(k, 'deleting file')
-              // !await pbCommands.storageDelete('/ext/' + flipperLevel[k].fullName, false)
               queue.push({
                 command: 'storageDelete',
                 path: '/ext/' + flipperLevel[k].fullName,
                 isRecursive: false
               })
             } else {
-              console.log(k, 'deleting dir')
-              // !await pbCommands.storageDelete('/ext/' + flipperLevel[k].fullPath, true)
               queue.push({
                 command: 'storageDelete',
                 path: '/ext/' + flipperLevel[k].fullName,
@@ -186,28 +156,19 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
             }
 
             if (fetchedLevel[k].type === 0) {
-              // !-> storageWriteRequest
-              console.log(fetchedLevel[k].fullName, '-> storageWriteRequest')
-
               const file = resources.find(e => e.name === fetchedLevel[k].fullName)
-              // !await pbCommands.storageWrite('/ext/' + fetchedLevel[k].fullName, file.buffer)
               queue.push({
                 command: 'storageWrite',
                 path: '/ext/' + fetchedLevel[k].fullName,
                 buffer: file.buffer
               })
             } else {
-              // !-> storageMkdirRequest
-              console.log(fetchedLevel[k].fullPath, '-> storageMkdirRequest')
-
-              // !await pbCommands.storageMkdir('/ext/' + fetchedLevel[k].fullPath)
               queue.push({
                 command: 'storageMkdir',
                 path: '/ext/' + fetchedLevel[k].fullPath
               })
 
               flipperLevel[k] = {}
-              // created directory, go deeper
               lookup(fetchedLevel[k], flipperLevel[k])
             }
           }
@@ -232,38 +193,33 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
 }
 
 async function writeQueue (queue) {
-  const delays = [0]
-  queue.forEach(async (e, i) => {
-    console.log(i + 3 + ' :', e.command, e.path, delays[i], '(adds', Math.ceil((e.buffer ? e.buffer.byteLength / 512 : 0) * 450) + 750, 'ms)')
-    setTimeout(async () => {
-      let res
-      const start = Date.now()
-      console.log('starting', e)
-      switch (e.command) {
-        case 'storageMkdir':
-          res = await pbCommands.storageMkdir(e.path)
-          break
-        case 'storageWrite':
-          res = await pbCommands.storageWrite(e.path, e.buffer)
-          break
-        case 'storageDelete':
-          res = await pbCommands.storageDelete(e.path, e.isRecursive)
-          break
-      }
-      console.log('response (', Date.now() - start, 'ms):', res)
-      if (res && res.error) {
-        console.log(res.error)
-      }
-    }, delays[i])
-
-    delays.push(delays[i] + 750)
-    if (e.buffer) {
-      delays[i + 1] += Math.ceil((e.buffer.byteLength / 512) * 450)
-      if (e.path === '/ext/Manifest') {
-        delays[i + 1] += 3000
-      }
+  const globalStart = Date.now()
+  for (const entry of queue) {
+    let req
+    const start = Date.now()
+    console.log('command:', entry)
+    switch (entry.command) {
+      case 'storageMkdir':
+        req = pbCommands.storageMkdir(entry.path)
+        break
+      case 'storageWrite':
+        req = pbCommands.storageWrite(entry.path, entry.buffer)
+        break
+      case 'storageDelete':
+        req = pbCommands.storageDelete(entry.path, entry.isRecursive)
+        break
+      case 'stopRpcSession':
+        req = pbCommands.stopRpcSession()
+        break
     }
-  })
+    if (req) {
+      await req
+        .then(res => {
+          console.log('response (' + (Date.now() - start) + 'ms):', res)
+        })
+    }
+  }
+  console.log('Resources loaded in ' + (Date.now() - globalStart) + ' ms')
 }
 
 export {

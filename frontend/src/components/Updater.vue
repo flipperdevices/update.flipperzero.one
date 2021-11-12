@@ -562,37 +562,37 @@ export default defineComponent({
       console.log(await pbCommands.storageMkdir(path))
     },
     async storageDelete (path) {
-      console.log(await pbCommands.storageDelete(path))
+      console.log(await pbCommands.storageDelete(path, true))
     },
     // Resourses update sequence
     async updateResources () {
-      //!
       if (!this.resources) {
         await this.fetchResources('dev')
       }
-      //!
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         console.log('Couldn\'t start rpc session:', startPing.error)
         return
       }
 
+      const empty = {
+        version: undefined,
+        timestamp: undefined,
+        storage: {}
+      }
       this.flipper.manifest = await pbCommands.storageRead('/ext/Manifest')
         .then(async res => {
-          const empty = {
-            version: undefined,
-            timestamp: undefined,
-            storage: {}
-          }
-          if (res === 'ERROR_STORAGE_NOT_EXIST') {
-            return empty
-          }
           const parsed = parseManifest(res)
           if (parsed === 'invalid manifest') {
             await pbCommands.storageDelete('/ext/Manifest')
             return empty
           }
           return parsed
+        })
+        .catch(error => {
+          if (error === 'ERROR_STORAGE_NOT_EXIST') {
+            return empty
+          }
         })
 
       try {

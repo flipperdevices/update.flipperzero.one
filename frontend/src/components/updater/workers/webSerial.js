@@ -66,7 +66,7 @@ function disconnect () {
   }
 }
 
-async function enqueue (entry) {
+function enqueue (entry) {
   writeQueue.push(entry)
   if (writerIdle) {
     write()
@@ -100,6 +100,9 @@ async function write () {
     await writer.close()
       .then(() => {
         writeQueue.shift()
+        self.postMessage({
+          operation: 'write/end'
+        })
         self.postMessage({
           operation: 'write',
           status: 1

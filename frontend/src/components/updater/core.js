@@ -46,6 +46,8 @@ serial.onmessage = (e) => {
     emitter.emit('cli output', e.data.data)
   } else if (e.data.operation === 'raw output') {
     emitter.emit('raw output', e.data.data)
+  } else if (e.data.operation === 'write/end') {
+    emitter.emit('write/end')
   } else {
     operation.terminate(e.data)
   }
