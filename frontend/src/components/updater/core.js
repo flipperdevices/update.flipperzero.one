@@ -198,13 +198,17 @@ export class Flipper {
 
   async write (mode, data) {
     if (this.state.connection === 2) {
-      const write = operation.create(serial, 'write', { mode: mode, data: [data] })
+      if (mode !== 'raw') {
+        const write = operation.create(serial, 'write', { mode: mode, data: [data] })
 
-      await write
-        .catch(error => {
-          this.state.status = 0
-          throw error
-        })
+        await write
+          .catch(error => {
+            this.state.status = 0
+            throw error
+          })
+      } else {
+        serial.postMessage({ operation: 'write', data: { mode: mode, data: [data] } })
+      }
     } else {
       throw new Error('Wrong connection state (flipper.write): expected 2, got ' + this.state.connection)
     }

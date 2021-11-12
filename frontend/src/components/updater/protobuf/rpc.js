@@ -5,21 +5,26 @@ const commandQueue = [
   {
     commandId: 0,
     requestType: 'unsolicited',
-    chunks: []
+    chunks: [],
+    error: undefined
   }
 ]
 
-function createRequest (requestType, args, hasNext) {
+function createRequest (requestType, args, hasNext, commandId) {
   const options = {
-    commandId: commandQueue.length
+    commandId: commandId || commandQueue.length
   }
   options[requestType] = args
+  if (hasNext) {
+    options.hasNext = hasNext
+  }
 
-  if (!hasNext || (hasNext && commandQueue[commandQueue.length - 1].requestType === requestType)) {
+  const command = commandQueue.find(c => c.commandId === options.commandId)
+  if (!command) {
     commandQueue.push({
       commandId: options.commandId,
       requestType: requestType,
-      args: args,
+      args: hasNext ? [args] : args,
       chunks: [],
       resolved: false,
       error: undefined
@@ -27,18 +32,20 @@ function createRequest (requestType, args, hasNext) {
   }
 
   const message = PB.Main.create(options)
-  return new Uint8Array(PB.Main.encodeDelimited(message).finish())
+  return { data: new Uint8Array(PB.Main.encodeDelimited(message).finish()), commandId: options.commandId }
 }
 
 function parseResponse (data) {
   const reader = protobuf.Reader.create(data)
+  let command
   while (reader.pos < reader.len) {
     const res = PB.Main.decodeDelimited(reader)
-    const command = commandQueue.find(c => c.commandId === res.commandId)
+    command = commandQueue.find(c => c.commandId === res.commandId)
 
-    if (res.commandStatus && res.commandStatus !== 0) {
+    if (res.commandStatus && res.commandStatus !== 0 && res.commandStatus !== 6) {
       command.resolved = true
       command.error = Object.keys(PB.CommandStatus).find(key => PB.CommandStatus[key] === res.commandStatus)
+      return command
     } else if (res.empty) {
       command.resolved = true
     } else {
@@ -49,7 +56,7 @@ function parseResponse (data) {
       command.chunks.push(payload)
     }
   }
-  return commandQueue
+  return command
 }
 
 function flushCommandQueue () {

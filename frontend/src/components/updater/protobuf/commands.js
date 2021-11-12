@@ -4,7 +4,7 @@ import { sleep } from '../util'
 
 let flipper
 
-async function sendRpcRequest (requestType, args, hasNext) {
+async function sendRpcRequest (requestType, args, hasNext, commandId) {
   let buffer = new Uint8Array(0)
 
   const unbind = emitter.on('raw output', data => {
@@ -14,24 +14,25 @@ async function sendRpcRequest (requestType, args, hasNext) {
     buffer = newBuffer
   })
 
-  const req = rpc.createRequest(requestType, args, hasNext)
-  await flipper.write('raw', req)
+  const req = rpc.createRequest(requestType, args, hasNext, commandId)
+  await flipper.write('raw', req.data)
 
-  let oldLength = 0, newLength = 1
-  while (oldLength < newLength) {
-    await sleep(350)
-    oldLength = newLength
-    newLength = buffer.length
+  if (!hasNext) {
+    let oldLength = 0, newLength = 1
+    while (oldLength < newLength) {
+      await sleep(350)
+      oldLength = newLength
+      newLength = buffer.length
+    }
   }
 
   let res
 
   if (buffer.length) {
     res = rpc.parseResponse(buffer)
-    res = res.reverse().find(e => e.requestType === requestType)
     buffer = new Uint8Array(0)
   } else {
-    console.log('No response for', requestType)
+    return { commandId: req.commandId }
   }
 
   unbind()
@@ -42,7 +43,7 @@ async function startRpcSession (f) {
   flipper = f
   await flipper.write('cli', 'start_rpc_session\r')
   flipper.read('raw')
-  await sleep(450)
+  await sleep(600)
   return sendRpcRequest('pingRequest', {})
 }
 
@@ -50,6 +51,7 @@ async function stopRpcSession () {
   await flipper.closeReader()
   await sendRpcRequest('stopSession', {})
   rpc.flushCommandQueue()
+  await sleep(600)
 }
 
 async function storageList (path) {
@@ -81,7 +83,34 @@ async function storageRead (path) {
     })
     return buffer
   }
-  console.log(res)
+}
+
+async function storageWrite (path, buffer) {
+  let commandId, res
+  const file = new Uint8Array(buffer)
+  for (let i = 0; i < file.byteLength; i += 512) {
+    await sleep(400)
+    const chunk = file.slice(i, i + 512)
+    res = await sendRpcRequest(
+      'storageWriteRequest',
+      {
+        path: path,
+        file: { data: chunk }
+      },
+      chunk.byteLength === 512,
+      commandId
+    )
+    commandId = res.commandId
+  }
+  return res
+}
+
+async function storageMkdir (path) {
+  return await sendRpcRequest('storageMkdirRequest', { path: path })
+}
+
+async function storageDelete (path, isRecursive) {
+  return await sendRpcRequest('storageDeleteRequest', { path: path, recursive: isRecursive })
 }
 
 export {
@@ -89,5 +118,8 @@ export {
   startRpcSession,
   stopRpcSession,
   storageList,
-  storageRead
+  storageRead,
+  storageWrite,
+  storageMkdir,
+  storageDelete
 }

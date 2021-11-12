@@ -342,6 +342,12 @@
       @click="updateResources"
     >update resources</q-btn>
     <div v-if="isRpcSession" class="flex">
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="fetchResources('dev')"
+      >load resources</q-btn>
       <q-input v-model="path" label="path" />
       <q-btn
         color="pink-8"
@@ -355,6 +361,24 @@
         class="q-ma-sm"
         @click="list(path)"
       >List</q-btn>
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="write(path)"
+      >write</q-btn>
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="mkdir(path)"
+      >mkdir</q-btn>
+      <q-btn
+        color="pink-8"
+        size="13px"
+        class="q-ma-sm"
+        @click="storageDelete(path)"
+      >Delete</q-btn>
     </div>
 
     <Terminal
@@ -377,7 +401,8 @@ import {
 import {
   fetchResources,
   parseManifest,
-  compareManifests
+  compareManifests,
+  writeQueue
 } from './updater/resourceLoader'
 import * as pbCommands from './updater/protobuf/commands'
 import semver from 'semver'
@@ -421,7 +446,7 @@ export default defineComponent({
       }
     )
     return {
-      path: ref('/ext/Manifest'),
+      path: ref('/ext'),
       isRpcSession: ref(false),
 
       autoReconnectEnabled,
@@ -529,10 +554,22 @@ export default defineComponent({
     async read (path) {
       console.log(await pbCommands.storageRead(path))
     },
+    async write (path) {
+      const file = this.resources.find(e => e.name.endsWith('Manifest'))
+      await pbCommands.storageWrite(path, file.buffer)
+    },
+    async mkdir (path) {
+      console.log(await pbCommands.storageMkdir(path))
+    },
+    async storageDelete (path) {
+      console.log(await pbCommands.storageDelete(path))
+    },
     // Resourses update sequence
     async updateResources () {
       //!
-      await this.fetchResources('dev')
+      if (!this.resources) {
+        await this.fetchResources('dev')
+      }
       //!
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
@@ -541,11 +578,30 @@ export default defineComponent({
       }
 
       this.flipper.manifest = await pbCommands.storageRead('/ext/Manifest')
-        .then(file => {
-          return parseManifest(file)
+        .then(async res => {
+          const empty = {
+            version: undefined,
+            timestamp: undefined,
+            storage: {}
+          }
+          if (res === 'ERROR_STORAGE_NOT_EXIST') {
+            return empty
+          }
+          const parsed = parseManifest(res)
+          if (parsed === 'invalid manifest') {
+            await pbCommands.storageDelete('/ext/Manifest')
+            return empty
+          }
+          return parsed
         })
 
-      compareManifests(this.flipper.manifest, this.fetchedManifest)
+      try {
+        const queue = compareManifests(this.flipper.manifest, this.fetchedManifest, this.resources)
+        await writeQueue(queue)
+      } catch (error) {
+        console.log(error)
+        await pbCommands.stopRpcSession()
+      }
     },
     // Startup
     async connect () {
@@ -664,8 +720,11 @@ export default defineComponent({
     async fetchResources (channel) {
       await fetchResources(channel, this[channel.toLowerCase()].files)
         .then(files => {
+          files.forEach(f => {
+            f.name = f.name.replace('resources/', '')
+          })
           this.resources = files
-          return parseManifest(files.find(e => e.name === 'resources/Manifest').buffer)
+          return parseManifest(files.find(e => e.name === 'Manifest').buffer)
         })
         .then(manifest => {
           this.fetchedManifest = manifest
