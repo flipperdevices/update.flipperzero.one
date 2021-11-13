@@ -14,7 +14,7 @@
       <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
         <q-card-section class="text-white text-left">
           <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
-          <div class="text-subtitle2">{{ error.message }}<a v-if="error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+          <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
         </q-card-section>
 
         <q-separator dark v-if="error.button.length"></q-separator>
@@ -72,7 +72,7 @@
     <q-card v-show="error.isError && !showOverlay" id="error">
       <q-card-section class="bg-negative text-white text-left">
         <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
-        <div class="text-subtitle2">{{ error.message }}<a v-if="error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+        <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
       </q-card-section>
 
       <q-separator v-if="error.button.length"></q-separator>
@@ -167,143 +167,157 @@
         </q-card-section>
       </q-card>
 
-      <div v-if="isOutdated && connection === 2" id="outdated">
-        <p v-if="!firmware.fileName.length">
-          Your firmware is outdated, latest release is <b>{{ release.version }}</b>
-        </p>
-      </div>
-      <div v-if="isOutdated === false && connection === 2" id="up-to-date">
-        <p v-if="!firmware.fileName.length && !newerThanLTS">
-          Your firmware is up to date.
-        </p>
-        <p v-if="!firmware.fileName.length && newerThanLTS">
-          Your firmware version is ahead of latest release.
-        </p>
-      </div>
+      <div v-if="!isUpdating">
 
-      <div v-if="!checks.sha256" class="alert">
-        <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-        Check your connection and try again.
-      </div>
-
-      <div v-if="!firmware.fileName.length && status === 1">
-        <div v-if="fwModel.value === 'custom'" class="alert">
-          <p class="ellipsis">
-            <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+        <div v-if="isOutdated && connection === 2" id="outdated">
+          <p v-if="!firmware.fileName.length">
+            Your firmware is outdated, latest release is <b>{{ release.version }}</b>
           </p>
-          This firmware might be <b>malicious</b> and might <b>break your device</b>!
+        </div>
+        <div v-if="isOutdated === false && connection === 2" id="up-to-date">
+          <p v-if="!firmware.fileName.length && !newerThanLTS">
+            Your firmware is up to date.
+          </p>
+          <p v-if="!firmware.fileName.length && newerThanLTS">
+            Your firmware version is ahead of latest release.
+          </p>
         </div>
 
-        <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
-          <q-select
-            v-model="fwModel"
-            :options="fwOptions"
-            label="Choose firmware"
-            :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-            id="fw-select"
-            :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section class="items-start">
-                  <q-item-label v-html="scope.opt.label" />
-                </q-item-section>
-                <q-item-section class="items-end">
-                  <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+        <div v-if="!checks.sha256" class="alert">
+          <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+          Check your connection and try again.
+        </div>
+
+        <div v-if="!firmware.fileName.length && status === 1">
+          <div v-if="fwModel.value === 'custom'" class="alert">
+            <p class="ellipsis">
+              <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+            </p>
+            This firmware might be <b>malicious</b> and might <b>break your device</b>!
+          </div>
+
+          <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
+            <q-select
+              v-model="fwModel"
+              :options="fwOptions"
+              label="Choose firmware"
+              :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+              id="fw-select"
+              :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section class="items-start">
+                    <q-item-label v-html="scope.opt.label" />
+                  </q-item-section>
+                  <q-item-section class="items-end">
+                    <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+            <q-btn
+              :loading="firmware.loading"
+              v-if="fwModel"
+              @click="update"
+              color="positive"
+              padding="12px 30px"
+              class="q-ml-lg"
+              :class="!$q.screen.xs ? '' : 'q-mt-sm'"
+            >Flash</q-btn>
+          </div>
+        </div>
+
+        <div v-if="firmware.fileName.length">
+          <div v-if="!checks.crc32" class="alert">
+            <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
+          </div>
+
+          <div v-if="!checks.target" class="alert">
+            <p>
+                <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+            </p>
+            This firmware might break your device!
+          </div>
+        </div>
+
+        <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
+          <p v-if="!firmware.fileName.length" class="q-mt-xl">
+            Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
+          </p>
           <q-btn
-            :loading="firmware.loading"
-            v-if="fwModel"
+            v-if="firmware.fileName.length && checks.crc32 && checks.target"
             @click="update"
             color="positive"
             padding="12px 30px"
+          >Flash {{ firmware.fileName }}</q-btn>
+          <q-btn
+            v-if="firmware.fileName.length"
+            @click="cancelUpload"
+            :flat="checks.target"
+            :color="checks.target ? '' : 'positive'"
+            :class="checks.crc32 ? 'q-ml-lg' : ''"
+            padding="12px 30px"
+          >Cancel</q-btn>
+          <q-btn
+            v-if="!checks.target"
+            flat
+            color="grey-8"
+            @click="update"
+            padding="12px 30px"
             class="q-ml-lg"
-            :class="!$q.screen.xs ? '' : 'q-mt-sm'"
-          >Flash</q-btn>
+          >Flash anyway</q-btn>
+        </div>
+
+        <div v-if="connection === 0 && !reconnecting" class="flex column flex-center alert">
+          <span>Information is valid on {{ disconnectTime }}</span>
+          <q-btn
+            color="positive"
+            padding="12px 30px"
+            size="13px"
+            class="q-ma-sm"
+            @click="connect"
+          >
+            Reconnect
+          </q-btn>
+        </div>
+
+      </div>
+      <div v-else>
+        <div class="alert">
+          <h5>Installing firmware (step {{ updateStage }} / 3)</h5>
+          <p class="q-mb-md">Don't disconnect your Flipper</p>
+        </div>
+        <div v-show="connection === 3 && status === 3">
+          <q-linear-progress
+            rounded
+            size="2.25rem"
+            :value="progress.current / progress.max"
+            color="positive"
+            class="q-mt-sm q-mb-lg"
+          >
+            <div class="absolute-full flex flex-center">
+              <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+            </div>
+          </q-linear-progress>
         </div>
       </div>
 
-      <div v-if="firmware.fileName.length">
-        <div v-if="!checks.crc32" class="alert">
-          <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
-        </div>
-
-        <div v-if="!checks.target" class="alert">
-          <p>
-              <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
-          </p>
-          This firmware might break your device!
-        </div>
-      </div>
-
-      <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
-        <p v-if="!firmware.fileName.length" class="q-mt-xl">
-          Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
-        </p>
-        <q-btn
-          v-if="firmware.fileName.length && checks.crc32 && checks.target"
-          @click="update"
-          color="positive"
-          padding="12px 30px"
-        >Flash {{ firmware.fileName }}</q-btn>
-        <q-btn
-          v-if="firmware.fileName.length"
-          @click="cancelUpload"
-          :flat="checks.target"
-          :color="checks.target ? '' : 'positive'"
-          :class="checks.crc32 ? 'q-ml-lg' : ''"
-          padding="12px 30px"
-        >Cancel</q-btn>
-        <q-btn
-          v-if="!checks.target"
-          flat
-          color="grey-8"
-          @click="update"
-          padding="12px 30px"
-          class="q-ml-lg"
-        >Flash anyway</q-btn>
-      </div>
-
-      <div v-if="connection === 0 && !reconnecting" class="flex column flex-center alert">
-        <span>Information is valid on {{ disconnectTime }}</span>
-        <q-btn
-          color="positive"
-          padding="12px 30px"
-          size="13px"
-          class="q-ma-sm"
-          @click="connect"
-        >
-          Reconnect
-        </q-btn>
-      </div>
-
-      <div v-if="reconnecting && connection < 2" class="flex column flex-center q-ma-lg">
+      <div v-if="reconnecting && connection < 2 || rpcStatus.isSession && rpcStatus.operation" class="flex column flex-center q-ma-lg">
         <q-spinner
+          v-if="!isUpdating"
           color="accent"
           size="3em"
         ></q-spinner>
-        <p class="q-ma-sm">Preparing Flipper...</p>
-      </div>
-
-      <div v-show="connection === 3 && status === 3">
-        <div class="alert">
-          <h5>Flashing firmware</h5>
-          <p class="q-mb-md">Don't disconnect your Flipper</p>
-        </div>
-        <q-linear-progress
-          rounded
-          size="2.25rem"
-          :value="progress.current / progress.max"
-          color="positive"
-          class="q-mt-sm q-mb-lg"
-        >
-          <div class="absolute-full flex flex-center">
-            <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
-          </div>
-        </q-linear-progress>
+        <p v-if="reconnecting" class="q-ma-sm"><code>Preparing Flipper...</code></p>
+        <p v-else-if="rpcStatus.operation" class="q-ma-sm">
+            <code>
+              {{ rpcStatus.operation }}
+              <span v-if="rpcStatus.command">
+                :&nbsp; {{ rpcStatus.command.name + ' ' +  rpcStatus.command.path }}
+              </span>
+            </code>
+        </p>
       </div>
     </div>
 
@@ -329,58 +343,6 @@
       @click="changeMode(!!(true * this.flipper.state.connection))"
     >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
 
-    <q-btn
-      color="pink-8"
-      size="13px"
-      class="q-ma-sm"
-      @click="toggleRpcSession"
-    >{{ isRpcSession ? 'Close' : 'Start' }} rpc session</q-btn>
-    <q-btn
-      color="pink-8"
-      size="13px"
-      class="q-ma-sm"
-      @click="updateResources"
-    >update resources</q-btn>
-    <div v-if="isRpcSession" class="flex">
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="fetchResources('dev')"
-      >load resources</q-btn>
-      <q-input v-model="path" label="path" />
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="read(path)"
-      >Read</q-btn>
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="list(path)"
-      >List</q-btn>
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="write(path)"
-      >write</q-btn>
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="mkdir(path)"
-      >mkdir</q-btn>
-      <q-btn
-        color="pink-8"
-        size="13px"
-        class="q-ma-sm"
-        @click="storageDelete(path)"
-      >Delete</q-btn>
-    </div>
-
     <Terminal
       v-if="terminalEnabled"
       v-show="showTerminal"
@@ -402,11 +364,13 @@ import {
   fetchResources,
   parseManifest,
   compareManifests,
-  writeQueue
+  commandQueue,
+  readInternalStorage,
+  writeInternalStorage
 } from './updater/resourceLoader'
 import * as pbCommands from './updater/protobuf/commands'
 import semver from 'semver'
-import { waitForDevice } from './updater/util'
+import { sleep, waitForDevice } from './updater/util'
 
 import {
   mdiChevronDown,
@@ -446,9 +410,6 @@ export default defineComponent({
       }
     )
     return {
-      path: ref('/ext'),
-      isRpcSession: ref(false),
-
       autoReconnectEnabled,
       checks: ref({
         crc32: true,
@@ -482,7 +443,9 @@ export default defineComponent({
           label: 'Dev (unstable)', value: 'dev', version: ''
         }
       ]),
+      internalStorageFiles: ref(undefined),
       isOutdated: ref(false),
+      isUpdating: ref(false),
       mode: ref('serial'),
       newerThanLTS: ref(false),
       progress: ref({
@@ -493,10 +456,16 @@ export default defineComponent({
       reconnecting: ref(false),
       reconnectLoop: ref(undefined),
       resources: ref(undefined),
+      rpcStatus: ref({
+        isSession: false,
+        operation: undefined,
+        command: undefined
+      }),
       showArrows: ref(false),
       showOverlay: ref(false),
       showTerminal: ref(false),
-      terminalEnabled: ref(false)
+      terminalEnabled: ref(false),
+      updateStage: ref(1)
     }
   },
 
@@ -540,69 +509,6 @@ export default defineComponent({
   },
 
   methods: {
-    async toggleRpcSession () {
-      if (!this.isRpcSession) {
-        await pbCommands.startRpcSession(this.flipper)
-      } else {
-        await pbCommands.stopRpcSession()
-      }
-      this.isRpcSession = !this.isRpcSession
-    },
-    async list (path) {
-      console.log(await pbCommands.storageList(path))
-    },
-    async read (path) {
-      console.log(await pbCommands.storageRead(path))
-    },
-    async write (path) {
-      const file = this.resources.find(e => e.name.endsWith('Manifest'))
-      await pbCommands.storageWrite(path, file.buffer)
-    },
-    async mkdir (path) {
-      console.log(await pbCommands.storageMkdir(path))
-    },
-    async storageDelete (path) {
-      console.log(await pbCommands.storageDelete(path, true))
-    },
-    // Resourses update sequence
-    async updateResources () {
-      if (!this.resources) {
-        await this.fetchResources('dev')
-      }
-      const startPing = await pbCommands.startRpcSession(this.flipper)
-      if (!startPing.resolved || startPing.error) {
-        console.log('Couldn\'t start rpc session:', startPing.error)
-        return
-      }
-
-      const empty = {
-        version: undefined,
-        timestamp: undefined,
-        storage: {}
-      }
-      this.flipper.manifest = await pbCommands.storageRead('/ext/Manifest')
-        .then(async res => {
-          const parsed = parseManifest(res)
-          if (parsed === 'invalid manifest') {
-            await pbCommands.storageDelete('/ext/Manifest')
-            return empty
-          }
-          return parsed
-        })
-        .catch(error => {
-          if (error === 'ERROR_STORAGE_NOT_EXIST') {
-            return empty
-          }
-        })
-
-      try {
-        const queue = compareManifests(this.flipper.manifest, this.fetchedManifest, this.resources)
-        await writeQueue(queue)
-      } catch (error) {
-        console.log(error)
-        await pbCommands.stopRpcSession()
-      }
-    },
     // Startup
     async connect () {
       if (this.reconnectLoop) {
@@ -618,7 +524,7 @@ export default defineComponent({
             }
           })
           .catch(async error => {
-            if (error.message.includes('No known')) {
+            if (error.message && error.message.includes('No known')) {
               return this.recognizeDevice(this.mode)
             }
           })
@@ -644,15 +550,25 @@ export default defineComponent({
       if (!this.firmware.fileName.length) {
         this.firmware.loading = true
         await this.fetchFirmwareFile(this.fwModel.value)
-        await this.fetchResources(this.fwModel.value)
         this.firmware.loading = false
       }
 
+      if (!this.resources) {
+        await this.fetchResources('dev')
+      }
+
+      this.isUpdating = true
+
+      this.updateStage = 1
+      await this.backupSettings()
+      await sleep(1000)
+
+      this.updateStage = 2
       this.reconnecting = true
       if (this.mode === 'serial') {
         await this.flipper.reboot()
           .catch(async error => {
-            if (error.message.includes('No known')) {
+            if (error.message && error.message.includes('No known')) {
               await this.recognizeDevice('usb')
             }
           })
@@ -681,13 +597,25 @@ export default defineComponent({
           unbind()
 
           await this.connect()
+
+          await sleep(1000)
+          this.updateStage = 3
+          if (this.resources) {
+            await this.updateResources()
+          }
+
+          await sleep(1000)
+          document.title = 'Flipper Zero Update Page'
+
+          this.isUpdating = false
         })
         .catch(async error => {
+          console.log(error)
           this.error.isError = true
-          if (error.message.includes('stall')) {
+          if (error.message && error.message.includes('stall')) {
             this.error.message = 'Flipper USB port is occupied by another process. Close it and try again.'
           } else {
-            this.error.message = error.message
+            this.error.message = error
           }
           this.error.button = 'dfu'
           await this.flipper.disconnect()
@@ -717,6 +645,7 @@ export default defineComponent({
         })
     },
 
+    // Resourses update
     async fetchResources (channel) {
       await fetchResources(channel, this[channel.toLowerCase()].files)
         .then(files => {
@@ -732,6 +661,82 @@ export default defineComponent({
         .catch(error => {
           console.log(error)
         })
+    },
+
+    async backupSettings () {
+      const startPing = await pbCommands.startRpcSession(this.flipper)
+      if (!startPing.resolved || startPing.error) {
+        console.log('Couldn\'t start rpc session:', startPing.error)
+        return
+      }
+      this.rpcStatus.isSession = true
+      const unbind = emitter.on('readInternalStorage', status => {
+        if (status === 'start') {
+          this.rpcStatus.operation = 'Settings backup in progress'
+        } else {
+          this.rpcStatus.operation = undefined
+        }
+      })
+      this.internalStorageFiles = await readInternalStorage()
+      await sleep(500)
+      await pbCommands.stopRpcSession()
+      unbind()
+    },
+
+    async restoreSettings () {
+      const unbind = emitter.on('writeInternalStorage', status => {
+        if (status === 'start') {
+          this.rpcStatus.operation = 'Restoring settings'
+        } else {
+          this.rpcStatus.operation = undefined
+        }
+      })
+      await writeInternalStorage(this.internalStorageFiles)
+      unbind()
+    },
+
+    async updateResources () {
+      const startPing = await pbCommands.startRpcSession(this.flipper)
+      if (!startPing.resolved || startPing.error) {
+        console.log('Couldn\'t start rpc session:', startPing.error)
+        return
+      }
+
+      const empty = {
+        version: undefined,
+        timestamp: undefined,
+        storage: {}
+      }
+      this.flipper.manifest = await pbCommands.storageRead('/ext/Manifest')
+        .then(async res => {
+          const parsed = parseManifest(res)
+          if (parsed === 'invalid manifest') {
+            await pbCommands.storageDelete('/ext/Manifest')
+            return empty
+          }
+          return parsed
+        })
+        .catch(error => {
+          if (error === 'ERROR_STORAGE_NOT_EXIST') {
+            return empty
+          }
+        })
+
+      try {
+        const queue = compareManifests(this.flipper.manifest, this.fetchedManifest, this.resources)
+        const unbind = emitter.on('commandQueue/progress', c => {
+          this.rpcStatus.operation = 'Writing static resources'
+          this.rpcStatus.command = c
+        })
+        const globalStart = Date.now()
+        await commandQueue(queue)
+        console.log('Resources updated in ' + (Date.now() - globalStart) + ' ms')
+        unbind()
+        await this.restoreSettings()
+      } catch (error) {
+        console.log(error)
+        await pbCommands.stopRpcSession()
+      }
     },
 
     // Utils
@@ -788,7 +793,7 @@ export default defineComponent({
         this.reconnecting = true
         await this.flipper.reboot()
           .catch(async error => {
-            if (error.message.includes('No known')) {
+            if (error.message && error.message.includes('No known')) {
               this.recognizeDevice(this.mode)
             }
           })

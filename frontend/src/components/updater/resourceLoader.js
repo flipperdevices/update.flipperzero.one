@@ -2,6 +2,7 @@ import untar from 'js-untar'
 import pako from 'pako'
 const inflate = new pako.Inflate()
 import * as pbCommands from './protobuf/commands'
+import { emitter } from './core'
 
 async function fetchResources (channel, files) {
   const file = files.find(e => {
@@ -108,13 +109,13 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
           if (fetchedLevel[k].type === 0) {
             const file = resources.find(e => e.name === fetchedLevel[k].fullName)
             queue.push({
-              command: 'storageWrite',
+              command: 'write',
               path: '/ext/' + fetchedLevel[k].fullName,
               buffer: file.buffer
             })
           } else {
             queue.push({
-              command: 'storageMkdir',
+              command: 'mkdir',
               path: '/ext/' + fetchedLevel[k].fullPath
             })
             flipperLevel[k] = {}
@@ -125,14 +126,14 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
             if (fetchedLevel[k].type === 0) {
               if (flipperLevel[k].md5 !== fetchedLevel[k].md5) {
                 queue.push({
-                  command: 'storageDelete',
+                  command: 'delete',
                   path: '/ext/' + fetchedLevel[k].fullName,
                   isRecursive: false
                 })
 
                 const file = resources.find(e => e.name === fetchedLevel[k].fullName)
                 queue.push({
-                  command: 'storageWrite',
+                  command: 'write',
                   path: '/ext/' + fetchedLevel[k].fullName,
                   buffer: file.buffer
                 })
@@ -143,13 +144,13 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
           } else {
             if (flipperLevel[k].type === 0) {
               queue.push({
-                command: 'storageDelete',
+                command: 'delete',
                 path: '/ext/' + flipperLevel[k].fullName,
                 isRecursive: false
               })
             } else {
               queue.push({
-                command: 'storageDelete',
+                command: 'delete',
                 path: '/ext/' + flipperLevel[k].fullName,
                 isRecursive: true
               })
@@ -158,13 +159,13 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
             if (fetchedLevel[k].type === 0) {
               const file = resources.find(e => e.name === fetchedLevel[k].fullName)
               queue.push({
-                command: 'storageWrite',
+                command: 'write',
                 path: '/ext/' + fetchedLevel[k].fullName,
                 buffer: file.buffer
               })
             } else {
               queue.push({
-                command: 'storageMkdir',
+                command: 'mkdir',
                 path: '/ext/' + fetchedLevel[k].fullPath
               })
 
@@ -181,45 +182,88 @@ function compareManifests (flipperManifest, fetchedManifest, resources) {
 
   const file = resources.find(e => e.name === 'Manifest')
   queue.push({
-    command: 'storageWrite',
+    command: 'write',
     path: '/ext/Manifest',
     buffer: file.buffer
-  })
-
-  queue.push({
-    command: 'stopRpcSession'
   })
   return queue
 }
 
-async function writeQueue (queue) {
-  const globalStart = Date.now()
+async function commandQueue (queue) {
+  let i = 0
   for (const entry of queue) {
+    i++
     let req
     const start = Date.now()
-    console.log('command:', entry)
     switch (entry.command) {
-      case 'storageMkdir':
+      case 'mkdir':
         req = pbCommands.storageMkdir(entry.path)
         break
-      case 'storageWrite':
+      case 'write':
         req = pbCommands.storageWrite(entry.path, entry.buffer)
         break
-      case 'storageDelete':
+      case 'delete':
         req = pbCommands.storageDelete(entry.path, entry.isRecursive)
         break
-      case 'stopRpcSession':
+      case 'stop session':
         req = pbCommands.stopRpcSession()
         break
     }
     if (req) {
+      emitter.emit('commandQueue/progress', {
+        index: i,
+        name: entry.command,
+        path: entry.path,
+        status: 'in progress'
+      })
       await req
         .then(res => {
-          console.log('response (' + (Date.now() - start) + 'ms):', res)
+          emitter.emit('commandQueue/progress', {
+            index: i,
+            time: Date.now() - start,
+            name: entry.command,
+            path: entry.path,
+            status: res && res.error ? res.error : 'ok'
+          })
         })
     }
   }
-  console.log('Resources loaded in ' + (Date.now() - globalStart) + ' ms')
+}
+
+async function readInternalStorage () {
+  emitter.emit('readInternalStorage', 'start')
+  return pbCommands.storageList('/int')
+    .then(async files => {
+      for (const file of files) {
+        file.data = await pbCommands.storageRead('/int/' + file.name)
+      }
+      emitter.emit('readInternalStorage', 'end')
+      return files
+    })
+}
+
+async function writeInternalStorage (files) {
+  emitter.emit('writeInternalStorage', 'start')
+  const flipperFiles = await pbCommands.storageList('/int')
+  const queue = []
+  flipperFiles.forEach(f => {
+    queue.push({
+      command: 'delete',
+      path: '/int/' + f.name
+    })
+  })
+  files.forEach(f => {
+    queue.push({
+      command: 'write',
+      path: '/int/' + f.name,
+      buffer: f.data
+    })
+  })
+  queue.push({
+    command: 'stop session'
+  })
+  await commandQueue(queue)
+  emitter.emit('writeInternalStorage', 'end')
 }
 
 export {
@@ -227,5 +271,7 @@ export {
   unpackResources,
   parseManifest,
   compareManifests,
-  writeQueue
+  commandQueue,
+  readInternalStorage,
+  writeInternalStorage
 }

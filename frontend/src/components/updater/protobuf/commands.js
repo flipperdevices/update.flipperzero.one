@@ -57,6 +57,7 @@ async function sendRpcRequest () {
 
 async function startRpcSession (f) {
   flipper = f
+  await sleep(600)
   await flipper.write('cli', 'start_rpc_session\r')
   flipper.read('raw')
   await sleep(600)
@@ -105,14 +106,14 @@ function storageList (path) {
       if (res && res.error) {
         reject(res.error, res)
       } else {
-        if (res.chunks.length) {
+        if (res.chunks && res.chunks.length) {
           let buffer = []
           res.chunks.forEach(c => {
             buffer = buffer.concat(c.file)
           })
           resolve(buffer)
         }
-        reject('empty response')
+        resolve('empty response')
       }
       unbind()
     })
@@ -139,7 +140,7 @@ function storageRead (path) {
           })
           resolve(buffer)
         }
-        reject('empty response')
+        resolve('empty response')
       }
       unbind()
     })
