@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
-    "build": "quasar build"
+    "build": "quasar build",
+    "compile-protofiles": "npx pbjs -t static-module -w es6 --no-comments --lint \"eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars, camelcase, default-case-last, no-mixed-operators\" -o src/components/updater/proto-compiled.js ./flipperzero-protobuf/*.proto && eslint --fix src/components/updater/proto-compiled.js"
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
@@ -16,6 +17,7 @@
     "dfu": "^0.1.5",
     "js-untar": "^2.0.0",
     "pako": "^2.0.4",
+    "protobufjs": "~6.11.2",
     "quasar": "^2.0.0",
     "semver": "^7.3.5",
     "sha.js": "^2.4.11",

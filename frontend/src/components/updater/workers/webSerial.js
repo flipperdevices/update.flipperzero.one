@@ -13,12 +13,13 @@ onmessage = function (event) {
       reader.cancel()
       break
     case 'write':
-      write(event.data.data)
+      enqueue(event.data.data)
       break
   }
 }
 
-let port, reader, readComplete = false
+let port, reader, readComplete = false, writerIdle = true
+const writeQueue = []
 
 async function connect () {
   const filters = [
@@ -65,38 +66,57 @@ function disconnect () {
   }
 }
 
-async function write (lines) {
-  let isCli = false
-  if (lines[0] === 'cli') {
-    isCli = true
-    lines = lines[1]
+function enqueue (entry) {
+  writeQueue.push(entry)
+  if (writerIdle) {
+    write()
   }
-  if (!isCli) {
-    lines.push('\r\n')
-  }
-  const encoder = new TextEncoder()
-  const writer = port.writable.getWriter()
-  lines.forEach(async (line, i) => {
-    let message = line
-    if (lines[i + 1]) {
-      message = line + '\r\n'
+}
+
+async function write () {
+  writerIdle = false
+  while (writeQueue.length) {
+    const entry = writeQueue[0]
+    const writer = port.writable.getWriter()
+
+    if (entry.mode.startsWith('cli')) {
+      if (entry.mode === 'cli/delimited') {
+        entry.data.push('\r\n')
+      }
+      const encoder = new TextEncoder()
+      entry.data.forEach(async (line, i) => {
+        let message = line
+        if (entry.data[i + 1]) {
+          message = line + '\r\n'
+        }
+        await writer.write(encoder.encode(message).buffer)
+      })
+    } else if (entry.mode === 'raw') {
+      await writer.write(entry.data[0].buffer)
+    } else {
+      throw new Error('Unknown write mode:', entry.mode)
     }
-    await writer.write(encoder.encode(message).buffer)
-  })
-  writer.close()
-    .then(() => {
-      self.postMessage({
-        operation: 'write',
-        status: 1
+
+    await writer.close()
+      .then(() => {
+        writeQueue.shift()
+        self.postMessage({
+          operation: 'write/end'
+        })
+        self.postMessage({
+          operation: 'write',
+          status: 1
+        })
       })
-    })
-    .catch(error => {
-      self.postMessage({
-        operation: 'write',
-        status: 0,
-        error: error
+      .catch(error => {
+        self.postMessage({
+          operation: 'write',
+          status: 0,
+          error: error
+        })
       })
-    })
+  }
+  writerIdle = true
 }
 
 async function read (mode) {
@@ -112,8 +132,13 @@ async function read (mode) {
       } else {
         if (mode === 'cli') {
           self.postMessage({
-            operation: 'log cli output',
+            operation: 'cli output',
             data: decoder.decode(value)
+          })
+        } else if (mode === 'raw') {
+          self.postMessage({
+            operation: 'raw output',
+            data: value
           })
         } else {
           const newBuffer = new Uint8Array(buffer.length + value.length)

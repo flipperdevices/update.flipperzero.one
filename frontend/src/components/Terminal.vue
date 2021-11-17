@@ -10,6 +10,8 @@ import { Terminal } from 'xterm'
 import 'xterm/css/xterm.css'
 import { FitAddon } from 'xterm-addon-fit'
 
+import { emitter } from './updater/core'
+
 import {
   evaCloseOutline
 } from '@quasar/extras/eva-icons'
@@ -25,7 +27,8 @@ export default defineComponent({
     return {
       terminal: ref(undefined),
       readInterval: undefined,
-      input: ref('')
+      input: ref(''),
+      unbind: ref(undefined)
     }
   },
 
@@ -50,16 +53,11 @@ export default defineComponent({
     },
 
     write (data) {
-      this.flipper.cliWrite(data)
+      this.flipper.write('cli', data)
     },
 
-    read () {
-      this.flipper.cliRead()
-      window.addEventListener('new cli output', this.print)
-    },
-
-    print (e) {
-      this.terminal.write(e.detail.replaceAll('\x7F', ''))
+    read (shouldStop) {
+      this.flipper.read('cli')
     }
   },
 
@@ -69,10 +67,13 @@ export default defineComponent({
 
   mounted () {
     this.init()
+    this.unbind = emitter.on('cli output', data => {
+      this.terminal.write(data.replaceAll('\x7F', ''))
+    })
   },
 
   beforeUnmount () {
-    window.removeEventListener('new cli output', this.print)
+    this.unbind()
   }
 })
 </script>

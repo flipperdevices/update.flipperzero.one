@@ -3,6 +3,19 @@ import {
   parseOutputText,
   parseOTPData
 } from './util'
+import { createNanoEvents } from 'nanoevents'
+
+export const emitter = createNanoEvents()
+export let progress = {
+  current: 0,
+  max: 1,
+  stage: 0
+}
+const title = {
+  string: 'Flipper Zero Update Page',
+  progress: 0
+}
+
 class Operation {
   constructor () {
     this.resolve = undefined
@@ -25,33 +38,25 @@ class Operation {
     }
   }
 }
-
 const operation = new Operation()
 
-// Firmware erasing/writing progress
-let progress = {
-  current: 0,
-  max: 1,
-  stage: 0
-}
-const title = {
-  string: 'Flipper Zero Update Page',
-  progress: 0
-}
-
-const serial = new Worker(new URL('./webSerial.js', import.meta.url))
+const serial = new Worker(new URL('./workers/webSerial.js', import.meta.url))
 serial.onmessage = (e) => {
-  if (e.data.operation === 'log cli output') {
-    const event = new CustomEvent('new cli output', { detail: e.data.data })
-    window.dispatchEvent(event)
+  if (e.data.operation === 'cli output') {
+    emitter.emit('cli output', e.data.data)
+  } else if (e.data.operation === 'raw output') {
+    emitter.emit('raw output', e.data.data)
+  } else if (e.data.operation === 'write/end') {
+    emitter.emit('write/end')
   } else {
     operation.terminate(e.data)
   }
 }
 
-const usb = new Worker(new URL('./webUSB.js', import.meta.url))
+const usb = new Worker(new URL('./workers/webUSB.js', import.meta.url))
 usb.onmessage = (e) => {
   if (e.data.operation === 'log progress') {
+    emitter.emit('log progress', e.data.data)
     progress = e.data.data
     if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
       title.progress = Math.floor(progress.current / (progress.max / 100))
@@ -67,19 +72,19 @@ usb.onmessage = (e) => {
 export class Flipper {
   constructor () {
     this.state = {
-      // 0: not connected
-      // 1: waiting for connection
-      // 2: connected to serial
-      // 3: connected to usb
+      /* 0: not connected
+         1: waiting for connection
+         2: connected to serial
+         3: connected to usb */
       connection: 0,
-      // 0: error
-      // 1: idle
-      // 2: reading data
-      // 3: writing data
+      /* 0: error
+         1: idle
+         2: reading data
+         3: writing data */
       status: 1
     }
     this.properties = {}
-    this.writeProgress = progress
+    this.manifest = undefined
   }
 
   async connect (connectionType) {
@@ -151,7 +156,7 @@ export class Flipper {
 
   async readProperties () {
     if (this.state.connection === 2) {
-      const writePropertiesData = operation.create(serial, 'write', ['power_info', 'device_info'])
+      const writePropertiesData = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['power_info', 'device_info', 'storage list /ext'] })
 
       this.state.status = 3
       await writePropertiesData
@@ -193,41 +198,45 @@ export class Flipper {
     }
   }
 
-  async cliWrite (data) {
+  async write (mode, data) {
     if (this.state.connection === 2) {
-      const write = operation.create(serial, 'write', ['cli', [data]])
+      if (mode !== 'raw') {
+        const write = operation.create(serial, 'write', { mode: mode, data: [data] })
 
-      await write
-        .catch(error => {
-          this.state.status = 0
-          throw error
-        })
+        await write
+          .catch(error => {
+            this.state.status = 0
+            throw error
+          })
+      } else {
+        serial.postMessage({ operation: 'write', data: { mode: mode, data: [data] } })
+      }
     } else {
       throw new Error('Wrong connection state (flipper.write): expected 2, got ' + this.state.connection)
     }
   }
 
-  async cliRead () {
+  async read (mode) {
     if (this.state.connection === 2) {
-      serial.postMessage({ operation: 'read', data: 'cli' })
+      serial.postMessage({ operation: 'read', data: mode })
       this.state.status = 2
     } else {
       throw new Error('Wrong connection state (flipper.read): expected 2, got ' + this.state.connection)
     }
   }
 
-  async closeReadingSession () {
+  async closeReader () {
     if (this.state.connection === 2) {
       serial.postMessage({ operation: 'stop reading' })
       this.state.status = 1
     } else {
-      throw new Error('Wrong connection state (flipper.closeReadingSession): expected 2, got ' + this.state.connection)
+      throw new Error('Wrong connection state (flipper.closeReader): expected 2, got ' + this.state.connection)
     }
   }
 
   async reboot () {
     if (this.state.connection === 2) {
-      const writeDFUCommand = operation.create(serial, 'write', ['dfu'])
+      const writeDFUCommand = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['dfu'] })
 
       this.state.status = 3
       await writeDFUCommand
@@ -255,18 +264,13 @@ export class Flipper {
     const writeFirmware = operation.create(usb, 'write', firmware)
 
     this.state.status = 3
-    const logProgress = setInterval(() => {
-      this.writeProgress = progress
-    }, 50)
     await writeFirmware
       .catch(error => {
-        clearInterval(logProgress)
         this.state.status = 0
         document.title = title.string
         throw error
       })
-    clearInterval(logProgress)
-    this.writeProgress.current = this.writeProgress.max
+    progress.current = progress.max
     document.title = '(100%) ' + title.string
     title.progress = 0
   }
