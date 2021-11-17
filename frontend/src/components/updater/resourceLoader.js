@@ -230,35 +230,61 @@ async function commandQueue (queue) {
   }
 }
 
+async function readDir (path) {
+  const files = await pbCommands.storageList(path)
+  for (const file of files) {
+    file.path = path + '/' + file.name
+    if (file.type !== 1) {
+      file.data = await pbCommands.storageRead(file.path)
+    } else {
+      file.files = await readDir(file.path)
+    }
+  }
+  return files
+}
+
+function enqueueWriteDir (files, queue) {
+  for (const file of files) {
+    if (file.type !== 1) {
+      queue.push({
+        command: 'write',
+        path: file.path,
+        buffer: file.data
+      })
+    } else {
+      queue = enqueueWriteDir(file.files, queue)
+    }
+  }
+  return queue
+}
+
 async function readInternalStorage () {
   emitter.emit('readInternalStorage', 'start')
-  return pbCommands.storageList('/int')
-    .then(async files => {
-      for (const file of files) {
-        file.data = await pbCommands.storageRead('/int/' + file.name)
-      }
-      emitter.emit('readInternalStorage', 'end')
-      return files
-    })
+  const internal = await readDir('/int')
+  emitter.emit('readInternalStorage', 'end')
+  return internal
 }
 
 async function writeInternalStorage (files) {
   emitter.emit('writeInternalStorage', 'start')
   const flipperFiles = await pbCommands.storageList('/int')
-  const queue = []
-  flipperFiles.forEach(f => {
-    queue.push({
-      command: 'delete',
-      path: '/int/' + f.name
+  let queue = []
+
+  if (flipperFiles !== 'empty response') {
+    flipperFiles.forEach(f => {
+      const command = {
+        command: 'delete',
+        path: '/int/' + f.name
+      }
+      if (f.type === 1) {
+        command.isRecursive = true
+      }
+      queue.push(command)
     })
-  })
-  files.forEach(f => {
-    queue.push({
-      command: 'write',
-      path: '/int/' + f.name,
-      buffer: f.data
-    })
-  })
+  }
+
+  queue = enqueueWriteDir(files, queue)
+
   queue.push({
     command: 'stop session'
   })

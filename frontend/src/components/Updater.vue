@@ -609,10 +609,15 @@ export default defineComponent({
 
             await this.connect()
 
-            if (this.resources && this.flipper.properties.sdCardMounted && this.mode === 'serial') {
-              this.updateStage = 3
+            if (this.mode === 'serial') {
               await sleep(1000)
-              await this.updateResources()
+              if (this.resources && this.flipper.properties.sdCardMounted) {
+                this.updateStage = 3
+                await this.updateResources()
+              } else {
+                this.updateStage = 3
+                await this.restoreSettings()
+              }
             }
 
             document.title = 'Flipper Zero Update Page'
