@@ -284,7 +284,7 @@
       </div>
       <div v-else>
         <div class="alert">
-          <h5>Installing firmware (step {{ updateStage }} of {{ flipper.properties.sdCardMounted ? '3' : 2 }})</h5>
+          <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' ? '3' : 2 }})</h5>
           <p class="q-mb-md">Don't disconnect your Flipper</p>
         </div>
         <div v-if="showUsbRecognizeButton">
