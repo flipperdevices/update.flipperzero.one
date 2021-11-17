@@ -550,6 +550,7 @@ export default defineComponent({
 
     // Update sequence
     async update () {
+      this.isUpdating = true
       if (this.updateStage === 1) {
         if (!this.firmware.fileName.length) {
           this.firmware.loading = true
@@ -557,18 +558,14 @@ export default defineComponent({
           this.firmware.loading = false
         }
 
-        if (!this.resources && this.flipper.properties.sdCardMounted) {
-          await this.fetchResources('dev')
-        }
-
-        this.isUpdating = true
-
-        this.updateStage = 1
-        await this.backupSettings()
-        await sleep(1000)
-
-        this.reconnecting = true
         if (this.mode === 'serial') {
+          if (!this.resources && this.flipper.properties.sdCardMounted) {
+            await this.fetchResources('dev')
+          }
+          await this.backupSettings()
+          await sleep(1000)
+
+          this.reconnecting = true
           await this.flipper.reboot()
             .then(() => {
               this.updateStage = 2
@@ -612,7 +609,7 @@ export default defineComponent({
 
             await this.connect()
 
-            if (this.resources && this.flipper.properties.sdCardMounted) {
+            if (this.resources && this.flipper.properties.sdCardMounted && this.mode === 'serial') {
               this.updateStage = 3
               await sleep(1000)
               await this.updateResources()
