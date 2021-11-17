@@ -156,7 +156,7 @@ export class Flipper {
 
   async readProperties () {
     if (this.state.connection === 2) {
-      const writePropertiesData = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['power_info', 'device_info'] })
+      const writePropertiesData = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['power_info', 'device_info', 'storage list /ext'] })
 
       this.state.status = 3
       await writePropertiesData

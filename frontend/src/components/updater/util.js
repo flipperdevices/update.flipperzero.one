@@ -54,7 +54,8 @@ function parseOutputText (text) {
       sub: undefined
     },
     btMac: undefined,
-    otpVer: undefined
+    otpVer: undefined,
+    sdCardMounted: true
   }
 
   lines.forEach(line => {
@@ -116,6 +117,7 @@ function parseOutputText (text) {
       properties.bootloaderBuild = line.replace(/boot(loader)?_build_date\s*:\s/g, '').trim()
       return
     }
+
     if (line.includes('radio_fus_major')) {
       properties.radioFusFirmware.major = line.replace(/radio_fus_major\s*:\s/g, '').trim()
       return
@@ -145,6 +147,10 @@ function parseOutputText (text) {
     }
     if (line.includes('hardware_otp_ver')) {
       properties.otpVer = line.replace(/hardware_otp_ver\s*:\s/g, '').trim()
+    }
+
+    if (line.includes('Storage error: internal error')) {
+      properties.sdCardMounted = false
     }
   })
 

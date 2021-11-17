@@ -168,7 +168,6 @@
       </q-card>
 
       <div v-if="!isUpdating">
-
         <div v-if="isOutdated && connection === 2" id="outdated">
           <p v-if="!firmware.fileName.length">
             Your firmware is outdated, latest release is <b>{{ release.version }}</b>
@@ -285,10 +284,13 @@
       </div>
       <div v-else>
         <div class="alert">
-          <h5>Installing firmware (step {{ updateStage }} / 3)</h5>
+          <h5>Installing firmware (step {{ updateStage }} of {{ flipper.properties.sdCardMounted ? '3' : 2 }})</h5>
           <p class="q-mb-md">Don't disconnect your Flipper</p>
         </div>
-        <div v-show="connection === 3 && status === 3">
+        <div v-if="showUsbRecognizeButton">
+          <q-btn color="positive" padding="12px 30px" @click="recognizeDevice('usb')">Continue</q-btn>
+        </div>
+        <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
           <q-linear-progress
             rounded
             size="2.25rem"
@@ -309,7 +311,7 @@
           color="accent"
           size="3em"
         ></q-spinner>
-        <p v-if="reconnecting" class="q-ma-sm"><code>Preparing Flipper...</code></p>
+        <p v-if="reconnecting && !showUsbRecognizeButton" class="q-ma-sm"><code>Preparing Flipper...</code></p>
         <p v-else-if="rpcStatus.operation" class="q-ma-sm">
             <code>
               {{ rpcStatus.operation }}
@@ -464,6 +466,7 @@ export default defineComponent({
       showArrows: ref(false),
       showOverlay: ref(false),
       showTerminal: ref(false),
+      showUsbRecognizeButton: ref(false),
       terminalEnabled: ref(false),
       updateStage: ref(1)
     }
@@ -547,81 +550,93 @@ export default defineComponent({
 
     // Update sequence
     async update () {
-      if (!this.firmware.fileName.length) {
-        this.firmware.loading = true
-        await this.fetchFirmwareFile(this.fwModel.value)
-        this.firmware.loading = false
+      if (this.updateStage === 1) {
+        if (!this.firmware.fileName.length) {
+          this.firmware.loading = true
+          await this.fetchFirmwareFile(this.fwModel.value)
+          this.firmware.loading = false
+        }
+
+        if (!this.resources && this.flipper.properties.sdCardMounted) {
+          await this.fetchResources('dev')
+        }
+
+        this.isUpdating = true
+
+        this.updateStage = 1
+        await this.backupSettings()
+        await sleep(1000)
+
+        this.reconnecting = true
+        if (this.mode === 'serial') {
+          await this.flipper.reboot()
+            .then(() => {
+              this.updateStage = 2
+            })
+            .catch(async error => {
+              if (error.message && error.message.includes('No known')) {
+                this.showUsbRecognizeButton = true
+              } else {
+                console.log(error)
+              }
+            })
+        } else {
+          this.updateStage = 2
+        }
       }
 
-      if (!this.resources) {
-        await this.fetchResources('dev')
-      }
+      if (this.updateStage === 2) {
+        this.showUsbRecognizeButton = false
+        await this.flipper.connect('usb')
+        this.reconnecting = false
+        function preventTabClose (event) {
+          event.returnValue = ''
+        }
+        window.addEventListener('beforeunload', preventTabClose)
 
-      this.isUpdating = true
+        const unbind = emitter.on('log progress', progress => {
+          this.progress = progress
+        })
 
-      this.updateStage = 1
-      await this.backupSettings()
-      await sleep(1000)
-
-      this.updateStage = 2
-      this.reconnecting = true
-      if (this.mode === 'serial') {
-        await this.flipper.reboot()
-          .catch(async error => {
-            if (error.message && error.message.includes('No known')) {
-              await this.recognizeDevice('usb')
+        this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
+          .then(async () => {
+            window.removeEventListener('beforeunload', preventTabClose)
+            if (this.mode === 'usb') {
+              this.mode = 'serial'
             }
+            this.reconnecting = true
+            await waitForDevice('rebooted to serial')
+            this.reconnecting = false
+
+            unbind()
+
+            await this.connect()
+
+            if (this.resources && this.flipper.properties.sdCardMounted) {
+              this.updateStage = 3
+              await sleep(1000)
+              await this.updateResources()
+            }
+
+            document.title = 'Flipper Zero Update Page'
+
+            this.updateStage = 1
+            this.isUpdating = false
+          })
+          .catch(async error => {
+            console.log(error)
+            this.error.isError = true
+            if (error.message && error.message.includes('stall')) {
+              this.error.message = 'Flipper USB port is occupied by another process. Close it and try again.'
+            } else {
+              this.error.message = error
+            }
+            this.error.button = 'dfu'
+            await this.flipper.disconnect()
+            this.mode = 'serial'
+            this.reconnecting = true
           })
       }
-      await this.flipper.connect('usb')
-      this.reconnecting = false
-      function preventTabClose (event) {
-        event.returnValue = ''
-      }
-      window.addEventListener('beforeunload', preventTabClose)
-
-      const unbind = emitter.on('log progress', progress => {
-        this.progress = progress
-      })
-
-      this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
-        .then(async () => {
-          window.removeEventListener('beforeunload', preventTabClose)
-          if (this.mode === 'usb') {
-            this.mode = 'serial'
-          }
-          this.reconnecting = true
-          await waitForDevice('rebooted to serial')
-          this.reconnecting = false
-
-          unbind()
-
-          await this.connect()
-
-          await sleep(1000)
-          this.updateStage = 3
-          if (this.resources) {
-            await this.updateResources()
-          }
-
-          await sleep(1000)
-          document.title = 'Flipper Zero Update Page'
-
-          this.isUpdating = false
-        })
-        .catch(async error => {
-          console.log(error)
-          this.error.isError = true
-          if (error.message && error.message.includes('stall')) {
-            this.error.message = 'Flipper USB port is occupied by another process. Close it and try again.'
-          } else {
-            this.error.message = error
-          }
-          this.error.button = 'dfu'
-          await this.flipper.disconnect()
-          this.mode = 'serial'
-          this.reconnecting = true
-        })
     },
 
     async fetchFirmwareFile (channel) {
@@ -843,6 +858,9 @@ export default defineComponent({
                 this.showArrows = false
                 if (this.mode === mode) {
                   return this.connect()
+                } else {
+                  this.updateStage = 2
+                  return this.update()
                 }
               })
           }
