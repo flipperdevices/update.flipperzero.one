@@ -284,7 +284,7 @@
       </div>
       <div v-else>
         <div class="alert">
-          <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' ? '3' : 2 }})</h5>
+          <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
           <p class="q-mb-md">Don't disconnect your Flipper</p>
         </div>
         <div v-if="showUsbRecognizeButton">
@@ -610,11 +610,12 @@ export default defineComponent({
             await this.connect()
 
             if (this.mode === 'serial') {
-              await sleep(1000)
               if (this.resources && this.flipper.properties.sdCardMounted) {
+                await sleep(1000)
                 this.updateStage = 3
                 await this.updateResources()
-              } else {
+              } else if (this.internalStorageFiles) {
+                await sleep(1000)
                 this.updateStage = 3
                 await this.restoreSettings()
               }
@@ -701,6 +702,7 @@ export default defineComponent({
     },
 
     async restoreSettings () {
+      this.rpcStatus.command = undefined
       const unbind = emitter.on('writeInternalStorage', status => {
         if (status === 'start') {
           this.rpcStatus.operation = 'Restoring settings'
