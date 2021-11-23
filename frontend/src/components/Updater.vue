@@ -359,10 +359,12 @@
 import { defineComponent, ref, watch } from 'vue'
 import Terminal from './Terminal.vue'
 import { Flipper, emitter } from './updater/core'
+
 import {
   fetchFirmwareFile,
   loadFirmwareFile
 } from './updater/firmwareLoader'
+
 import {
   fetchResources,
   parseManifest,
@@ -372,6 +374,8 @@ import {
   writeInternalStorage
 } from './updater/resourceLoader'
 import * as pbCommands from './updater/protobuf/commands'
+import xbms from './updater/protobuf/xbms'
+
 import semver from 'semver'
 import { sleep, waitForDevice } from './updater/util'
 
@@ -691,6 +695,15 @@ export default defineComponent({
         return
       }
       this.rpcStatus.isSession = true
+
+      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+      if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
+        console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+      } else {
+        const data = new Uint8Array(xbms.pngtest)
+        await pbCommands.guiScreenFrame(data)
+      }
+
       const unbind = emitter.on('readInternalStorage', status => {
         if (status === 'start') {
           this.rpcStatus.operation = 'Settings backup in progress'
@@ -700,11 +713,22 @@ export default defineComponent({
       })
       this.internalStorageFiles = await readInternalStorage()
       await sleep(500)
+
       await pbCommands.stopRpcSession()
       unbind()
     },
 
-    async restoreSettings () {
+    async restoreSettings (isVirtualDisplaySession) {
+      if (!isVirtualDisplaySession) {
+        const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+        if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
+          console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+        } else {
+          const data = new Uint8Array(xbms.pngtest)
+          await pbCommands.guiScreenFrame(data)
+        }
+      }
+
       this.rpcStatus.command = undefined
       const unbind = emitter.on('writeInternalStorage', status => {
         if (status === 'start') {
@@ -714,6 +738,9 @@ export default defineComponent({
         }
       })
       await writeInternalStorage(this.internalStorageFiles)
+
+      await pbCommands.guiStopVirtualDisplay()
+
       unbind()
     },
 
@@ -722,6 +749,14 @@ export default defineComponent({
       if (!startPing.resolved || startPing.error) {
         console.log('Couldn\'t start rpc session:', startPing.error)
         return
+      }
+
+      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+      if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
+        console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+      } else {
+        const data = new Uint8Array(xbms.pngtest)
+        await pbCommands.guiScreenFrame(data)
       }
 
       const empty = {
@@ -754,7 +789,7 @@ export default defineComponent({
         await commandQueue(queue)
         console.log('Resources updated in ' + (Date.now() - globalStart) + ' ms')
         unbind()
-        await this.restoreSettings()
+        await this.restoreSettings(true)
       } catch (error) {
         console.log(error)
         await pbCommands.stopRpcSession()
@@ -982,7 +1017,7 @@ export default defineComponent({
       }
       if (this.autoReconnectEnabled) {
         this.reconnectLoop = setInterval(async () => {
-          if (this.reconnecting) {
+          if (!this.reconnecting) {
             let ports, filters
             if (this.mode === 'serial') {
               filters = [

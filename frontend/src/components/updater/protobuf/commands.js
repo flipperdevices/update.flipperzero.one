@@ -211,6 +211,59 @@ function storageDelete (path, isRecursive) {
   })
 }
 
+function guiStartVirtualDisplay () {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'guiStartVirtualDisplayRequest',
+      args: {}
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
+function guiStopVirtualDisplay () {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'guiStopVirtualDisplayRequest',
+      args: {}
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
+function guiScreenFrame (data) {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'guiScreenFrame',
+      args: {
+        data: data
+      }
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
 export {
   enqueue,
   sendRpcRequest,
@@ -220,5 +273,8 @@ export {
   storageRead,
   storageWrite,
   storageMkdir,
-  storageDelete
+  storageDelete,
+  guiStartVirtualDisplay,
+  guiStopVirtualDisplay,
+  guiScreenFrame
 }
