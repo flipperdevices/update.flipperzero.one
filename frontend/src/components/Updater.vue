@@ -568,7 +568,7 @@ export default defineComponent({
             await this.fetchResources('dev')
           }
           await this.backupSettings()
-          await sleep(1000)
+          await sleep(500)
 
           this.reconnecting = true
           await this.flipper.reboot()
@@ -616,11 +616,11 @@ export default defineComponent({
 
             if (this.mode === 'serial') {
               if (this.resources && this.flipper.properties.sdCardMounted) {
-                await sleep(1000)
+                await sleep(500)
                 this.updateStage = 3
                 await this.updateResources()
               } else if (this.internalStorageFiles) {
-                await sleep(1000)
+                await sleep(500)
                 this.updateStage = 3
                 await this.restoreSettings()
               } else {
