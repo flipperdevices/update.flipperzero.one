@@ -264,6 +264,8 @@ export const PB = $root.PB = (() => {
     values[valuesById[18] = 'ERROR_STORAGE_DIR_NOT_EMPTY'] = 18
     values[valuesById[16] = 'ERROR_APP_CANT_START'] = 16
     values[valuesById[17] = 'ERROR_APP_SYSTEM_LOCKED'] = 17
+    values[valuesById[19] = 'ERROR_VIRTUAL_DISPLAY_ALREADY_STARTED'] = 19
+    values[valuesById[20] = 'ERROR_VIRTUAL_DISPLAY_NOT_STARTED'] = 20
     return values
   })()
 
@@ -423,13 +425,15 @@ export const PB = $root.PB = (() => {
     Main.prototype.appLockStatusResponse = null
     Main.prototype.guiStartScreenStreamRequest = null
     Main.prototype.guiStopScreenStreamRequest = null
-    Main.prototype.guiScreenStreamFrame = null
+    Main.prototype.guiScreenFrame = null
     Main.prototype.guiSendInputEventRequest = null
+    Main.prototype.guiStartVirtualDisplayRequest = null
+    Main.prototype.guiStopVirtualDisplayRequest = null
 
     let $oneOfFields
 
     Object.defineProperty(Main.prototype, 'content', {
-      get: $util.oneOfGetter($oneOfFields = ['empty', 'stopSession', 'pingRequest', 'pingResponse', 'storageStatRequest', 'storageStatResponse', 'storageListRequest', 'storageListResponse', 'storageReadRequest', 'storageReadResponse', 'storageWriteRequest', 'storageDeleteRequest', 'storageMkdirRequest', 'storageMd5sumRequest', 'storageMd5sumResponse', 'appStartRequest', 'appLockStatusRequest', 'appLockStatusResponse', 'guiStartScreenStreamRequest', 'guiStopScreenStreamRequest', 'guiScreenStreamFrame', 'guiSendInputEventRequest']),
+      get: $util.oneOfGetter($oneOfFields = ['empty', 'stopSession', 'pingRequest', 'pingResponse', 'storageStatRequest', 'storageStatResponse', 'storageListRequest', 'storageListResponse', 'storageReadRequest', 'storageReadResponse', 'storageWriteRequest', 'storageDeleteRequest', 'storageMkdirRequest', 'storageMd5sumRequest', 'storageMd5sumResponse', 'appStartRequest', 'appLockStatusRequest', 'appLockStatusResponse', 'guiStartScreenStreamRequest', 'guiStopScreenStreamRequest', 'guiScreenFrame', 'guiSendInputEventRequest', 'guiStartVirtualDisplayRequest', 'guiStopVirtualDisplayRequest']),
       set: $util.oneOfSetter($oneOfFields)
     })
 
@@ -460,10 +464,12 @@ export const PB = $root.PB = (() => {
       if (message.stopSession != null && Object.hasOwnProperty.call(message, 'stopSession')) { $root.PB.StopSession.encode(message.stopSession, writer.uint32(154).fork()).ldelim() }
       if (message.guiStartScreenStreamRequest != null && Object.hasOwnProperty.call(message, 'guiStartScreenStreamRequest')) { $root.PB_Gui.StartScreenStreamRequest.encode(message.guiStartScreenStreamRequest, writer.uint32(162).fork()).ldelim() }
       if (message.guiStopScreenStreamRequest != null && Object.hasOwnProperty.call(message, 'guiStopScreenStreamRequest')) { $root.PB_Gui.StopScreenStreamRequest.encode(message.guiStopScreenStreamRequest, writer.uint32(170).fork()).ldelim() }
-      if (message.guiScreenStreamFrame != null && Object.hasOwnProperty.call(message, 'guiScreenStreamFrame')) { $root.PB_Gui.ScreenStreamFrame.encode(message.guiScreenStreamFrame, writer.uint32(178).fork()).ldelim() }
+      if (message.guiScreenFrame != null && Object.hasOwnProperty.call(message, 'guiScreenFrame')) { $root.PB_Gui.ScreenFrame.encode(message.guiScreenFrame, writer.uint32(178).fork()).ldelim() }
       if (message.guiSendInputEventRequest != null && Object.hasOwnProperty.call(message, 'guiSendInputEventRequest')) { $root.PB_Gui.SendInputEventRequest.encode(message.guiSendInputEventRequest, writer.uint32(186).fork()).ldelim() }
       if (message.storageStatRequest != null && Object.hasOwnProperty.call(message, 'storageStatRequest')) { $root.PB_Storage.StatRequest.encode(message.storageStatRequest, writer.uint32(194).fork()).ldelim() }
       if (message.storageStatResponse != null && Object.hasOwnProperty.call(message, 'storageStatResponse')) { $root.PB_Storage.StatResponse.encode(message.storageStatResponse, writer.uint32(202).fork()).ldelim() }
+      if (message.guiStartVirtualDisplayRequest != null && Object.hasOwnProperty.call(message, 'guiStartVirtualDisplayRequest')) { $root.PB_Gui.StartVirtualDisplayRequest.encode(message.guiStartVirtualDisplayRequest, writer.uint32(210).fork()).ldelim() }
+      if (message.guiStopVirtualDisplayRequest != null && Object.hasOwnProperty.call(message, 'guiStopVirtualDisplayRequest')) { $root.PB_Gui.StopVirtualDisplayRequest.encode(message.guiStopVirtualDisplayRequest, writer.uint32(218).fork()).ldelim() }
       return writer
     }
 
@@ -547,10 +553,16 @@ export const PB = $root.PB = (() => {
             message.guiStopScreenStreamRequest = $root.PB_Gui.StopScreenStreamRequest.decode(reader, reader.uint32())
             break
           case 22:
-            message.guiScreenStreamFrame = $root.PB_Gui.ScreenStreamFrame.decode(reader, reader.uint32())
+            message.guiScreenFrame = $root.PB_Gui.ScreenFrame.decode(reader, reader.uint32())
             break
           case 23:
             message.guiSendInputEventRequest = $root.PB_Gui.SendInputEventRequest.decode(reader, reader.uint32())
+            break
+          case 26:
+            message.guiStartVirtualDisplayRequest = $root.PB_Gui.StartVirtualDisplayRequest.decode(reader, reader.uint32())
+            break
+          case 27:
+            message.guiStopVirtualDisplayRequest = $root.PB_Gui.StopVirtualDisplayRequest.decode(reader, reader.uint32())
             break
           default:
             reader.skipType(tag & 7)
@@ -594,6 +606,8 @@ export const PB = $root.PB = (() => {
           case 18:
           case 16:
           case 17:
+          case 19:
+          case 20:
             break
         }
       }
@@ -759,12 +773,12 @@ export const PB = $root.PB = (() => {
           if (error) { return 'guiStopScreenStreamRequest.' + error }
         }
       }
-      if (message.guiScreenStreamFrame != null && message.hasOwnProperty('guiScreenStreamFrame')) {
+      if (message.guiScreenFrame != null && message.hasOwnProperty('guiScreenFrame')) {
         if (properties.content === 1) { return 'content: multiple values' }
         properties.content = 1
         {
-          const error = $root.PB_Gui.ScreenStreamFrame.verify(message.guiScreenStreamFrame)
-          if (error) { return 'guiScreenStreamFrame.' + error }
+          const error = $root.PB_Gui.ScreenFrame.verify(message.guiScreenFrame)
+          if (error) { return 'guiScreenFrame.' + error }
         }
       }
       if (message.guiSendInputEventRequest != null && message.hasOwnProperty('guiSendInputEventRequest')) {
@@ -773,6 +787,22 @@ export const PB = $root.PB = (() => {
         {
           const error = $root.PB_Gui.SendInputEventRequest.verify(message.guiSendInputEventRequest)
           if (error) { return 'guiSendInputEventRequest.' + error }
+        }
+      }
+      if (message.guiStartVirtualDisplayRequest != null && message.hasOwnProperty('guiStartVirtualDisplayRequest')) {
+        if (properties.content === 1) { return 'content: multiple values' }
+        properties.content = 1
+        {
+          const error = $root.PB_Gui.StartVirtualDisplayRequest.verify(message.guiStartVirtualDisplayRequest)
+          if (error) { return 'guiStartVirtualDisplayRequest.' + error }
+        }
+      }
+      if (message.guiStopVirtualDisplayRequest != null && message.hasOwnProperty('guiStopVirtualDisplayRequest')) {
+        if (properties.content === 1) { return 'content: multiple values' }
+        properties.content = 1
+        {
+          const error = $root.PB_Gui.StopVirtualDisplayRequest.verify(message.guiStopVirtualDisplayRequest)
+          if (error) { return 'guiStopVirtualDisplayRequest.' + error }
         }
       }
       return null
@@ -859,6 +889,14 @@ export const PB = $root.PB = (() => {
         case 17:
           message.commandStatus = 17
           break
+        case 'ERROR_VIRTUAL_DISPLAY_ALREADY_STARTED':
+        case 19:
+          message.commandStatus = 19
+          break
+        case 'ERROR_VIRTUAL_DISPLAY_NOT_STARTED':
+        case 20:
+          message.commandStatus = 20
+          break
       }
       if (object.hasNext != null) { message.hasNext = Boolean(object.hasNext) }
       if (object.empty != null) {
@@ -941,13 +979,21 @@ export const PB = $root.PB = (() => {
         if (typeof object.guiStopScreenStreamRequest !== 'object') { throw TypeError('.PB.Main.guiStopScreenStreamRequest: object expected') }
         message.guiStopScreenStreamRequest = $root.PB_Gui.StopScreenStreamRequest.fromObject(object.guiStopScreenStreamRequest)
       }
-      if (object.guiScreenStreamFrame != null) {
-        if (typeof object.guiScreenStreamFrame !== 'object') { throw TypeError('.PB.Main.guiScreenStreamFrame: object expected') }
-        message.guiScreenStreamFrame = $root.PB_Gui.ScreenStreamFrame.fromObject(object.guiScreenStreamFrame)
+      if (object.guiScreenFrame != null) {
+        if (typeof object.guiScreenFrame !== 'object') { throw TypeError('.PB.Main.guiScreenFrame: object expected') }
+        message.guiScreenFrame = $root.PB_Gui.ScreenFrame.fromObject(object.guiScreenFrame)
       }
       if (object.guiSendInputEventRequest != null) {
         if (typeof object.guiSendInputEventRequest !== 'object') { throw TypeError('.PB.Main.guiSendInputEventRequest: object expected') }
         message.guiSendInputEventRequest = $root.PB_Gui.SendInputEventRequest.fromObject(object.guiSendInputEventRequest)
+      }
+      if (object.guiStartVirtualDisplayRequest != null) {
+        if (typeof object.guiStartVirtualDisplayRequest !== 'object') { throw TypeError('.PB.Main.guiStartVirtualDisplayRequest: object expected') }
+        message.guiStartVirtualDisplayRequest = $root.PB_Gui.StartVirtualDisplayRequest.fromObject(object.guiStartVirtualDisplayRequest)
+      }
+      if (object.guiStopVirtualDisplayRequest != null) {
+        if (typeof object.guiStopVirtualDisplayRequest !== 'object') { throw TypeError('.PB.Main.guiStopVirtualDisplayRequest: object expected') }
+        message.guiStopVirtualDisplayRequest = $root.PB_Gui.StopVirtualDisplayRequest.fromObject(object.guiStopVirtualDisplayRequest)
       }
       return message
     }
@@ -1035,9 +1081,9 @@ export const PB = $root.PB = (() => {
         object.guiStopScreenStreamRequest = $root.PB_Gui.StopScreenStreamRequest.toObject(message.guiStopScreenStreamRequest, options)
         if (options.oneofs) { object.content = 'guiStopScreenStreamRequest' }
       }
-      if (message.guiScreenStreamFrame != null && message.hasOwnProperty('guiScreenStreamFrame')) {
-        object.guiScreenStreamFrame = $root.PB_Gui.ScreenStreamFrame.toObject(message.guiScreenStreamFrame, options)
-        if (options.oneofs) { object.content = 'guiScreenStreamFrame' }
+      if (message.guiScreenFrame != null && message.hasOwnProperty('guiScreenFrame')) {
+        object.guiScreenFrame = $root.PB_Gui.ScreenFrame.toObject(message.guiScreenFrame, options)
+        if (options.oneofs) { object.content = 'guiScreenFrame' }
       }
       if (message.guiSendInputEventRequest != null && message.hasOwnProperty('guiSendInputEventRequest')) {
         object.guiSendInputEventRequest = $root.PB_Gui.SendInputEventRequest.toObject(message.guiSendInputEventRequest, options)
@@ -1050,6 +1096,14 @@ export const PB = $root.PB = (() => {
       if (message.storageStatResponse != null && message.hasOwnProperty('storageStatResponse')) {
         object.storageStatResponse = $root.PB_Storage.StatResponse.toObject(message.storageStatResponse, options)
         if (options.oneofs) { object.content = 'storageStatResponse' }
+      }
+      if (message.guiStartVirtualDisplayRequest != null && message.hasOwnProperty('guiStartVirtualDisplayRequest')) {
+        object.guiStartVirtualDisplayRequest = $root.PB_Gui.StartVirtualDisplayRequest.toObject(message.guiStartVirtualDisplayRequest, options)
+        if (options.oneofs) { object.content = 'guiStartVirtualDisplayRequest' }
+      }
+      if (message.guiStopVirtualDisplayRequest != null && message.hasOwnProperty('guiStopVirtualDisplayRequest')) {
+        object.guiStopVirtualDisplayRequest = $root.PB_Gui.StopVirtualDisplayRequest.toObject(message.guiStopVirtualDisplayRequest, options)
+        if (options.oneofs) { object.content = 'guiStopVirtualDisplayRequest' }
       }
       return object
     }
@@ -2124,12 +2178,15 @@ export const PB_Status = $root.PB_Status = (() => {
       }
     }
 
+    PingRequest.prototype.data = $util.newBuffer([])
+
     PingRequest.create = function create (properties) {
       return new PingRequest(properties)
     }
 
     PingRequest.encode = function encode (message, writer) {
       if (!writer) { writer = $Writer.create() }
+      if (message.data != null && Object.hasOwnProperty.call(message, 'data')) { writer.uint32(10).bytes(message.data) }
       return writer
     }
 
@@ -2143,6 +2200,9 @@ export const PB_Status = $root.PB_Status = (() => {
       while (reader.pos < end) {
         const tag = reader.uint32()
         switch (tag >>> 3) {
+          case 1:
+            message.data = reader.bytes()
+            break
           default:
             reader.skipType(tag & 7)
             break
@@ -2158,16 +2218,32 @@ export const PB_Status = $root.PB_Status = (() => {
 
     PingRequest.verify = function verify (message) {
       if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.data != null && message.hasOwnProperty('data')) {
+        if (!(message.data && typeof message.data.length === 'number' || $util.isString(message.data))) { return 'data: buffer expected' }
+      }
       return null
     }
 
     PingRequest.fromObject = function fromObject (object) {
       if (object instanceof $root.PB_Status.PingRequest) { return object }
-      return new $root.PB_Status.PingRequest()
+      const message = new $root.PB_Status.PingRequest()
+      if (object.data != null) {
+        if (typeof object.data === 'string') { $util.base64.decode(object.data, message.data = $util.newBuffer($util.base64.length(object.data)), 0) } else if (object.data.length) { message.data = object.data }
+      }
+      return message
     }
 
-    PingRequest.toObject = function toObject () {
-      return {}
+    PingRequest.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) {
+        if (options.bytes === String) { object.data = '' } else {
+          object.data = []
+          if (options.bytes !== Array) { object.data = $util.newBuffer(object.data) }
+        }
+      }
+      if (message.data != null && message.hasOwnProperty('data')) { object.data = options.bytes === String ? $util.base64.encode(message.data, 0, message.data.length) : options.bytes === Array ? Array.prototype.slice.call(message.data) : message.data }
+      return object
     }
 
     PingRequest.prototype.toJSON = function toJSON () {
@@ -2186,12 +2262,15 @@ export const PB_Status = $root.PB_Status = (() => {
       }
     }
 
+    PingResponse.prototype.data = $util.newBuffer([])
+
     PingResponse.create = function create (properties) {
       return new PingResponse(properties)
     }
 
     PingResponse.encode = function encode (message, writer) {
       if (!writer) { writer = $Writer.create() }
+      if (message.data != null && Object.hasOwnProperty.call(message, 'data')) { writer.uint32(10).bytes(message.data) }
       return writer
     }
 
@@ -2205,6 +2284,9 @@ export const PB_Status = $root.PB_Status = (() => {
       while (reader.pos < end) {
         const tag = reader.uint32()
         switch (tag >>> 3) {
+          case 1:
+            message.data = reader.bytes()
+            break
           default:
             reader.skipType(tag & 7)
             break
@@ -2220,16 +2302,32 @@ export const PB_Status = $root.PB_Status = (() => {
 
     PingResponse.verify = function verify (message) {
       if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.data != null && message.hasOwnProperty('data')) {
+        if (!(message.data && typeof message.data.length === 'number' || $util.isString(message.data))) { return 'data: buffer expected' }
+      }
       return null
     }
 
     PingResponse.fromObject = function fromObject (object) {
       if (object instanceof $root.PB_Status.PingResponse) { return object }
-      return new $root.PB_Status.PingResponse()
+      const message = new $root.PB_Status.PingResponse()
+      if (object.data != null) {
+        if (typeof object.data === 'string') { $util.base64.decode(object.data, message.data = $util.newBuffer($util.base64.length(object.data)), 0) } else if (object.data.length) { message.data = object.data }
+      }
+      return message
     }
 
-    PingResponse.toObject = function toObject () {
-      return {}
+    PingResponse.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) {
+        if (options.bytes === String) { object.data = '' } else {
+          object.data = []
+          if (options.bytes !== Array) { object.data = $util.newBuffer(object.data) }
+        }
+      }
+      if (message.data != null && message.hasOwnProperty('data')) { object.data = options.bytes === String ? $util.base64.encode(message.data, 0, message.data.length) : options.bytes === Array ? Array.prototype.slice.call(message.data) : message.data }
+      return object
     }
 
     PingResponse.prototype.toJSON = function toJSON () {
@@ -2264,6 +2362,90 @@ export const PB_Gui = $root.PB_Gui = (() => {
     values[valuesById[3] = 'LONG'] = 3
     values[valuesById[4] = 'REPEAT'] = 4
     return values
+  })()
+
+  PB_Gui.ScreenFrame = (function () {
+    function ScreenFrame (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    ScreenFrame.prototype.data = $util.newBuffer([])
+
+    ScreenFrame.create = function create (properties) {
+      return new ScreenFrame(properties)
+    }
+
+    ScreenFrame.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      if (message.data != null && Object.hasOwnProperty.call(message, 'data')) { writer.uint32(10).bytes(message.data) }
+      return writer
+    }
+
+    ScreenFrame.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    ScreenFrame.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_Gui.ScreenFrame()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          case 1:
+            message.data = reader.bytes()
+            break
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    ScreenFrame.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    ScreenFrame.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.data != null && message.hasOwnProperty('data')) {
+        if (!(message.data && typeof message.data.length === 'number' || $util.isString(message.data))) { return 'data: buffer expected' }
+      }
+      return null
+    }
+
+    ScreenFrame.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_Gui.ScreenFrame) { return object }
+      const message = new $root.PB_Gui.ScreenFrame()
+      if (object.data != null) {
+        if (typeof object.data === 'string') { $util.base64.decode(object.data, message.data = $util.newBuffer($util.base64.length(object.data)), 0) } else if (object.data.length) { message.data = object.data }
+      }
+      return message
+    }
+
+    ScreenFrame.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) {
+        if (options.bytes === String) { object.data = '' } else {
+          object.data = []
+          if (options.bytes !== Array) { object.data = $util.newBuffer(object.data) }
+        }
+      }
+      if (message.data != null && message.hasOwnProperty('data')) { object.data = options.bytes === String ? $util.base64.encode(message.data, 0, message.data.length) : options.bytes === Array ? Array.prototype.slice.call(message.data) : message.data }
+      return object
+    }
+
+    ScreenFrame.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return ScreenFrame
   })()
 
   PB_Gui.StartScreenStreamRequest = (function () {
@@ -2388,90 +2570,6 @@ export const PB_Gui = $root.PB_Gui = (() => {
     }
 
     return StopScreenStreamRequest
-  })()
-
-  PB_Gui.ScreenStreamFrame = (function () {
-    function ScreenStreamFrame (properties) {
-      if (properties) {
-        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
-          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
-        }
-      }
-    }
-
-    ScreenStreamFrame.prototype.data = $util.newBuffer([])
-
-    ScreenStreamFrame.create = function create (properties) {
-      return new ScreenStreamFrame(properties)
-    }
-
-    ScreenStreamFrame.encode = function encode (message, writer) {
-      if (!writer) { writer = $Writer.create() }
-      if (message.data != null && Object.hasOwnProperty.call(message, 'data')) { writer.uint32(10).bytes(message.data) }
-      return writer
-    }
-
-    ScreenStreamFrame.encodeDelimited = function encodeDelimited (message, writer) {
-      return this.encode(message, writer).ldelim()
-    }
-
-    ScreenStreamFrame.decode = function decode (reader, length) {
-      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
-      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_Gui.ScreenStreamFrame()
-      while (reader.pos < end) {
-        const tag = reader.uint32()
-        switch (tag >>> 3) {
-          case 1:
-            message.data = reader.bytes()
-            break
-          default:
-            reader.skipType(tag & 7)
-            break
-        }
-      }
-      return message
-    }
-
-    ScreenStreamFrame.decodeDelimited = function decodeDelimited (reader) {
-      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
-      return this.decode(reader, reader.uint32())
-    }
-
-    ScreenStreamFrame.verify = function verify (message) {
-      if (typeof message !== 'object' || message === null) { return 'object expected' }
-      if (message.data != null && message.hasOwnProperty('data')) {
-        if (!(message.data && typeof message.data.length === 'number' || $util.isString(message.data))) { return 'data: buffer expected' }
-      }
-      return null
-    }
-
-    ScreenStreamFrame.fromObject = function fromObject (object) {
-      if (object instanceof $root.PB_Gui.ScreenStreamFrame) { return object }
-      const message = new $root.PB_Gui.ScreenStreamFrame()
-      if (object.data != null) {
-        if (typeof object.data === 'string') { $util.base64.decode(object.data, message.data = $util.newBuffer($util.base64.length(object.data)), 0) } else if (object.data.length) { message.data = object.data }
-      }
-      return message
-    }
-
-    ScreenStreamFrame.toObject = function toObject (message, options) {
-      if (!options) { options = {} }
-      const object = {}
-      if (options.defaults) {
-        if (options.bytes === String) { object.data = '' } else {
-          object.data = []
-          if (options.bytes !== Array) { object.data = $util.newBuffer(object.data) }
-        }
-      }
-      if (message.data != null && message.hasOwnProperty('data')) { object.data = options.bytes === String ? $util.base64.encode(message.data, 0, message.data.length) : options.bytes === Array ? Array.prototype.slice.call(message.data) : message.data }
-      return object
-    }
-
-    ScreenStreamFrame.prototype.toJSON = function toJSON () {
-      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
-    }
-
-    return ScreenStreamFrame
   })()
 
   PB_Gui.SendInputEventRequest = (function () {
@@ -2627,6 +2725,130 @@ export const PB_Gui = $root.PB_Gui = (() => {
     }
 
     return SendInputEventRequest
+  })()
+
+  PB_Gui.StartVirtualDisplayRequest = (function () {
+    function StartVirtualDisplayRequest (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    StartVirtualDisplayRequest.create = function create (properties) {
+      return new StartVirtualDisplayRequest(properties)
+    }
+
+    StartVirtualDisplayRequest.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      return writer
+    }
+
+    StartVirtualDisplayRequest.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    StartVirtualDisplayRequest.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_Gui.StartVirtualDisplayRequest()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    StartVirtualDisplayRequest.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    StartVirtualDisplayRequest.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      return null
+    }
+
+    StartVirtualDisplayRequest.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_Gui.StartVirtualDisplayRequest) { return object }
+      return new $root.PB_Gui.StartVirtualDisplayRequest()
+    }
+
+    StartVirtualDisplayRequest.toObject = function toObject () {
+      return {}
+    }
+
+    StartVirtualDisplayRequest.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return StartVirtualDisplayRequest
+  })()
+
+  PB_Gui.StopVirtualDisplayRequest = (function () {
+    function StopVirtualDisplayRequest (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    StopVirtualDisplayRequest.create = function create (properties) {
+      return new StopVirtualDisplayRequest(properties)
+    }
+
+    StopVirtualDisplayRequest.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      return writer
+    }
+
+    StopVirtualDisplayRequest.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    StopVirtualDisplayRequest.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_Gui.StopVirtualDisplayRequest()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    StopVirtualDisplayRequest.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    StopVirtualDisplayRequest.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      return null
+    }
+
+    StopVirtualDisplayRequest.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_Gui.StopVirtualDisplayRequest) { return object }
+      return new $root.PB_Gui.StopVirtualDisplayRequest()
+    }
+
+    StopVirtualDisplayRequest.toObject = function toObject () {
+      return {}
+    }
+
+    StopVirtualDisplayRequest.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return StopVirtualDisplayRequest
   })()
 
   return PB_Gui
