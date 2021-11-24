@@ -152,6 +152,7 @@ export default defineComponent({
         interval: undefined,
         delay: 500
       }),
+      backlightInterval: ref(undefined),
       file: ref(undefined),
       scaling: ref(1)
     }
@@ -202,7 +203,7 @@ export default defineComponent({
         }
       }
 
-      await pbCommands.guiScreenFrame(new Uint8Array(xbmBytes))
+      pbCommands.guiScreenFrame(new Uint8Array(xbmBytes))
     },
     toggleAutoStreaming () {
       if (this.autoStreaming.enabled) {
@@ -353,9 +354,19 @@ export default defineComponent({
     this.ctx.fillStyle = '#fe8a2c'
     this.ctx.fillRect(0, 0, 128, 64)
     this.save()
+
+    this.backlightInterval = setInterval(() => {
+      pbCommands.guiSendInputEvent(4, 0)
+      pbCommands.guiSendInputEvent(4, 2)
+      pbCommands.guiSendInputEvent(4, 1)
+    }, 10000)
   },
 
   beforeUnmount () {
+    if (this.autoStreaming.interval) {
+      clearInterval(this.autoStreaming.interval)
+    }
+    clearInterval(this.backlightInterval)
     this.stopSession()
   }
 })

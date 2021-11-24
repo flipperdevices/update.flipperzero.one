@@ -264,6 +264,26 @@ function guiScreenFrame (data) {
   })
 }
 
+function guiSendInputEvent (key, type) {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'guiSendInputEventRequest',
+      args: {
+        key: key,
+        type: type
+      }
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
 export {
   enqueue,
   sendRpcRequest,
@@ -276,5 +296,6 @@ export {
   storageDelete,
   guiStartVirtualDisplay,
   guiStopVirtualDisplay,
-  guiScreenFrame
+  guiScreenFrame,
+  guiSendInputEvent
 }
