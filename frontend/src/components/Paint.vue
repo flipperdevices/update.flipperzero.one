@@ -215,6 +215,11 @@ export default defineComponent({
         clearInterval(this.autoStreaming.interval)
       }
     },
+    enableBacklight () {
+      pbCommands.guiSendInputEvent(4, 0)
+      pbCommands.guiSendInputEvent(4, 2)
+      pbCommands.guiSendInputEvent(4, 1)
+    },
 
     clear () {
       this.save()
@@ -344,6 +349,7 @@ export default defineComponent({
 
   mounted () {
     this.startSession()
+    this.enableBacklight()
 
     this.ctx = this.$refs.canvas.getContext('2d')
     this.ctx.lineWidth = 1
@@ -355,11 +361,7 @@ export default defineComponent({
     this.ctx.fillRect(0, 0, 128, 64)
     this.save()
 
-    this.backlightInterval = setInterval(() => {
-      pbCommands.guiSendInputEvent(4, 0)
-      pbCommands.guiSendInputEvent(4, 2)
-      pbCommands.guiSendInputEvent(4, 1)
-    }, 10000)
+    this.backlightInterval = setInterval(this.enableBacklight, 10000)
   },
 
   beforeUnmount () {
