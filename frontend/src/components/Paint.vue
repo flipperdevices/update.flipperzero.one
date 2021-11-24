@@ -263,6 +263,7 @@ export default defineComponent({
             this.ctx.drawImage(img, 0, 0, 128, 64)
             const imageData = this.filter('orange')
             this.ctx.putImageData(imageData, 0, 0)
+            this.save()
           }
           img.src = event.target.result
         }
