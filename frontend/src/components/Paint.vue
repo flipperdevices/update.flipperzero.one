@@ -170,6 +170,8 @@ export default defineComponent({
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
       }
+
+      await this.enableBacklight()
     },
     async stopSession () {
       await pbCommands.guiStopVirtualDisplay()
@@ -215,10 +217,10 @@ export default defineComponent({
         clearInterval(this.autoStreaming.interval)
       }
     },
-    enableBacklight () {
-      pbCommands.guiSendInputEvent(4, 0)
-      pbCommands.guiSendInputEvent(4, 2)
-      pbCommands.guiSendInputEvent(4, 1)
+    async enableBacklight () {
+      await pbCommands.guiSendInputEvent(4, 0)
+      await pbCommands.guiSendInputEvent(4, 2)
+      await pbCommands.guiSendInputEvent(4, 1)
     },
 
     clear () {
@@ -349,7 +351,6 @@ export default defineComponent({
 
   mounted () {
     this.startSession()
-    this.enableBacklight()
 
     this.ctx = this.$refs.canvas.getContext('2d')
     this.ctx.lineWidth = 1
@@ -361,7 +362,7 @@ export default defineComponent({
     this.ctx.fillRect(0, 0, 128, 64)
     this.save()
 
-    this.backlightInterval = setInterval(this.enableBacklight, 10000)
+    this.backlightInterval = setInterval(this.enableBacklight, 15000)
   },
 
   beforeUnmount () {
