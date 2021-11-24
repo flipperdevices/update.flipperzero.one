@@ -74,7 +74,8 @@
             <q-slider
               v-model="ctx.lineWidth"
               :min="1"
-              :max="20"
+              :max="10"
+              :step="1"
               label
               label-always
               class="q-mt-lg"
@@ -86,8 +87,12 @@
         </q-item>
       </div>
 
-      <div class="canvas-container">
+      <div
+        :class="scaling === 1 ? 'canvas-container' : ''"
+        :style="scaling === 1 ? '' : 'margin-top:' + scaling * 16 + 'px;'"
+      >
         <canvas
+          :style="'transform: scale(' + scaling + ');'"
           width="128"
           height="64"
           ref="canvas"
@@ -97,6 +102,16 @@
         ></canvas>
       </div>
     </div>
+    <q-btn-toggle
+      v-model="scaling"
+      toggle-color="primary"
+      :options="[
+        {label: '1x', value: 1},
+        {label: '2x', value: 2},
+        {label: '4x', value: 4}
+      ]"
+      class="absolute-top-left q-ma-sm"
+    />
   </div>
 </template>
 
@@ -137,7 +152,8 @@ export default defineComponent({
         interval: undefined,
         delay: 500
       }),
-      file: ref(undefined)
+      file: ref(undefined),
+      scaling: ref(1)
     }
   },
 
@@ -202,8 +218,11 @@ export default defineComponent({
     clear () {
       this.save()
       this.ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height)
+      this.ctx.fillRect(0, 0, 128, 64)
     },
     save () {
+      const imageData = this.filter('orange')
+      this.ctx.putImageData(imageData, 0, 0)
       this.saveState.push(this.ctx.getImageData(0, 0, 128, 64))
       if (this.restoreState.length > 0) {
         this.restoreState = []
@@ -229,7 +248,7 @@ export default defineComponent({
     triggerUpload () {
       document.getElementById('file-upload').click()
     },
-    async upload (event) {
+    upload (event) {
       const file = event.target.files[0]
       if (file) {
         const reader = new FileReader()
@@ -241,7 +260,6 @@ export default defineComponent({
             return
           }
           img.onload = () => {
-            this.ctx.clearRect(0, 0, 128, 64)
             this.ctx.drawImage(img, 0, 0, 128, 64)
             const imageData = this.filter('orange')
             this.ctx.putImageData(imageData, 0, 0)
@@ -268,6 +286,7 @@ export default defineComponent({
       }
     },
     stroke (e) {
+      console.log(e.offsetX, e.offsetY)
       this.ctx.lineTo(e.offsetX, e.offsetY)
       this.ctx.stroke()
     },
@@ -330,6 +349,7 @@ export default defineComponent({
     this.ctx.lineCap = 'square'
     this.ctx.strokeStyle = 'black'
     this.ctx.imageSmoothingEnabled = false
+
     this.ctx.fillStyle = '#fe8a2c'
     this.ctx.fillRect(0, 0, 128, 64)
     this.save()
@@ -344,6 +364,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 canvas {
   border: 1px #00000080 solid;
+  image-rendering: pixelated;
 }
 .canvas-container {
   padding: 25px 46px 0 0;
