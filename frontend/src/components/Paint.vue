@@ -287,7 +287,6 @@ export default defineComponent({
       }
     },
     stroke (e) {
-      console.log(e.offsetX, e.offsetY)
       this.ctx.lineTo(e.offsetX, e.offsetY)
       this.ctx.stroke()
     },
