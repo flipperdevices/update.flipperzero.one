@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - dev
-      - ktq*
+      - ktq/ci_self_hosted
 
 jobs:
   build:
