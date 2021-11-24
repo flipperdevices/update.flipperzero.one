@@ -324,18 +324,32 @@
       </div>
     </div>
 
-    <q-btn
-      v-if="connection === 2"
-      flat
-      dense
-      :color="showTerminal ? 'grey-2' : 'grey-7'"
-      :icon="showTerminal ? evaCloseOutline : mdiConsole"
-      size="16px"
-      class="absolute-top-right q-ma-sm"
-      :class="showTerminal ? 'z-max' : 'z-top'"
-      :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
-      @click="toggleTerminal"
-    ></q-btn>
+    <div class="absolute-top-right">
+      <q-btn
+        v-if="!showPaint && connection === 2"
+        flat
+        dense
+        :color="showTerminal ? 'grey-2' : 'grey-7'"
+        :icon="showTerminal ? evaCloseOutline : mdiConsole"
+        size="16px"
+        class="q-ma-sm"
+        :class="showTerminal ? 'z-max' : 'z-top'"
+        :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
+        @click="toggleTerminal"
+      ></q-btn>
+
+      <q-btn
+        v-if="paintEnabled && connection === 2"
+        flat
+        dense
+        color="grey-7"
+        :icon="showPaint ? evaCloseOutline : evaBrushOutline"
+        size="16px"
+        class="q-ma-sm"
+        :class="showPaint ? 'z-max' : 'z-top'"
+        @click="togglePaint"
+      ></q-btn>
+    </div>
 
     <q-btn
       :disabled="connection === 3 && status === 3"
@@ -352,12 +366,18 @@
       :flipper="flipper"
       ref="Terminal"
     />
+
+    <Paint
+      v-if="paintEnabled && showPaint"
+      :flipper="flipper"
+    />
   </div>
 </template>
 
 <script>
 import { defineComponent, ref, watch } from 'vue'
 import Terminal from './Terminal.vue'
+import Paint from './Paint.vue'
 import { Flipper, emitter } from './updater/core'
 
 import {
@@ -388,14 +408,16 @@ import {
   evaArrowUpwardOutline,
   evaAlertCircleOutline,
   evaRefreshOutline,
-  evaCloseOutline
+  evaCloseOutline,
+  evaBrushOutline
 } from '@quasar/extras/eva-icons'
 
 export default defineComponent({
   name: 'Updater',
 
   components: {
-    Terminal
+    Terminal,
+    Paint
   },
 
   props: {
@@ -455,6 +477,7 @@ export default defineComponent({
       isUpdating: ref(false),
       mode: ref('serial'),
       newerThanLTS: ref(false),
+      paintEnabled: ref(false),
       progress: ref({
         current: 0,
         max: 1,
@@ -470,6 +493,7 @@ export default defineComponent({
       }),
       showArrows: ref(false),
       showOverlay: ref(false),
+      showPaint: ref(false),
       showTerminal: ref(false),
       showUsbRecognizeButton: ref(false),
       terminalEnabled: ref(false),
@@ -1055,6 +1079,14 @@ export default defineComponent({
 
       this.showTerminal = !this.showTerminal
       document.querySelector('body').style.overflowY = this.showTerminal ? 'hidden' : 'auto'
+    },
+
+    async togglePaint () {
+      if (this.flipper.state.connection === 2 && this.flipper.state.status === 2) {
+        await this.flipper.closeReader()
+      }
+
+      this.showPaint = !this.showPaint
     }
   },
 
@@ -1066,6 +1098,7 @@ export default defineComponent({
     this.evaAlertCircleOutline = evaAlertCircleOutline
     this.evaRefreshOutline = evaRefreshOutline
     this.evaCloseOutline = evaCloseOutline
+    this.evaBrushOutline = evaBrushOutline
 
     window.addEventListener('keydown', (e) => {
       if (!this.showTerminal && e.key === 'Escape') {
@@ -1096,6 +1129,8 @@ export default defineComponent({
       this.autoReconnectEnabled = true
       localStorage.setItem('autoReconnectEnabled', '1')
     }
+
+    this.paintEnabled = document.location.search.includes('paint=true')
 
     this.connect()
 
