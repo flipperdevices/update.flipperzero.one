@@ -84,18 +84,25 @@
           <q-item-section side>
             <q-icon :name="mdiPencilPlus" />
           </q-item-section>
+          <q-checkbox v-model="pixelGrid" class="q-ml-md" label="Pixel grid" />
         </q-item>
       </div>
 
       <div
-        :class="scaling === 1 ? 'canvas-container' : ''"
-        :style="scaling === 1 ? '' : 'margin-top:' + scaling * 16 + 'px;'"
+        class="canvas-container"
+        :style="'transform: scale(' + scaling + ');'"
       >
+        <div
+          v-if="pixelGrid"
+          class="pixel-grid"
+          @mousedown="mouseDown"
+          @mouseup="mouseUp"
+          @mousemove="mouseMove"
+        ></div>
         <canvas
-          :style="'transform: scale(' + scaling + ');'"
-          width="128"
-          height="64"
-          ref="canvas"
+          width="256"
+          height="128"
+          ref="mainCanvas"
           @mousedown="mouseDown"
           @mouseup="mouseUp"
           @mousemove="mouseMove"
@@ -112,6 +119,13 @@
       ]"
       class="absolute-top-left q-ma-sm"
     />
+
+    <canvas
+      class="hidden"
+      width="128"
+      height="64"
+      ref="resizeCanvas"
+    ></canvas>
   </div>
 </template>
 
@@ -145,6 +159,7 @@ export default defineComponent({
       }),
       painting: ref(false),
       tool: ref('pencil'),
+      pixelGrid: ref(false),
       saveState: ref([]),
       restoreState: ref([]),
       autoStreaming: ref({
@@ -178,8 +193,9 @@ export default defineComponent({
       await pbCommands.stopRpcSession()
     },
     async sendFrame () {
-      const imageData = this.filter('monochrome')
-      const data = imageData.data
+      const resized = this.resize()
+      const filtered = this.filter('monochrome', resized)
+      const data = filtered.data
 
       let pixel = 0
       let atualRow = 1
@@ -225,13 +241,13 @@ export default defineComponent({
 
     clear () {
       this.save()
-      this.ctx.clearRect(0, 0, this.$refs.canvas.width, this.$refs.canvas.height)
-      this.ctx.fillRect(0, 0, 128, 64)
+      this.ctx.clearRect(0, 0, this.$refs.mainCanvas.width, this.$refs.mainCanvas.height)
+      this.ctx.fillRect(0, 0, 256, 128)
     },
     save () {
       const imageData = this.filter('orange')
       this.ctx.putImageData(imageData, 0, 0)
-      this.saveState.push(this.ctx.getImageData(0, 0, 128, 64))
+      this.saveState.push(this.ctx.getImageData(0, 0, 256, 128))
       if (this.restoreState.length > 0) {
         this.restoreState = []
       }
@@ -268,9 +284,7 @@ export default defineComponent({
             return
           }
           img.onload = () => {
-            this.ctx.drawImage(img, 0, 0, 128, 64)
-            const imageData = this.filter('orange')
-            this.ctx.putImageData(imageData, 0, 0)
+            this.ctx.drawImage(img, 0, 0, 256, 128)
             this.save()
           }
           img.src = event.target.result
@@ -291,17 +305,19 @@ export default defineComponent({
       if (this.painting) {
         this.stroke(e)
         this.ctx.beginPath()
-        this.ctx.moveTo(e.offsetX, e.offsetY)
+        this.ctx.moveTo(e.offsetX + e.offsetX % 2 - 1, e.offsetY + e.offsetY % 2 - 1)
       }
     },
     stroke (e) {
-      this.ctx.lineTo(e.offsetX, e.offsetY)
+      this.ctx.lineTo(e.offsetX + e.offsetX % 2 - 1, e.offsetY + e.offsetY % 2 - 1)
       this.ctx.stroke()
     },
-    filter (type) {
-      const imageData = this.ctx.getImageData(0, 0, 128, 64)
+    filter (type, imageData) {
+      if (!imageData) {
+        imageData = this.ctx.getImageData(0, 0, 256, 128)
+      }
       const data = imageData.data
-      const pixelsLength = 128 * 64
+      const pixelsLength = imageData.width * imageData.height
       for (let pixel = 0; pixel < pixelsLength; pixel++) {
         const pixelRed = data[pixel * 4]
         const pixelGreen = data[pixel * 4 + 1]
@@ -333,6 +349,16 @@ export default defineComponent({
       }
       return imageData
     },
+    resize () {
+      const resizeCtx = this.$refs.resizeCanvas.getContext('2d')
+      resizeCtx.scale(0.5, 0.5)
+      resizeCtx.drawImage(this.$refs.mainCanvas, 0, 0)
+      const resized = resizeCtx.getImageData(0, 0, 128, 64)
+      resizeCtx.scale(2, 2)
+      resizeCtx.fillStyle = '#ffff'
+      resizeCtx.fillRect(0, 0, 128, 64)
+      return resized
+    },
     toggleTool () {
       this.ctx.strokeStyle = this.tool === 'pencil' ? 'black' : '#fe8a2c'
     }
@@ -352,14 +378,15 @@ export default defineComponent({
   mounted () {
     this.startSession()
 
-    this.ctx = this.$refs.canvas.getContext('2d')
+    this.ctx = this.$refs.mainCanvas.getContext('2d')
     this.ctx.lineWidth = 1
     this.ctx.lineCap = 'square'
     this.ctx.strokeStyle = 'black'
     this.ctx.imageSmoothingEnabled = false
+    this.ctx.globalCompositeOperation = 'new content'
 
     this.ctx.fillStyle = '#fe8a2c'
-    this.ctx.fillRect(0, 0, 128, 64)
+    this.ctx.fillRect(0, 0, 256, 128)
     this.save()
 
     this.backlightInterval = setInterval(this.enableBacklight, 15000)
@@ -376,15 +403,23 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+#paint-wrapper {
+  border-radius: 10px;
+}
 canvas {
-  border: 1px #00000080 solid;
   image-rendering: pixelated;
 }
 .canvas-container {
-  padding: 25px 46px 0 0;
-  width: 360px;
-  height: 160px;
-  background-image: url(../assets/flipper_w.svg);
-  background-repeat: no-repeat;
+  width: 258px;
+  height: 130px;
+  border: 1px transparent solid;
+}
+.pixel-grid {
+  position: absolute;
+  width: 256px;
+  height: 128px;
+  background-size: 4px 4px;
+  background-position: 0px 0px;
+  background-image: repeating-conic-gradient( #fff0 0deg 90deg, #00000017 0 180deg);
 }
 </style>
