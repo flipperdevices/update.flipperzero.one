@@ -607,7 +607,7 @@ export default defineComponent({
         }, 4000)
       }
       if (this.isUpdating) {
-        console.log('⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
+        console.log('⎢ ⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
       }
       let i = 0
       while (!this.flipperResponds && i < 10) {
@@ -616,7 +616,7 @@ export default defineComponent({
         await sleep(100)
       }
       if (this.isUpdating) {
-        console.log('⎢ ⎣ parsed properties')
+        console.log('⎢ ⎢ ⎣ parsed properties')
       }
       if (this.cliResponseTimeout) {
         clearTimeout(this.cliResponseTimeout)
@@ -636,6 +636,7 @@ export default defineComponent({
       if (this.updateStage === 1) {
         this.updateCounter++
         console.log('⎡ Update #' + this.updateCounter, 'started')
+        console.log('⎢ Stage 1')
 
         this.blockButtons = true
         window.addEventListener('beforeunload', preventTabClose)
@@ -675,6 +676,7 @@ export default defineComponent({
       }
 
       if (this.updateStage === 2) {
+        console.log('⎢ Stage 2')
         this.blockButtons = true
         window.addEventListener('beforeunload', preventTabClose)
         this.showUsbRecognizeButton = false
@@ -683,7 +685,6 @@ export default defineComponent({
 
         const unbind = emitter.on('log progress', progress => {
           this.progress = progress
-          // console.log('   flashing firmware, stage ' + progress.stage + ': ' + progress.current + '/' + progress.max)
         })
 
         console.log('⎢ ⎡ begin writing firmware')
@@ -709,9 +710,11 @@ export default defineComponent({
               if (this.resources && this.flipper.properties.sdCardMounted) {
                 await sleep(500)
                 this.updateStage = 3
+                console.log('⎢ Stage 3')
                 await this.updateResources()
               } else if (this.internalStorageFiles) {
                 await sleep(500)
+                console.log('⎢ Stage 3')
                 this.updateStage = 3
                 await this.restoreSettings()
               }
