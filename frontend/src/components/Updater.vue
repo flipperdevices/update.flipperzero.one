@@ -185,11 +185,6 @@
                 </p>
               </div>
 
-              <div v-if="!checks.sha256" class="alert">
-                <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-                Check your connection and try again.
-              </div>
-
               <div v-if="!firmware.fileName.length && status === 1">
                 <div v-if="fwModel.value === 'custom'" class="alert">
                   <p>
@@ -286,9 +281,13 @@
             </template>
           </template>
           <template v-else>
-            <div class="alert">
+            <div class="alert" v-if="checks.sha256">
               <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
               <p class="q-mb-md">Don't disconnect your Flipper</p>
+            </div>
+            <div v-else class="alert">
+              <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+              Check your connection and try again.
             </div>
             <div v-if="showUsbRecognizeButton">
               <q-btn color="positive" padding="12px 30px" @click="recognizeDevice('usb')">Continue</q-btn>
@@ -616,6 +615,9 @@ export default defineComponent({
         if (!this.firmware.fileName.length) {
           this.firmware.loading = true
           await this.fetchFirmwareFile(this.fwModel.value)
+          if (!this.checks.sha256) {
+            return
+          }
           this.firmware.loading = false
         }
 
@@ -712,6 +714,11 @@ export default defineComponent({
           this.firmware.startAddress = startAddress
           this.checks.target = targetCheck
           this.checks.crc32 = crc32Check
+        })
+        .catch(error => {
+          if (error.message && error.message === 'SHA256 check failed') {
+            this.checks.sha256 = false
+          }
         })
     },
 
