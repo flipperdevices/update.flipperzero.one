@@ -235,7 +235,9 @@ async function readDir (path) {
   for (const file of files) {
     file.path = path + '/' + file.name
     if (file.type !== 1) {
+      emitter.emit('storageRead', { path: file.path, status: 'in progress' })
       file.data = await pbCommands.storageRead(file.path)
+      emitter.emit('storageRead', { path: file.path, status: 'ok' })
     } else {
       file.files = await readDir(file.path)
     }

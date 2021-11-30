@@ -26,7 +26,7 @@
       <div class="absolute-bottom-right q-mr-lg text-white text-right">
         <div v-if="error.isError" style="min-width: 200px">
           <q-btn
-            :disabled="connection === 3 && status === 3"
+            :disabled="connection === 3 && status === 3 && blockButtons"
             outline
             color="white"
             size="13px"
@@ -325,7 +325,7 @@
           </div>
         </div>
 
-        <div class="absolute-top-right">
+        <div v-if="!blockButtons" class="absolute-top-right">
           <q-btn
             v-if="!showPaint && connection === 2"
             flat
@@ -360,7 +360,7 @@
     </template>
 
     <q-btn
-      :disabled="connection === 3 && status === 3"
+      :disabled="blockButtons"
       flat
       color="grey-8"
       size="13px"
@@ -447,12 +447,15 @@ export default defineComponent({
       }
     )
     return {
+      updateCounter: ref(0),
       autoReconnectEnabled,
+      blockButtons: ref(false),
       checks: ref({
         crc32: true,
         sha256: true,
         target: true
       }),
+      cliResponseTimeout: ref(undefined),
       disconnectTime: ref(''),
       error: ref({
         isError: false,
@@ -594,15 +597,31 @@ export default defineComponent({
     },
 
     async readProperties () {
-      const responseCheck = setTimeout(() => {
-        if (!this.flipper.properties.name) {
-          this.error.isError = true
-          this.error.message = 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.'
-          this.error.button = this.mode
-        }
-      }, 2000)
-      await this.flipper.readProperties()
-      clearTimeout(responseCheck)
+      if (!this.isUpdating) {
+        this.cliResponseTimeout = setTimeout(() => {
+          if (!this.flipper.properties.name) {
+            this.error.isError = true
+            this.error.message = 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.'
+            this.error.button = this.mode
+          }
+        }, 4000)
+      }
+      if (this.isUpdating) {
+        console.log('⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
+      }
+      let i = 0
+      while (!this.flipperResponds && i < 10) {
+        await this.flipper.readProperties()
+        i++
+        await sleep(100)
+      }
+      if (this.isUpdating) {
+        console.log('⎢ ⎣ parsed properties')
+      }
+      if (this.cliResponseTimeout) {
+        clearTimeout(this.cliResponseTimeout)
+        this.cliResponseTimeout = undefined
+      }
       if (!this.error.isError) {
         this.compareVersions()
       }
@@ -611,7 +630,15 @@ export default defineComponent({
     // Update sequence
     async update () {
       this.isUpdating = true
+      function preventTabClose (event) {
+        event.returnValue = ''
+      }
       if (this.updateStage === 1) {
+        this.updateCounter++
+        console.log('⎡ Update #' + this.updateCounter, 'started')
+
+        this.blockButtons = true
+        window.addEventListener('beforeunload', preventTabClose)
         if (!this.firmware.fileName.length) {
           this.firmware.loading = true
           await this.fetchFirmwareFile(this.fwModel.value)
@@ -643,34 +670,40 @@ export default defineComponent({
         } else {
           this.updateStage = 2
         }
+        this.blockButtons = false
+        window.removeEventListener('beforeunload', preventTabClose)
       }
 
       if (this.updateStage === 2) {
+        this.blockButtons = true
+        window.addEventListener('beforeunload', preventTabClose)
         this.showUsbRecognizeButton = false
         await this.flipper.connect('usb')
         this.reconnecting = false
-        function preventTabClose (event) {
-          event.returnValue = ''
-        }
-        window.addEventListener('beforeunload', preventTabClose)
 
         const unbind = emitter.on('log progress', progress => {
           this.progress = progress
+          // console.log('   flashing firmware, stage ' + progress.stage + ': ' + progress.current + '/' + progress.max)
         })
 
+        console.log('⎢ ⎡ begin writing firmware')
         await this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
           .then(async () => {
-            window.removeEventListener('beforeunload', preventTabClose)
+            console.log('⎢ ⎣ end writing firmware')
+            unbind()
+            console.log('⎢ ⎡ rebooting to serial')
             if (this.mode === 'usb') {
               this.mode = 'serial'
             }
             this.reconnecting = true
             await waitForDevice('rebooted to serial')
+            console.log('⎢ ⎣ rebooted to serial')
             this.reconnecting = false
 
-            unbind()
-
+            console.log('⎢ ⎡ connecting')
             await this.connect()
+            console.log('⎢ ⎣ connected')
+            document.title = 'Flipper Zero Update Page'
 
             if (this.mode === 'serial') {
               if (this.resources && this.flipper.properties.sdCardMounted) {
@@ -681,18 +714,23 @@ export default defineComponent({
                 await sleep(500)
                 this.updateStage = 3
                 await this.restoreSettings()
-              } else {
-                console.log('this.resources:', this.resources, 'sdCard:', this.flipper.properties.sdCardMounted)
               }
             }
 
-            document.title = 'Flipper Zero Update Page'
-
+            this.blockButtons = false
+            window.removeEventListener('beforeunload', preventTabClose)
             this.updateStage = 1
             this.isUpdating = false
+
+            console.log('⎣ Update #' + this.updateCounter, 'finished')
+            // await sleep(3000)
+            // return this.update()
           })
           .catch(async error => {
+            console.log('⎣ Update #' + this.updateCounter, 'failed')
             console.log(error)
+            unbind()
+            document.title = 'Flipper Zero Update Page'
             this.error.isError = true
             if (error.message && error.message.includes('stall')) {
               this.error.message = 'Flipper USB port may be occupied by another process. Close it and try again.'
@@ -703,6 +741,8 @@ export default defineComponent({
             await this.flipper.disconnect()
             this.mode = 'serial'
             this.reconnecting = true
+            this.updateStage = 1
+            this.isUpdating = false
           })
       }
     },
@@ -752,6 +792,7 @@ export default defineComponent({
     },
 
     async backupSettings () {
+      console.log('⎢ ⎡ begin settings backup')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         console.log('Couldn\'t start rpc session:', startPing.error)
@@ -774,14 +815,24 @@ export default defineComponent({
           this.rpcStatus.operation = undefined
         }
       })
+
+      const unbindCQ = emitter.on('storageRead', c => {
+        const corner = c.status === 'ok' ? '⎣ ' : '⎡ '
+        console.log('⎢ ⎢ ' + corner + 'read', c.path, 'status:', c.status)
+      })
+
       this.internalStorageFiles = await readInternalStorage()
       await sleep(500)
 
       await pbCommands.stopRpcSession()
       unbind()
+      unbindCQ()
+      console.log('⎢ ⎣ end settings backup')
     },
 
     async restoreSettings (isVirtualDisplaySession) {
+      const nested = isVirtualDisplaySession ? '⎢ ' : ''
+      console.log('⎢ ' + nested + '⎡ begin settings restore')
       if (!isVirtualDisplaySession) {
         const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
         if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
@@ -793,6 +844,7 @@ export default defineComponent({
       }
 
       this.rpcStatus.command = undefined
+
       const unbind = emitter.on('writeInternalStorage', status => {
         if (status === 'start') {
           this.rpcStatus.operation = 'Restoring settings'
@@ -800,14 +852,23 @@ export default defineComponent({
           this.rpcStatus.operation = undefined
         }
       })
+
+      const unbindCQ = emitter.on('commandQueue/progress', c => {
+        const corner = c.status === 'ok' ? '⎣ ' : '⎡ '
+        console.log('⎢ ' + nested + '⎢ ' + corner + c.name, c.path, 'status:', c.status)
+      })
+
       await writeInternalStorage(this.internalStorageFiles)
 
       await pbCommands.guiStopVirtualDisplay()
 
       unbind()
+      unbindCQ()
+      console.log('⎢ ' + nested + '⎣ end settings restore')
     },
 
     async updateResources () {
+      console.log('⎢ ⎡ begin resource update')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         console.log('Couldn\'t start rpc session:', startPing.error)
@@ -847,15 +908,19 @@ export default defineComponent({
         const unbind = emitter.on('commandQueue/progress', c => {
           this.rpcStatus.operation = 'Writing static resources'
           this.rpcStatus.command = c
+          const corner = c.status === 'ok' ? '⎣ ' : '⎡ '
+          console.log('⎢ ⎢ ' + corner + c.name, c.path, 'status:', c.status)
         })
         const globalStart = Date.now()
         await commandQueue(queue)
-        console.log('Resources updated in ' + (Date.now() - globalStart) + ' ms')
+        console.log('⎢ ⎢  Resources updated in ' + (Date.now() - globalStart) + ' ms')
         unbind()
         await this.restoreSettings(true)
+        console.log('⎢ ⎣ end resource update')
       } catch (error) {
         console.log(error)
         await pbCommands.stopRpcSession()
+        console.log('⎢ ⎣ error during resource update')
       }
     },
 

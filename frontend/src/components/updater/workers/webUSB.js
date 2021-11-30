@@ -155,7 +155,7 @@ async function write ({ file, startAddress }) {
 
     process.events.on('write/end', async () => {
       writeTime.write = Date.now() - writeTime.write
-      console.log(`erased in ${writeTime.erase}ms, wrote in ${writeTime.write}ms, total ${writeTime.erase + writeTime.write}ms`)
+      console.log(`⎢ ⎢ erased in ${writeTime.erase}ms, wrote in ${writeTime.write}ms, total ${writeTime.erase + writeTime.write}ms`)
       clearInterval(logProgress)
       await disconnect()
       self.postMessage({
