@@ -83,248 +83,255 @@
     </q-card>
 
     <div v-show="!error.isError" class="connected q-mt-sm">
-      <q-card flat>
-        <q-card-section horizontal class="text-left">
-          <div class="col-6 flex flex-center flipper">
-            <img v-if="connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-              viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
-              <g>
-                <path :style="'opacity: 0.5; fill:' + ledColor" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
-              </g>
-              <circle :style="'fill:' + ledColor" cx="238.5" cy="94.5" r="2.5"/>
-            </svg>
-            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper_w.svg" />
-            <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper_b.svg" />
-          </div>
-          <div class="col-6 q-ml-xl" style="white-space: nowrap;">
-            <h5 class="q-mb-none">
-              <b>{{ flipper.properties.name }}&nbsp;</b>
-              <span v-if="reconnecting">reconnecting...</span>
-              <span v-else-if="connection">connected
-                <span v-if="connection === 3">
-                  <br />in recovery mode
+      <div v-if="flipperResponds">
+        <q-card flat>
+          <q-card-section horizontal class="text-left">
+            <div class="col-6 flex flex-center flipper">
+              <img v-if="connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
+              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
+                <g>
+                  <path :style="'opacity: 0.5; fill:' + ledColor" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
+                </g>
+                <circle :style="'fill:' + ledColor" cx="238.5" cy="94.5" r="2.5"/>
+              </svg>
+              <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper_w.svg" />
+              <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper_b.svg" />
+            </div>
+            <div class="col-6 q-ml-xl" style="white-space: nowrap;">
+              <h5 class="q-mb-none">
+                <b>{{ flipper.properties.name }}&nbsp;</b>
+                <span v-if="reconnecting">reconnecting...</span>
+                <span v-else-if="connection">connected
+                  <span v-if="connection === 3">
+                    <br />in recovery mode
+                  </span>
                 </span>
-              </span>
-              <span v-else class="text-accent">disconnected</span>
-            </h5>
-            <q-toggle
-              v-model="autoReconnectEnabled"
-              color="positive"
-              label="Auto-reconnect"
-              left-label
-            ></q-toggle>
-            <h5 v-if="mode === 'serial'">
-              Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery }}</span>
-            </h5>
-          </div>
-        </q-card-section>
-        <q-card-section v-if="mode === 'serial' && connection !== 1 && !reconnecting" horizontal class="text-left q-ma-md">
-          <q-card flat class="col-6">
-            <q-card-section horizontal>
-              <div class="properties">
-                <div><b>Device type:</b></div><div>{{ flipper.properties.type }}</div>
-                <div><b>Device name:</b></div><div>{{ flipper.properties.name }}</div>
-                <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.stm32Serial }}</div>
-                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
-                <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
-                <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
-                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
-              </div>
-            </q-card-section>
-          </q-card>
-          <q-card flat class="col-6 q-ml-xl">
-            <q-card-section horizontal>
-              <div class="properties">
-                <div><b>Firmware version:</b></div><div>{{ flipper.properties.firmwareVer !== 'unknown' ? flipper.properties.firmwareVer : flipper.properties.firmwareCommit }}</div>
-                <div><b>Firmware build:</b></div><div>{{ flipper.properties.firmwareBuild }}</div>
-                <div><b>Bootloader version:</b></div><div>{{ flipper.properties.bootloaderVer !== 'unknown' ? flipper.properties.bootloaderVer : flipper.properties.bootloaderCommit }}</div>
-                <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloaderBuild }}</div>
-                <div><b>FUS version:</b></div><div>{{ flipper.properties.radioFusFirmware }}</div>
-                <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radioFirmware }}</div>
-                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
-              </div>
-            </q-card-section>
-          </q-card>
-        </q-card-section>
-        <q-card-section v-if="mode === 'usb' && connection === 3 && !reconnecting" horizontal class="text-left q-ma-md">
-          <q-card flat class="col-6">
-            <q-card-section horizontal>
-              <div class="properties">
-                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
-                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
-              </div>
-            </q-card-section>
-          </q-card>
-          <q-card flat class="col-6 q-ml-xl">
-            <q-card-section horizontal>
-              <div class="properties">
-                <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
-                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
-              </div>
-            </q-card-section>
-          </q-card>
-        </q-card-section>
-      </q-card>
+                <span v-else class="text-accent">disconnected</span>
+              </h5>
+              <q-toggle
+                v-model="autoReconnectEnabled"
+                color="positive"
+                label="Auto-reconnect"
+                left-label
+              ></q-toggle>
+              <h5 v-if="mode === 'serial'">
+                Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery }}</span>
+              </h5>
+            </div>
+          </q-card-section>
+          <q-card-section v-if="mode === 'serial' && connection !== 1 && !reconnecting" horizontal class="text-left q-ma-md">
+            <q-card flat class="col-6">
+              <q-card-section horizontal>
+                <div class="properties">
+                  <div><b>Device type:</b></div><div>{{ flipper.properties.type }}</div>
+                  <div><b>Device name:</b></div><div>{{ flipper.properties.name }}</div>
+                  <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.stm32Serial }}</div>
+                  <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
+                  <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
+                  <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
+                  <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+            <q-card flat class="col-6 q-ml-xl">
+              <q-card-section horizontal>
+                <div class="properties">
+                  <div><b>Firmware version:</b></div><div>{{ flipper.properties.firmwareVer !== 'unknown' ? flipper.properties.firmwareVer : flipper.properties.firmwareCommit }}</div>
+                  <div><b>Firmware build:</b></div><div>{{ flipper.properties.firmwareBuild }}</div>
+                  <div><b>Bootloader version:</b></div><div>{{ flipper.properties.bootloaderVer !== 'unknown' ? flipper.properties.bootloaderVer : flipper.properties.bootloaderCommit }}</div>
+                  <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloaderBuild }}</div>
+                  <div><b>FUS version:</b></div><div>{{ flipper.properties.radioFusFirmware }}</div>
+                  <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radioFirmware }}</div>
+                  <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </q-card-section>
+          <q-card-section v-if="mode === 'usb' && connection === 3 && !reconnecting" horizontal class="text-left q-ma-md">
+            <q-card flat class="col-6">
+              <q-card-section horizontal>
+                <div class="properties">
+                  <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
+                  <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+            <q-card flat class="col-6 q-ml-xl">
+              <q-card-section horizontal>
+                <div class="properties">
+                  <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
+                  <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </q-card-section>
+        </q-card>
 
-      <div v-if="!isUpdating">
-        <div v-if="!reconnecting">
-          <div v-if="isOutdated && connection === 2" id="outdated">
-            <p v-if="!firmware.fileName.length">
-              Your firmware is outdated, latest release is <b>{{ release.version }}</b>
-            </p>
-          </div>
-          <div v-if="isOutdated === false && connection === 2" id="up-to-date">
-            <p v-if="!firmware.fileName.length && !newerThanLTS">
-              Your firmware is up to date.
-            </p>
-            <p v-if="!firmware.fileName.length && newerThanLTS">
-              Your firmware version is ahead of latest release.
-            </p>
-          </div>
-
-          <div v-if="!checks.sha256" class="alert">
-            <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-            Check your connection and try again.
-          </div>
-
-          <div v-if="!firmware.fileName.length && status === 1">
-            <div v-if="fwModel.value === 'custom'" class="alert">
-              <p class="ellipsis">
-                <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+        <div v-if="!isUpdating">
+          <div v-if="!reconnecting">
+            <div v-if="isOutdated && connection === 2" id="outdated">
+              <p v-if="!firmware.fileName.length">
+                Your firmware is outdated, latest release is <b>{{ release.version }}</b>
               </p>
-              This firmware might be <b>malicious</b> and might <b>break your device</b>!
+            </div>
+            <div v-if="isOutdated === false && connection === 2" id="up-to-date">
+              <p v-if="!firmware.fileName.length && !newerThanLTS">
+                Your firmware is up to date.
+              </p>
+              <p v-if="!firmware.fileName.length && newerThanLTS">
+                Your firmware version is ahead of latest release.
+              </p>
             </div>
 
-            <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
-              <q-select
-                v-model="fwModel"
-                :options="fwOptions"
-                label="Choose firmware"
-                :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-                id="fw-select"
-                :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
-              >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps">
-                    <q-item-section class="items-start">
-                      <q-item-label v-html="scope.opt.label" />
-                    </q-item-section>
-                    <q-item-section class="items-end">
-                      <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
+            <div v-if="!checks.sha256" class="alert">
+              <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+              Check your connection and try again.
+            </div>
+
+            <div v-if="!firmware.fileName.length && status === 1">
+              <div v-if="fwModel.value === 'custom'" class="alert">
+                <p class="ellipsis">
+                  <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+                </p>
+                This firmware might be <b>malicious</b> and might <b>break your device</b>!
+              </div>
+
+              <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
+                <q-select
+                  v-model="fwModel"
+                  :options="fwOptions"
+                  label="Choose firmware"
+                  :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+                  id="fw-select"
+                  :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
+                >
+                  <template v-slot:option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section class="items-start">
+                        <q-item-label v-html="scope.opt.label" />
+                      </q-item-section>
+                      <q-item-section class="items-end">
+                        <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+                <q-btn
+                  :loading="firmware.loading"
+                  v-if="fwModel"
+                  @click="update"
+                  color="positive"
+                  padding="12px 30px"
+                  class="q-ml-lg"
+                  :class="!$q.screen.xs ? '' : 'q-mt-sm'"
+                >Flash</q-btn>
+              </div>
+            </div>
+
+            <div v-if="firmware.fileName.length">
+              <div v-if="!checks.crc32" class="alert">
+                <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
+              </div>
+
+              <div v-if="!checks.target" class="alert">
+                <p>
+                    <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+                </p>
+                This firmware might break your device!
+              </div>
+            </div>
+
+            <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
+              <p v-if="!firmware.fileName.length" class="q-mt-xl">
+                Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
+              </p>
               <q-btn
-                :loading="firmware.loading"
-                v-if="fwModel"
+                v-if="firmware.fileName.length && checks.crc32 && checks.target"
                 @click="update"
                 color="positive"
                 padding="12px 30px"
+              >Flash {{ firmware.fileName }}</q-btn>
+              <q-btn
+                v-if="firmware.fileName.length"
+                @click="cancelUpload"
+                :flat="checks.target"
+                :color="checks.target ? '' : 'positive'"
+                :class="checks.crc32 ? 'q-ml-lg' : ''"
+                padding="12px 30px"
+              >Cancel</q-btn>
+              <q-btn
+                v-if="!checks.target"
+                flat
+                color="grey-8"
+                @click="update"
+                padding="12px 30px"
                 class="q-ml-lg"
-                :class="!$q.screen.xs ? '' : 'q-mt-sm'"
-              >Flash</q-btn>
+              >Flash anyway</q-btn>
+            </div>
+
+            <div v-if="connection === 0 && !reconnecting" class="flex column flex-center alert">
+              <span>Information is valid on {{ disconnectTime }}</span>
+              <q-btn
+                color="positive"
+                padding="12px 30px"
+                size="13px"
+                class="q-ma-sm"
+                @click="connect"
+              >
+                Reconnect
+              </q-btn>
             </div>
           </div>
-
-          <div v-if="firmware.fileName.length">
-            <div v-if="!checks.crc32" class="alert">
-              <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
-            </div>
-
-            <div v-if="!checks.target" class="alert">
-              <p>
-                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
-              </p>
-              This firmware might break your device!
-            </div>
+        </div>
+        <div v-else>
+          <div class="alert">
+            <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
+            <p class="q-mb-md">Don't disconnect your Flipper</p>
           </div>
-
-          <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
-            <p v-if="!firmware.fileName.length" class="q-mt-xl">
-              Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
-            </p>
-            <q-btn
-              v-if="firmware.fileName.length && checks.crc32 && checks.target"
-              @click="update"
+          <div v-if="showUsbRecognizeButton">
+            <q-btn color="positive" padding="12px 30px" @click="recognizeDevice('usb')">Continue</q-btn>
+          </div>
+          <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
+            <q-linear-progress
+              rounded
+              size="2.25rem"
+              :value="progress.current / progress.max"
               color="positive"
-              padding="12px 30px"
-            >Flash {{ firmware.fileName }}</q-btn>
-            <q-btn
-              v-if="firmware.fileName.length"
-              @click="cancelUpload"
-              :flat="checks.target"
-              :color="checks.target ? '' : 'positive'"
-              :class="checks.crc32 ? 'q-ml-lg' : ''"
-              padding="12px 30px"
-            >Cancel</q-btn>
-            <q-btn
-              v-if="!checks.target"
-              flat
-              color="grey-8"
-              @click="update"
-              padding="12px 30px"
-              class="q-ml-lg"
-            >Flash anyway</q-btn>
-          </div>
-
-          <div v-if="connection === 0 && !reconnecting" class="flex column flex-center alert">
-            <span>Information is valid on {{ disconnectTime }}</span>
-            <q-btn
-              color="positive"
-              padding="12px 30px"
-              size="13px"
-              class="q-ma-sm"
-              @click="connect"
+              class="q-mt-sm q-mb-lg"
             >
-              Reconnect
-            </q-btn>
+              <div class="absolute-full flex flex-center">
+                <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+              </div>
+            </q-linear-progress>
           </div>
         </div>
-      </div>
-      <div v-else>
-        <div class="alert">
-          <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
-          <p class="q-mb-md">Don't disconnect your Flipper</p>
-        </div>
-        <div v-if="showUsbRecognizeButton">
-          <q-btn color="positive" padding="12px 30px" @click="recognizeDevice('usb')">Continue</q-btn>
-        </div>
-        <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
-          <q-linear-progress
-            rounded
-            size="2.25rem"
-            :value="progress.current / progress.max"
-            color="positive"
-            class="q-mt-sm q-mb-lg"
-          >
-            <div class="absolute-full flex flex-center">
-              <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
-            </div>
-          </q-linear-progress>
-        </div>
-      </div>
 
-      <div v-if="reconnecting && connection < 2 || rpcStatus.isSession && rpcStatus.operation" class="flex column flex-center q-ma-lg">
-        <q-spinner
-          v-if="!isUpdating"
-          color="accent"
-          size="3em"
-        ></q-spinner>
-        <p v-if="reconnecting && !showUsbRecognizeButton" class="q-ma-sm"><code>Preparing Flipper...</code></p>
-        <p v-else-if="rpcStatus.operation" class="q-ma-sm">
-            <code>
-              {{ rpcStatus.operation }}
-              <span v-if="rpcStatus.command">
-                :&nbsp; {{ rpcStatus.command.name + ' ' +  rpcStatus.command.path }}
-              </span>
-            </code>
-        </p>
+        <div v-if="reconnecting && connection < 2 || rpcStatus.isSession && rpcStatus.operation" class="flex column flex-center q-ma-lg">
+          <q-spinner
+            v-if="!isUpdating"
+            color="accent"
+            size="3em"
+          ></q-spinner>
+          <p v-if="reconnecting && !showUsbRecognizeButton" class="q-ma-sm"><code>Preparing Flipper...</code></p>
+          <p v-else-if="rpcStatus.operation" class="q-ma-sm">
+              <code>
+                {{ rpcStatus.operation }}
+                <span v-if="rpcStatus.command">
+                  :&nbsp; {{ rpcStatus.command.name + ' ' +  rpcStatus.command.path }}
+                </span>
+              </code>
+          </p>
+        </div>
       </div>
+      <q-spinner
+        v-else
+        color="accent"
+        size="3em"
+      ></q-spinner>
     </div>
 
-    <div class="absolute-top-right">
+    <div class="absolute-top-right" v-if="!this.error.isError && flipperResponds">
       <q-btn
         v-if="!showPaint && connection === 2"
         flat
@@ -537,6 +544,9 @@ export default defineComponent({
     },
     status () {
       return this.flipper.state.status
+    },
+    flipperResponds () {
+      return !!this.flipper.properties.name
     }
   },
 
@@ -558,6 +568,11 @@ export default defineComponent({
           .catch(async error => {
             if (error.message && error.message.includes('No known')) {
               return this.recognizeDevice(this.mode)
+            } else {
+              if (error.message && error.message.includes('Failed to open')) {
+                throw new Error('Flipper serial port may be occupied by another process, close it and try again.')
+              }
+              throw error
             }
           })
 
@@ -573,8 +588,18 @@ export default defineComponent({
     },
 
     async readProperties () {
+      const responseCheck = setTimeout(() => {
+        if (!this.flipper.properties.name) {
+          this.error.isError = true
+          this.error.message = 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.'
+          this.error.button = this.mode
+        }
+      }, 2000)
       await this.flipper.readProperties()
-      this.compareVersions()
+      clearTimeout(responseCheck)
+      if (!this.error.isError) {
+        this.compareVersions()
+      }
     },
 
     // Update sequence
@@ -661,7 +686,7 @@ export default defineComponent({
             console.log(error)
             this.error.isError = true
             if (error.message && error.message.includes('stall')) {
-              this.error.message = 'Flipper USB port is occupied by another process. Close it and try again.'
+              this.error.message = 'Flipper USB port may be occupied by another process. Close it and try again.'
             } else {
               this.error.message = error
             }
