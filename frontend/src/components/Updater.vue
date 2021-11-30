@@ -117,7 +117,7 @@
                   left-label
                 ></q-toggle>
                 <h5 v-if="mode === 'serial'">
-                  Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery }}</span>
+                  Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery ? flipper.properties.battery : 'undefined' }}</span>
                 </h5>
               </div>
             </q-card-section>

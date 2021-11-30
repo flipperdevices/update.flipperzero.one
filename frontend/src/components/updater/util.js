@@ -61,6 +61,9 @@ function parseOutputText (text) {
   lines.forEach(line => {
     if (line.includes('State of Charge: ')) {
       properties.battery = line.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
+      if (properties.battery[0] === ':') {
+        properties.battery = properties.battery.slice(1)
+      }
       return
     }
 
