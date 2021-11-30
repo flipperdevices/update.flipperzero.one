@@ -192,8 +192,8 @@
 
               <div v-if="!firmware.fileName.length && status === 1">
                 <div v-if="fwModel.value === 'custom'" class="alert">
-                  <p class="ellipsis">
-                    <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/>{{ this['custom'].url }}!
+                  <p>
+                    <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/><b>{{ this['custom'].url }}</b>
                   </p>
                   This firmware might be <b>malicious</b> and might <b>break your device</b>!
                 </div>
