@@ -40,34 +40,42 @@ class Operation {
 }
 const operation = new Operation()
 
-const serial = new Worker(new URL('./workers/webSerial.js', import.meta.url))
-serial.onmessage = (e) => {
-  if (e.data.operation === 'cli output') {
-    emitter.emit('cli output', e.data.data)
-  } else if (e.data.operation === 'raw output') {
-    emitter.emit('raw output', e.data.data)
-  } else if (e.data.operation === 'write/end') {
-    emitter.emit('write/end')
-  } else {
-    operation.terminate(e.data)
-  }
-}
-
-const usb = new Worker(new URL('./workers/webUSB.js', import.meta.url))
-usb.onmessage = (e) => {
-  if (e.data.operation === 'log progress') {
-    emitter.emit('log progress', e.data.data)
-    progress = e.data.data
-    if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
-      title.progress = Math.floor(progress.current / (progress.max / 100))
-      document.title = '(' + title.progress + '%) ' + title.string
-    } else if (progress.stage === 0) {
-      document.title = '(erasing) ' + title.string
+function startSerialWorker () {
+  const serial = new Worker(new URL('./workers/webSerial.js', import.meta.url))
+  serial.onmessage = (e) => {
+    if (e.data.operation === 'cli output') {
+      emitter.emit('cli output', e.data.data)
+    } else if (e.data.operation === 'raw output') {
+      emitter.emit('raw output', e.data.data)
+    } else if (e.data.operation === 'write/end') {
+      emitter.emit('write/end')
+    } else {
+      operation.terminate(e.data)
     }
-  } else {
-    operation.terminate(e.data)
   }
+  return serial
 }
+let serial = startSerialWorker()
+
+function startUsbWorker () {
+  const usb = new Worker(new URL('./workers/webUSB.js', import.meta.url))
+  usb.onmessage = (e) => {
+    if (e.data.operation === 'log progress') {
+      emitter.emit('log progress', e.data.data)
+      progress = e.data.data
+      if (progress.stage === 1 && progress.max > 0 && (progress.current / (progress.max / 100)).toFixed() > title.progress) {
+        title.progress = Math.floor(progress.current / (progress.max / 100))
+        document.title = '(' + title.progress + '%) ' + title.string
+      } else if (progress.stage === 0) {
+        document.title = '(erasing) ' + title.string
+      }
+    } else {
+      operation.terminate(e.data)
+    }
+  }
+  return usb
+}
+let usb = startUsbWorker()
 
 export class Flipper {
   constructor () {
@@ -130,7 +138,7 @@ export class Flipper {
     }
   }
 
-  async disconnect () {
+  async disconnect (force) {
     if (this.state.connection === 2 || this.state.connection === 0) {
       const disconnectSerial = operation.create(serial, 'disconnect')
       await disconnectSerial
@@ -150,7 +158,21 @@ export class Flipper {
     } else if (this.state.connection === 1) {
       this.state.connection = 0
     } else {
-      throw new Error('Wrong connection state')
+      throw new Error('Wrong connection state (flipper.disconnect): expected 2 or 3, got ' + this.state.connection)
+    }
+  }
+
+  restartWorker () {
+    if (this.state.connection === 2 || this.state.connection === 0) {
+      serial.terminate()
+      serial = startSerialWorker()
+      this.state.connection = 0
+    } else if (this.state.connection === 3) {
+      usb.terminate()
+      usb = startUsbWorker()
+      this.state.connection = 0
+    } else {
+      throw new Error('Wrong connection state (flipper.terminateWorker): expected 2 or 3, got ' + this.state.connection)
     }
   }
 

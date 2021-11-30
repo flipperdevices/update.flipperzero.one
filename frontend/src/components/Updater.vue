@@ -571,6 +571,11 @@ export default defineComponent({
             } else {
               if (error.message && error.message.includes('Failed to open')) {
                 throw new Error('Flipper serial port may be occupied by another process, close it and try again.')
+              } else if (error.message && error.message.includes("'open' on 'SerialPort'")) {
+                this.flipper.restartWorker()
+                return this.connect()
+              } else {
+                console.log(error)
               }
               throw error
             }
