@@ -133,7 +133,7 @@ async function read (mode) {
         if (mode === 'cli') {
           self.postMessage({
             operation: 'cli output',
-            data: decoder.decode(value)
+            data: value
           })
         } else if (mode === 'raw') {
           self.postMessage({

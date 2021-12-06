@@ -56,7 +56,7 @@ export default defineComponent({
       this.flipper.write('cli', data)
     },
 
-    read (shouldStop) {
+    read () {
       this.flipper.read('cli')
     }
   },
@@ -67,8 +67,48 @@ export default defineComponent({
 
   mounted () {
     this.init()
+
+    let isUnicode = false,
+      unicodeBytesLeft = 0,
+      unicodeBuffer = []
+
     this.unbind = emitter.on('cli output', data => {
-      this.terminal.write(data.replaceAll('\x7F', ''))
+      if (data.byteLength === 1) {
+        const byte = data[0]
+        if (!isUnicode && byte >> 7 === 1) {
+          isUnicode = true
+          data = undefined
+          unicodeBuffer.push(byte)
+          for (let i = 6; i >= 4; i--) {
+            if ((byte >> i) % 2 === 1) {
+              unicodeBytesLeft++
+            } else {
+              break
+            }
+          }
+        } else {
+          if (unicodeBytesLeft > 0 && byte >> 6 === 2) {
+            unicodeBuffer.push(byte)
+            unicodeBytesLeft--
+            if (unicodeBytesLeft === 0) {
+              data = new Uint8Array(unicodeBuffer)
+              isUnicode = false
+              unicodeBuffer = []
+            } else {
+              data = undefined
+            }
+          } else {
+            isUnicode = false
+            unicodeBytesLeft = 0
+            unicodeBuffer = []
+          }
+        }
+      }
+
+      if (data) {
+        const text = new TextDecoder().decode(data).replaceAll('\x7F', '')
+        this.terminal.write(text)
+      }
     })
   },
 
