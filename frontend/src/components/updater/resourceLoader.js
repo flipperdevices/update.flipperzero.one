@@ -254,6 +254,10 @@ function enqueueWriteDir (files, queue) {
         buffer: file.data
       })
     } else {
+      queue.push({
+        command: 'mkdir',
+        path: file.path
+      })
       queue = enqueueWriteDir(file.files, queue)
     }
   }
