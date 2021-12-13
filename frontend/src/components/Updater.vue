@@ -609,9 +609,15 @@ export default defineComponent({
       if (this.isUpdating) {
         console.log('⎢ ⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
       }
-      let i = this.isUpdating ? 30 : 10
+      let i = 10
       while (!this.flipperResponds && i > 0) {
         await this.flipper.readProperties()
+          .catch(async error => {
+            if (error.message === 'readTimeout (flipper.readProperties)') {
+              await this.flipper.disconnect()
+              await this.connect()
+            }
+          })
         i++
         await sleep(100)
       }
@@ -693,6 +699,7 @@ export default defineComponent({
         console.log('⎢ Stage 2')
         this.blockButtons = true
         window.addEventListener('beforeunload', preventTabClose)
+        this.flipper.restartWorker('serial')
         this.showUsbRecognizeButton = false
         await this.flipper.connect('usb')
         this.reconnecting = false
@@ -709,6 +716,7 @@ export default defineComponent({
             console.log('⎢ ⎡ rebooting to serial')
             if (this.mode === 'usb') {
               this.mode = 'serial'
+              this.flipper.restartWorker('usb')
             }
             this.reconnecting = true
             await waitForDevice('rebooted to serial')
@@ -734,12 +742,13 @@ export default defineComponent({
               }
             }
 
+            await sleep(500)
+            this.flipper.write('cli/delimited', 'reboot')
+
             this.blockButtons = false
             window.removeEventListener('beforeunload', preventTabClose)
             this.updateStage = 1
             this.isUpdating = false
-
-            this.flipper.write('cli', 'reboot')
 
             console.log('⎣ Update #' + this.updateCounter, 'finished')
             // await sleep(5000)
@@ -878,15 +887,13 @@ export default defineComponent({
 
       const unbindCQ = emitter.on('commandQueue/progress', c => {
         const corner = c.status === 'ok' ? '⎣ ' : '⎡ '
-        console.log('⎢ ' + nested + '⎢ ' + corner + c.name, c.path, 'status:', c.status)
+        console.log('⎢ ' + nested + '⎢ ' + corner + c.name, c.path || '', 'status:', c.status)
       })
 
       await writeInternalStorage(this.internalStorageFiles)
 
       await pbCommands.guiStopVirtualDisplay()
-      if (!isVirtualDisplaySession) {
-        await pbCommands.stopRpcSession()
-      }
+      await pbCommands.stopRpcSession()
 
       unbind()
       unbindCQ()

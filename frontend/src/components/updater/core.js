@@ -162,12 +162,12 @@ export class Flipper {
     }
   }
 
-  restartWorker () {
-    if (this.state.connection === 2 || this.state.connection === 0) {
+  restartWorker (mode) {
+    if (mode === 'serial' || this.state.connection === 2 || this.state.connection === 0) {
       serial.terminate()
       serial = startSerialWorker()
       this.state.connection = 0
-    } else if (this.state.connection === 3) {
+    } else if (mode === 'usb' || this.state.connection === 3) {
       usb.terminate()
       usb = startUsbWorker()
       this.state.connection = 0
@@ -187,11 +187,16 @@ export class Flipper {
           throw error
         })
 
-      const readPropertiesData = operation.create(serial, 'read', 'async')
+      const readPropertiesData = operation.create(serial, 'read')
+
+      const readTimeout = setTimeout(() => {
+        throw new Error('readTimeout (flipper.readProperties)')
+      }, 1000)
 
       this.state.status = 2
       this.properties = await readPropertiesData
         .then(data => {
+          clearTimeout(readTimeout)
           this.state.status = 1
           const decoder = new TextDecoder()
           return decoder.decode(data)
@@ -256,8 +261,8 @@ export class Flipper {
     }
   }
 
-  async reboot () {
-    if (this.state.connection === 2) {
+  async reboot (mode) {
+    if (mode === 'usb' || (!mode && this.state.connection === 2)) {
       const writeDFUCommand = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['dfu'] })
 
       this.state.status = 3
@@ -272,12 +277,14 @@ export class Flipper {
 
       await waitForDevice('rebooted to usb')
       await this.connect('usb')
-    } else if (this.state.connection === 3) {
+    } else if (mode === 'serial' || (!mode && this.state.connection === 3)) {
       this.state.status = 1
       await this.disconnect()
 
       await waitForDevice('rebooted to serial')
       await this.connect('serial')
+    } else {
+      throw new Error('Wrong connection state (flipper.reboot): expected 2 or 3, got ' + this.state.connection)
     }
   }
 
