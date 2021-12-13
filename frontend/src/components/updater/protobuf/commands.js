@@ -82,7 +82,7 @@ function stopRpcSession () {
 function ping () {
   return new Promise((resolve, reject) => {
     enqueue({
-      requestType: 'pingRequest',
+      requestType: 'systemPingRequest',
       args: {}
     })
     const unbind = emitter.on('response', res => {

@@ -609,8 +609,8 @@ export default defineComponent({
       if (this.isUpdating) {
         console.log('⎢ ⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
       }
-      let i = 0
-      while (!this.flipperResponds && i < 10) {
+      let i = this.isUpdating ? 30 : 10
+      while (!this.flipperResponds && i > 0) {
         await this.flipper.readProperties()
         i++
         await sleep(100)
@@ -739,13 +739,15 @@ export default defineComponent({
             this.updateStage = 1
             this.isUpdating = false
 
+            this.flipper.write('cli', 'reboot')
+
             console.log('⎣ Update #' + this.updateCounter, 'finished')
-            // await sleep(3000)
+            // await sleep(5000)
             // return this.update()
           })
           .catch(async error => {
             console.log('⎣ Update #' + this.updateCounter, 'failed')
-            console.log(error)
+            console.error(error)
             unbind()
             document.title = 'Flipper Zero Update Page'
             this.error.isError = true
@@ -818,7 +820,7 @@ export default defineComponent({
 
       const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
-        console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+        console.error('Couldn\'t start virtual display session')
       } else {
         const data = new Uint8Array(xbms.pngtest)
         await pbCommands.guiScreenFrame(data)
@@ -850,9 +852,14 @@ export default defineComponent({
       const nested = isVirtualDisplaySession ? '⎢ ' : ''
       console.log('⎢ ' + nested + '⎡ begin settings restore')
       if (!isVirtualDisplaySession) {
+        const startPing = await pbCommands.startRpcSession(this.flipper)
+        if (!startPing.resolved || startPing.error) {
+          throw new Error('Couldn\'t start rpc session')
+        }
+
         const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
         if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
-          console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+          console.error('Couldn\'t start virtual display session')
         } else {
           const data = new Uint8Array(xbms.pngtest)
           await pbCommands.guiScreenFrame(data)
@@ -877,6 +884,9 @@ export default defineComponent({
       await writeInternalStorage(this.internalStorageFiles)
 
       await pbCommands.guiStopVirtualDisplay()
+      if (!isVirtualDisplaySession) {
+        await pbCommands.stopRpcSession()
+      }
 
       unbind()
       unbindCQ()
@@ -892,7 +902,7 @@ export default defineComponent({
 
       const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
-        console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
+        console.error('Couldn\'t start virtual display session')
       } else {
         const data = new Uint8Array(xbms.pngtest)
         await pbCommands.guiScreenFrame(data)
