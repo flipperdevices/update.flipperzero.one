@@ -649,21 +649,9 @@ export default defineComponent({
         if (!this.firmware.fileName.length) {
           this.firmware.loading = true
           await this.fetchFirmwareFile(this.fwModel.value)
-          if (!this.checks.sha256) {
-            return
-          }
-          this.firmware.loading = false
-        }
-
-        if (this.mode === 'serial') {
-          if (!this.resources && this.flipper.properties.sdCardMounted) {
-            await this.fetchResources('dev')
-          }
-
-          await this.backupSettings()
-            .catch(async error => {
+            .catch(error => {
               console.log('⎣ Update #' + this.updateCounter, 'failed')
-              console.log(error)
+              window.removeEventListener('beforeunload', preventTabClose)
               document.title = 'Flipper Zero Update Page'
               this.error.isError = true
               this.error.message = error.message
@@ -673,26 +661,52 @@ export default defineComponent({
               this.updateStage = 1
               this.isUpdating = false
             })
-
-          await sleep(500)
-
-          this.reconnecting = true
-          await this.flipper.reboot()
-            .then(() => {
-              this.updateStage = 2
-            })
-            .catch(async error => {
-              if (error.message && error.message.includes('No known')) {
-                this.showUsbRecognizeButton = true
-              } else {
-                console.log(error)
-              }
-            })
-        } else {
-          this.updateStage = 2
+          if (!this.checks.sha256) {
+            return
+          }
+          this.firmware.loading = false
         }
-        this.blockButtons = false
-        window.removeEventListener('beforeunload', preventTabClose)
+
+        if (!this.error.isError) {
+          if (this.mode === 'serial') {
+            if (!this.resources && this.flipper.properties.sdCardMounted) {
+              await this.fetchResources('dev')
+            }
+
+            await this.backupSettings()
+              .catch(async error => {
+                console.log('⎣ Update #' + this.updateCounter, 'failed')
+                console.log(error)
+                document.title = 'Flipper Zero Update Page'
+                this.error.isError = true
+                this.error.message = error.message
+                this.error.button = 'serial'
+                this.mode = 'serial'
+                this.reconnecting = true
+                this.updateStage = 1
+                this.isUpdating = false
+              })
+
+            await sleep(500)
+
+            this.reconnecting = true
+            await this.flipper.reboot()
+              .then(() => {
+                this.updateStage = 2
+              })
+              .catch(async error => {
+                if (error.message && error.message.includes('No known')) {
+                  this.showUsbRecognizeButton = true
+                } else {
+                  console.log(error)
+                }
+              })
+          } else {
+            this.updateStage = 2
+          }
+          this.blockButtons = false
+          window.removeEventListener('beforeunload', preventTabClose)
+        }
       }
 
       if (this.updateStage === 2) {
@@ -788,6 +802,8 @@ export default defineComponent({
         .catch(error => {
           if (error.message && error.message === 'SHA256 check failed') {
             this.checks.sha256 = false
+          } else {
+            throw error
           }
         })
     },

@@ -15,6 +15,9 @@ async function fetchFirmwareFile (channel, files, target) {
     .then(response => {
       return response.arrayBuffer()
     })
+    .catch(() => {
+      throw new Error('Failed to fetch firmware')
+    })
   const firmwareFile = new Uint8Array(buffer)
 
   const calculatedSha256 = await shajs('sha256').update(firmwareFile).digest('hex')
