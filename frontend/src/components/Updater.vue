@@ -751,8 +751,10 @@ export default defineComponent({
             this.isUpdating = false
 
             console.log('⎣ Update #' + this.updateCounter, 'finished')
-            // await sleep(5000)
-            // return this.update()
+            if (document.location.search.includes('infinite=true')) {
+              await sleep(5000)
+              return this.update()
+            }
           })
           .catch(async error => {
             console.log('⎣ Update #' + this.updateCounter, 'failed')
