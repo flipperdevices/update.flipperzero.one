@@ -386,8 +386,7 @@ export default defineComponent({
           return response.json()
         })
         .then(data => {
-          // will switch to release channel later
-          this.qFlipper.release = data.channels.find(e => e.id === 'development')
+          this.qFlipper.release = data.channels.find(e => e.id === 'release')
           if (this.qFlipper.release) {
             this.qFlipper.release.versions.sort((a, b) => {
               if (semver.lt(a.version, b.version)) return 1
