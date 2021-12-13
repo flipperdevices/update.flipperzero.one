@@ -653,7 +653,21 @@ export default defineComponent({
           if (!this.resources && this.flipper.properties.sdCardMounted) {
             await this.fetchResources('dev')
           }
+
           await this.backupSettings()
+            .catch(async error => {
+              console.log('⎣ Update #' + this.updateCounter, 'failed')
+              console.log(error)
+              document.title = 'Flipper Zero Update Page'
+              this.error.isError = true
+              this.error.message = error.message
+              this.error.button = 'serial'
+              this.mode = 'serial'
+              this.reconnecting = true
+              this.updateStage = 1
+              this.isUpdating = false
+            })
+
           await sleep(500)
 
           this.reconnecting = true
@@ -798,8 +812,7 @@ export default defineComponent({
       console.log('⎢ ⎡ begin settings backup')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
-        console.log('Couldn\'t start rpc session:', startPing.error)
-        return
+        throw new Error('Couldn\'t start rpc session')
       }
       this.rpcStatus.isSession = true
 
@@ -874,8 +887,7 @@ export default defineComponent({
       console.log('⎢ ⎡ begin resource update')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
-        console.log('Couldn\'t start rpc session:', startPing.error)
-        return
+        throw new Error('Couldn\'t start rpc session')
       }
 
       const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
