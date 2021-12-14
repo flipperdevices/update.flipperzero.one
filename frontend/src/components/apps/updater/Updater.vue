@@ -51,8 +51,8 @@
         <div>
           <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
           <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
-            <img src="../assets/screens/dfu.svg" class="absolute"/>
-            <img src="../assets/flipper_w.svg" />
+            <img src="../../../assets/screens/dfu.svg" class="absolute"/>
+            <img src="../../../assets/flipper_w.svg" />
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
               viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
               <g>
@@ -88,7 +88,7 @@
           <q-card flat>
             <q-card-section horizontal class="text-left">
               <div class="col-6 flex flex-center flipper">
-                <img v-if="connection === 3" src="../assets/screens/dfu.svg" class="absolute"/>
+                <img v-if="connection === 3" src="../../../assets/screens/dfu.svg" class="absolute"/>
                 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                   viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
                   <g>
@@ -96,8 +96,8 @@
                   </g>
                   <circle :style="'fill:' + ledColor" cx="238.5" cy="94.5" r="2.5"/>
                 </svg>
-                <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../assets/flipper_w.svg" />
-                <img v-if="flipper.properties.bodyColor === 'black'" src="../assets/flipper_b.svg" />
+                <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../../../assets/flipper_w.svg" />
+                <img v-if="flipper.properties.bodyColor === 'black'" src="../../../assets/flipper_b.svg" />
               </div>
               <div class="col-6 q-ml-xl" style="white-space: nowrap;">
                 <h5 class="q-mb-none">
@@ -388,14 +388,14 @@
 
 <script>
 import { defineComponent, ref, watch } from 'vue'
-import Terminal from './Terminal.vue'
-import Paint from './Paint.vue'
-import { Flipper, emitter } from './updater/core'
+import Terminal from '../terminal/Terminal.vue'
+import Paint from '../paint/Paint.vue'
+import { Flipper, emitter } from './core'
 
 import {
   fetchFirmwareFile,
   loadFirmwareFile
-} from './updater/firmwareLoader'
+} from './firmwareLoader'
 
 import {
   fetchResources,
@@ -404,12 +404,12 @@ import {
   commandQueue,
   readInternalStorage,
   writeInternalStorage
-} from './updater/resourceLoader'
-import * as pbCommands from './updater/protobuf/commands'
-import xbms from './updater/protobuf/xbms'
+} from './resourceLoader'
+import * as pbCommands from './protobuf/commands'
+import xbms from './protobuf/xbms'
 
 import semver from 'semver'
-import { sleep, waitForDevice } from './updater/util'
+import { sleep, waitForDevice } from './util'
 
 import {
   mdiChevronDown,
@@ -1302,4 +1302,4 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss" src="../css/updater.scss"></style>
+<style lang="scss" src="../../../css/updater.scss"></style>

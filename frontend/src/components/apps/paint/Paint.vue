@@ -131,8 +131,8 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import * as pbCommands from './updater/protobuf/commands'
-import { xbmValues } from './paint/xbm-values'
+import * as pbCommands from '../updater/protobuf/commands'
+import { xbmValues } from './xbm-values'
 
 import {
   mdiPencil,
