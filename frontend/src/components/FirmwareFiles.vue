@@ -8,7 +8,7 @@
         <q-btn
           class="fw-btn"
           type="a"
-          :href="release.url"
+          @click="route(release.url)"
         >
           <div class="fw-btn-inner flex justify-between">
             <div>
@@ -23,7 +23,7 @@
         <q-btn
           class="fw-btn"
           type="a"
-          :href="rc.url"
+          @click="route(release.url)"
         >
           <div class="fw-btn-inner flex justify-between">
             <div>
@@ -77,6 +77,12 @@ export default defineComponent({
     },
     dev () {
       return this.$store.state.firmwareChannels.dev
+    }
+  },
+
+  methods: {
+    route (url) {
+      location.href = url
     }
   },
 

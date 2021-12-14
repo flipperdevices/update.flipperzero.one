@@ -36,7 +36,7 @@
         </div>
         <p v-if="userAgent.os === 'Windows'">
           Can't find your Flipper?
-          Connect Flipper in DFU mode and install WinUSB driver. You can use <a :href="qFlipperInstaller">qFlipper installer</a> for that..
+          Connect Flipper in DFU mode and install WinUSB driver. You can use qFlipper installer for that.
         </p>
         <p v-if="userAgent.os === 'Linux'" class="q-mb-sm">
           Can't find your Flipper?
@@ -433,13 +433,7 @@ export default defineComponent({
   },
 
   props: {
-    custom: Object,
-    dev: Object,
-    initialMode: String,
-    qFlipperInstaller: String,
-    release: Object,
-    rc: Object,
-    userAgent: Object
+    initialMode: String
   },
 
   setup () {
@@ -556,6 +550,22 @@ export default defineComponent({
     },
     flipperResponds () {
       return !!this.flipper.properties.name
+    },
+
+    userAgent () {
+      return this.$store.state.userAgent
+    },
+    release () {
+      return this.$store.state.firmwareChannels.release
+    },
+    rc () {
+      return this.$store.state.firmwareChannels.rc
+    },
+    dev () {
+      return this.$store.state.firmwareChannels.dev
+    },
+    custom () {
+      return this.$store.state.firmwareChannels.custom
     }
   },
 

@@ -9,7 +9,7 @@
       </q-card-section>
       <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
         <h4>Web updater</h4>
-        <h5>Flash the latest firmware right in your browser using WebUSB.</h5>
+        <h5>Flash the latest firmware right in your userAgent.browser using WebUSB.</h5>
         <p v-if="userAgent.os === 'Windows'">
           1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use <a @click="route(dropdown[0].href)">qFlipper installer</a> for that.
         </p>
@@ -37,12 +37,12 @@
           No drivers needed!
         </p>
         <p>
-          <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from browser prompt.
+          <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from userAgent.browser prompt.
         </p>
         <p>
           Currently supports only Chrome-based browsers (except Opera).
         </p>
-        <p v-if="customSource">
+        <p v-if="customSource.url">
           <b>Found custom firmware, connect to flash it.</b>
         </p>
         <div class="text-center q-mt-lg" :class="$q.screen.xs ? 'q-pb-lg' : 'q-pb-sm'">
@@ -61,7 +61,7 @@
       v-if="userAgent.browser === 'Not supported'"
       class="fit flex column flex-center q-pa-md"
     >
-      <h4>Your browser doesn't support Web Updater <span style="white-space: nowrap;">:(</span></h4>
+      <h4>Your userAgent.browser doesn't support Web Updater <span style="white-space: nowrap;">:(</span></h4>
       <img
         v-if="userAgent.os !== 'Android'"
         src="../assets/notsupported.svg"
@@ -72,9 +72,9 @@
         <q-img src="../assets/chrome.svg" class="updater-img absolute"></q-img>
       </div>
       <p class="q-pt-md">
-        Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
+        Your userAgent.browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
       </p>
-      <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex Browser.</p>
+      <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex userAgent.browser.</p>
       <p v-if="userAgent.os === 'Android' && !userAgent.usb">Updater supports Recovery Mode in Chrome for Android. Install latest Chrome version or Chrome Beta.</p>
       <div>
         <q-btn v-if="!userAgent.usb" color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
@@ -92,6 +92,7 @@
     <q-card-section v-if="!showIntro">
       <Updater
         v-if="currentApp === 'Updater'"
+        :initialMode="initialMode"
       />
       <Terminal
         v-else-if="currentApp === 'Terminal'"
@@ -124,7 +125,30 @@ export default defineComponent({
     return {
       showIntro: ref(true),
       initialMode: 'serial',
-      copied: ref(false)
+      copied: ref(false),
+      release: ref({
+        version: '',
+        date: '',
+        url: '',
+        files: [],
+        changelog: ''
+      }),
+      dev: ref({
+        version: '',
+        date: '',
+        url: '',
+        files: [],
+        changelog: ''
+      }),
+      rc: ref({
+        version: '',
+        date: '',
+        url: '',
+        files: [],
+        changelog: ''
+      }),
+      custom: ref(undefined),
+      customSource: ref({})
     }
   },
 
@@ -132,6 +156,7 @@ export default defineComponent({
     currentApp () {
       return this.$store.state.currentApp
     },
+
     userAgent () {
       return this.$store.state.userAgent
     }
@@ -205,19 +230,28 @@ export default defineComponent({
           })
           this.rc.changelog = rc.versions[0].changelog
 
-          if (!this.customSource) {
-            return
-          }
-          this.custom = {
-            channel: this.customSource.channel,
-            version: this.customSource.version,
-            date: new Date().toISOString().slice(0, 10),
-            url: this.customSource.url,
-            files: [{
+          if (this.customSource.url) {
+            this.custom = {
+              channel: this.customSource.channel,
+              version: this.customSource.version,
+              date: new Date().toISOString().slice(0, 10),
               url: this.customSource.url,
-              type: 'full_dfu'
-            }]
+              files: [{
+                url: this.customSource.url,
+                type: 'full_dfu'
+              }]
+            }
           }
+
+          this.$store.commit({
+            type: 'setFirmwareChannels',
+            firmwareChannels: {
+              release: this.release,
+              rc: this.release,
+              dev: this.dev,
+              custom: this.custom
+            }
+          })
         })
         .then(() => {
           this.lookForKnownDevices()
@@ -230,6 +264,11 @@ export default defineComponent({
   },
 
   mounted () {
+    this.customSource = {
+      url: this.$route.query.url,
+      channel: this.$route.query.channel,
+      version: this.$route.query.version
+    }
     this.getChannels()
   }
 })
