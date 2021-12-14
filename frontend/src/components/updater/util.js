@@ -8,7 +8,7 @@ async function sleep (ms) {
 async function waitForDevice (c) {
   const usbFilters = [{ vendorId: 0x0483, productId: 0x5740 }]
   const serialFilters = [{ usbVendorId: 0x0483, usbProductId: 0x5740 }]
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 20; i++) {
     let ports = []
     if (c === 'rebooted to serial') {
       ports = await navigator.serial.getPorts({ serialFilters })
@@ -16,7 +16,7 @@ async function waitForDevice (c) {
       ports = await navigator.usb.getDevices({ usbFilters })
     }
     if (ports.length > 0) {
-      await sleep(2000)
+      await sleep(500)
       return
     }
     await sleep(350)

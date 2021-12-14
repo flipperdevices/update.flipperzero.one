@@ -84,7 +84,7 @@
 
     <template v-if="!error.isError">
       <template v-if="flipperResponds">
-        <div v-show="!error.isError" class="connected q-mt-sm">
+        <div v-show="!updateSuccess" class="connected q-mt-sm">
           <q-card flat>
             <q-card-section horizontal class="text-left">
               <div class="col-6 flex flex-center flipper">
@@ -126,12 +126,12 @@
                 <q-card-section horizontal>
                   <div class="properties">
                     <div><b>Device type:</b></div><div>{{ flipper.properties.type }}</div>
-                    <div><b>Device name:</b></div><div>{{ flipper.properties.name }}</div>
                     <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.stm32Serial }}</div>
                     <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
                     <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
                     <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
                     <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
+                    <div><b>SD card:</b></div><div>{{ flipper.properties.sdCardMounted ? 'mounted' : 'missing' }}</div>
                   </div>
                 </q-card-section>
               </q-card>
@@ -324,6 +324,10 @@
             </p>
           </div>
         </div>
+        <div v-if="updateSuccess">
+          <h2>Update success</h2>
+          <q-btn color="positive" padding="12px 30px" @click="updateSuccess = false">Continue</q-btn>
+        </div>
 
         <div v-if="!blockButtons" class="absolute-top-right">
           <q-btn
@@ -508,7 +512,8 @@ export default defineComponent({
       showTerminal: ref(false),
       showUsbRecognizeButton: ref(false),
       terminalEnabled: ref(false),
-      updateStage: ref(1)
+      updateStage: ref(1),
+      updateSuccess: ref(false)
     }
   },
 
@@ -613,10 +618,9 @@ export default defineComponent({
       while (!this.flipperResponds && i > 0) {
         await this.flipper.readProperties()
           .catch(async error => {
-            if (error.message === 'readTimeout (flipper.readProperties)') {
-              await this.flipper.disconnect()
-              await this.connect()
-            }
+            console.error(error)
+            await this.flipper.disconnect()
+            await this.connect()
           })
         i++
         await sleep(100)
@@ -636,6 +640,7 @@ export default defineComponent({
     // Update sequence
     async update () {
       this.isUpdating = true
+      this.updateSuccess = false
       function preventTabClose (event) {
         event.returnValue = ''
       }
@@ -758,6 +763,8 @@ export default defineComponent({
 
             await sleep(500)
             this.flipper.write('cli/delimited', 'reboot')
+            await waitForDevice('rebooted to serial')
+            this.updateSuccess = true
 
             this.blockButtons = false
             window.removeEventListener('beforeunload', preventTabClose)
@@ -765,6 +772,7 @@ export default defineComponent({
             this.isUpdating = false
 
             console.log('⎣ Update #' + this.updateCounter, 'finished')
+
             if (document.location.search.includes('infinite=true')) {
               await sleep(5000)
               return this.update()
@@ -849,7 +857,7 @@ export default defineComponent({
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
       } else {
-        const data = new Uint8Array(xbms.pngtest)
+        const data = new Uint8Array(xbms.updating)
         await pbCommands.guiScreenFrame(data)
       }
 
@@ -888,7 +896,7 @@ export default defineComponent({
         if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
           console.error('Couldn\'t start virtual display session')
         } else {
-          const data = new Uint8Array(xbms.pngtest)
+          const data = new Uint8Array(xbms.updating)
           await pbCommands.guiScreenFrame(data)
         }
       }
@@ -929,7 +937,7 @@ export default defineComponent({
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
       } else {
-        const data = new Uint8Array(xbms.pngtest)
+        const data = new Uint8Array(xbms.updating)
         await pbCommands.guiScreenFrame(data)
       }
 
