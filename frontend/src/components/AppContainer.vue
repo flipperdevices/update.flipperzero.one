@@ -238,7 +238,8 @@ export default defineComponent({
               url: this.customSource.url,
               files: [{
                 url: this.customSource.url,
-                type: 'full_dfu'
+                type: 'full_dfu',
+                target: this.customSource.target
               }]
             }
           }
@@ -267,7 +268,8 @@ export default defineComponent({
     this.customSource = {
       url: this.$route.query.url,
       channel: this.$route.query.channel,
-      version: this.$route.query.version
+      version: this.$route.query.version,
+      target: this.$route.query.target
     }
     this.getChannels()
   }

@@ -193,6 +193,13 @@
                   This firmware might be <b>malicious</b> and might <b>break your device</b>!
                 </div>
 
+                <div v-if="!checks.target" class="alert">
+                  <p>
+                      <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+                  </p>
+                  This firmware might break your device!
+                </div>
+
                 <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
                   <q-select
                     v-model="fwModel"
@@ -229,13 +236,6 @@
                 <div v-if="!checks.crc32" class="alert">
                   <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
                 </div>
-
-                <div v-if="!checks.target" class="alert">
-                  <p>
-                      <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
-                  </p>
-                  This firmware might break your device!
-                </div>
               </div>
 
               <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
@@ -257,7 +257,7 @@
                   padding="12px 30px"
                 >Cancel</q-btn>
                 <q-btn
-                  v-if="!checks.target"
+                  v-if="firmware.fileName.length && !checks.target"
                   flat
                   color="grey-8"
                   @click="update"
@@ -643,6 +643,9 @@ export default defineComponent({
         this.cliResponseTimeout = undefined
       }
       if (!this.error.isError) {
+        if (this.custom && this.custom.files[0].target) {
+          this.checks.target = 'f' + this.flipper.properties.target === this.custom.files[0].target
+        }
         this.compareVersions()
       }
     },
