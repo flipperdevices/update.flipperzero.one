@@ -5,6 +5,17 @@ import actions from './actions'
 export default createStore({
   state: {
     currentApp: 'Updater',
+    mode: 'serial',
+
+    ui: {
+      error: {
+        isError: false,
+        message: '',
+        button: ''
+      },
+      reconnecting: false,
+      blockButtons: false
+    },
 
     userAgent: {},
 

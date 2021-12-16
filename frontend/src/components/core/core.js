@@ -2,7 +2,7 @@ import {
   waitForDevice,
   parseOutputText,
   parseOTPData
-} from './util'
+} from '../util'
 import { createNanoEvents } from 'nanoevents'
 
 export const emitter = createNanoEvents()

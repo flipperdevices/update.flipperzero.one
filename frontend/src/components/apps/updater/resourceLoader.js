@@ -2,7 +2,7 @@ import untar from 'js-untar'
 import pako from 'pako'
 const inflate = new pako.Inflate()
 import * as pbCommands from './protobuf/commands'
-import { emitter } from './core'
+import { emitter } from '../../core/core'
 
 async function fetchResources (channel, files) {
   const file = files.find(e => {

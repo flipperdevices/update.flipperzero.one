@@ -10,7 +10,7 @@ import { Terminal } from 'xterm'
 import 'xterm/css/xterm.css'
 import { FitAddon } from 'xterm-addon-fit'
 
-import { emitter } from '../updater/core'
+import { emitter } from '../../core/core'
 
 import {
   evaCloseOutline
