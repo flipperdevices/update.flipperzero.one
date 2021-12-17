@@ -159,7 +159,7 @@
           </div>
         </div>
 
-        <q-card v-show="error.isError && !showOverlay" id="error">
+        <q-card v-show="error.isError && !showOverlay" id="error" class="q-ma-xl">
           <q-card-section class="bg-negative text-white text-left">
             <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
             <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
@@ -441,7 +441,7 @@ export default defineComponent({
             type: 'setFirmwareChannels',
             firmwareChannels: {
               release: releaseChannel,
-              rc: releaseChannel,
+              rc: rcChannel,
               dev: devChannel,
               custom: customChannel
             }
