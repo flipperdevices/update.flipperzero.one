@@ -89,141 +89,142 @@
       </q-card-section>
     </template>
     <template v-else>
-      <div v-show="showOverlay" class="popup-overlay z-max">
-        <div class="absolute-top-right q-ma-md text-white">
-          <q-btn
-            flat
-            round
-            :icon="evaCloseOutline"
-            :size="!$q.screen.xs ? '24px' : '18px'"
-            @click="showOverlay = false"
-          ></q-btn>
-          <p>Close</p>
+      <div class="flex column flex-center">
+        <div v-show="showOverlay" class="popup-overlay z-max">
+          <div class="absolute-top-right q-ma-md text-white">
+            <q-btn
+              flat
+              round
+              :icon="evaCloseOutline"
+              :size="!$q.screen.xs ? '24px' : '18px'"
+              @click="showOverlay = false"
+            ></q-btn>
+            <p>Close</p>
+          </div>
+          <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
+            <q-card-section class="text-white text-left">
+              <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
+              <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+            </q-card-section>
+
+            <q-separator dark v-if="error.button.length"></q-separator>
+
+            <q-card-actions v-if="error.button.length" align="right" class="text-white">
+            <q-btn flat @click="connect()">Reconnect</q-btn>
+            </q-card-actions>
+          </q-card>
+          <div class="absolute-bottom-right q-mr-lg text-white text-right">
+            <div v-if="error.isError" style="min-width: 200px">
+              <q-btn
+                :disabled="connection === 3 && status === 3 && ui.blockButtons"
+                outline
+                color="white"
+                size="13px"
+                class="q-ma-sm"
+                @click="changeMode(false)"
+              >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
+            </div>
+            <p v-if="userAgent.os === 'Windows'">
+              Can't find your Flipper?
+              Connect Flipper in DFU mode and install WinUSB driver. You can use qFlipper installer for that.
+            </p>
+            <p v-if="userAgent.os === 'Linux'" class="q-mb-sm">
+              Can't find your Flipper?
+              On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh" target="blank">this script</a>.
+            </p>
+          </div>
         </div>
-        <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
-          <q-card-section class="text-white text-left">
-            <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
+
+        <div v-show="showArrows && !$q.screen.xs" class="arrows z-max">
+          <div id="arrow-1">
+            <q-icon :name="evaArrowBackOutline"></q-icon>
+            <div>
+              <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
+              <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
+                <img src="../assets/screens/dfu.svg" class="absolute"/>
+                <img src="../assets/flipper_w.svg" />
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                  viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
+                  <g>
+                    <path style="opacity: 0.5; fill: #007eff;" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
+                  </g>
+                  <circle style="fill: #007eff;" cx="238.5" cy="94.5" r="2.5"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div id="arrow-2">
+            <q-icon :name="evaArrowUpwardOutline"></q-icon>
+            <span class="q-pl-sm q-pt-xs">2. Press "Connect"</span>
+          </div>
+        </div>
+
+        <q-card v-show="error.isError && !showOverlay" id="error">
+          <q-card-section class="bg-negative text-white text-left">
+            <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
             <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
           </q-card-section>
 
-          <q-separator dark v-if="error.button.length"></q-separator>
+          <q-separator v-if="error.button.length"></q-separator>
 
-          <q-card-actions v-if="error.button.length" align="right" class="text-white">
-          <q-btn flat @click="connect()">Reconnect</q-btn>
+          <q-card-actions v-if="error.button.length" align="right">
+            <q-btn flat @click="connect()">Reconnect</q-btn>
           </q-card-actions>
         </q-card>
-        <div class="absolute-bottom-right q-mr-lg text-white text-right">
-          <div v-if="error.isError" style="min-width: 200px">
-            <q-btn
-              :disabled="connection === 3 && status === 3 && ui.blockButtons"
-              outline
-              color="white"
-              size="13px"
-              class="q-ma-sm"
-              @click="changeMode(false)"
-            >{{mode == 'serial' ? 'Recovery mode' : 'Normal mode'}}</q-btn>
-          </div>
-          <p v-if="userAgent.os === 'Windows'">
-            Can't find your Flipper?
-            Connect Flipper in DFU mode and install WinUSB driver. You can use qFlipper installer for that.
-          </p>
-          <p v-if="userAgent.os === 'Linux'" class="q-mb-sm">
-            Can't find your Flipper?
-            On Linux you need to allow WebUSB to access devices first. Download and run <a href="https://raw.githubusercontent.com/Flipper-Zero/update.flipperzero.one/main/setup_rules.sh" target="blank">this script</a>.
-          </p>
-        </div>
-      </div>
 
-      <div v-show="showArrows && !$q.screen.xs" class="arrows z-max">
-        <div id="arrow-1">
-          <q-icon :name="evaArrowBackOutline"></q-icon>
-          <div>
-            <span class="q-pl-sm">1. {{ mode === 'serial' ? 'Find your Flipper in dropdown menu' : 'Find your Flipper in recovery mode (DFU in FS Mode)' }}</span>
-            <div v-if="!error.isError && mode === 'usb'" class="flex flex-center flipper q-mt-lg">
-              <img src="../assets/screens/dfu.svg" class="absolute"/>
-              <img src="../assets/flipper_w.svg" />
-              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-                viewBox="0 0 360 156" style="enable-background:new 0 0 360 156;" xml:space="preserve" class="led absolute">
-                <g>
-                  <path style="opacity: 0.5; fill: #007eff;" d="M238.5,98c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S240.4,98,238.5,98z M238.5,92 c-1.4,0-2.5,1.1-2.5,2.5s1.1,2.5,2.5,2.5s2.5-1.1,2.5-2.5S239.9,92,238.5,92z"/>
-                </g>
-                <circle style="fill: #007eff;" cx="238.5" cy="94.5" r="2.5"/>
-              </svg>
+        <template v-if="!error.isError">
+          <template v-if="flipperResponds">
+            <q-card-section>
+              <Updater
+                v-if="currentApp === 'Updater'"
+                :flipper="flipper"
+                @connect="connect"
+                @set-manifest="setManifest"
+              />
+              <Terminal
+                v-else-if="currentApp === 'Terminal'"
+                :flipper="flipper"
+                ref="Terminal"
+              />
+              <Paint
+                v-else-if="currentApp === 'Paint'"
+                :flipper="flipper"
+              />
+            </q-card-section>
+            <div v-if="!ui.blockButtons" class="absolute-top-right">
+              <q-btn
+                v-if="!showPaint && connection === 2"
+                flat
+                dense
+                :color="showTerminal ? 'grey-2' : 'grey-7'"
+                :icon="showTerminal ? evaCloseOutline : mdiConsole"
+                size="16px"
+                class="q-ma-sm"
+                :class="showTerminal ? 'z-max' : 'z-top'"
+                :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
+                @click="toggleTerminal"
+              ></q-btn>
+
+              <q-btn
+                v-if="connection === 2"
+                flat
+                dense
+                color="grey-7"
+                :icon="showPaint ? evaCloseOutline : evaBrushOutline"
+                size="16px"
+                class="q-ma-sm"
+                :class="showPaint ? 'z-max' : 'z-top'"
+                @click="togglePaint"
+              ></q-btn>
             </div>
-          </div>
-        </div>
-        <div id="arrow-2">
-          <q-icon :name="evaArrowUpwardOutline"></q-icon>
-          <span class="q-pl-sm q-pt-xs">2. Press "Connect"</span>
-        </div>
-      </div>
-
-      <q-card v-show="error.isError && !showOverlay" id="error">
-        <q-card-section class="bg-negative text-white text-left">
-          <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
-          <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
-        </q-card-section>
-
-        <q-separator v-if="error.button.length"></q-separator>
-
-        <q-card-actions v-if="error.button.length" align="right">
-          <q-btn flat @click="connect()">Reconnect</q-btn>
-        </q-card-actions>
-      </q-card>
-
-      <template v-if="!error.isError">
-        <template v-if="flipperResponds">
-          <q-card-section>
-            <Updater
-              v-if="currentApp === 'Updater'"
-              :flipper="flipper"
-              @connect="connect"
-              @set-manifest="setManifest"
-            />
-            <Terminal
-              v-else-if="currentApp === 'Terminal'"
-              :flipper="flipper"
-              ref="Terminal"
-            />
-            <Paint
-              v-else-if="currentApp === 'Paint'"
-              :flipper="flipper"
-            />
-          </q-card-section>
-          <div v-if="!ui.blockButtons" class="absolute-top-right">
-            <q-btn
-              v-if="!showPaint && connection === 2"
-              flat
-              dense
-              :color="showTerminal ? 'grey-2' : 'grey-7'"
-              :icon="showTerminal ? evaCloseOutline : mdiConsole"
-              size="16px"
-              class="q-ma-sm"
-              :class="showTerminal ? 'z-max' : 'z-top'"
-              :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
-              @click="toggleTerminal"
-            ></q-btn>
-
-            <q-btn
-              v-if="connection === 2"
-              flat
-              dense
-              color="grey-7"
-              :icon="showPaint ? evaCloseOutline : evaBrushOutline"
-              size="16px"
-              class="q-ma-sm"
-              :class="showPaint ? 'z-max' : 'z-top'"
-              @click="togglePaint"
-            ></q-btn>
-          </div>
+          </template>
+          <q-spinner
+            v-else
+            color="accent"
+            size="3em"
+          ></q-spinner>
         </template>
-        <q-spinner
-          v-else
-          color="accent"
-          size="3em"
-        ></q-spinner>
-      </template>
-
+      </div>
       <q-toggle
         v-model="autoReconnectEnabled"
         color="positive"

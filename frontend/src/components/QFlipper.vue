@@ -5,7 +5,7 @@
         <img src="../assets/qflipper.png"/>
       </q-card-section>
       <q-card-section class="col-8 q-pb-lg qflippa-desc">
-        <h4>Desktop crossplatform application</h4>
+        <h4>Desktop cross-platform application</h4>
         <p>
           Check your Flipper status and choose different update versions. Find additional info on a <a href="http://docs.flipperzero.one/">wiki page</a>.
         </p>
