@@ -1,6 +1,6 @@
 import * as rpc from './rpc'
-import { emitter } from '../core'
-import { sleep } from '../util'
+import { emitter } from '../../../core/core'
+import { sleep } from '../../../util'
 
 let flipper, rpcIdle = true
 const commandQueue = []

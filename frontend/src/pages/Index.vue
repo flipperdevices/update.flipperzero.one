@@ -1,23 +1,31 @@
 <template>
   <q-page class="flex flex-center">
-    <Homepage
-      :userAgent="userAgent"
-      :customSource="customSource"
-    />
+    <div id="homepage-container" class="fit text-center q-pa-sm">
+      <h3>Flipper Zero Firmware Update page</h3>
+
+      <AppContainer />
+
+      <QFlipper />
+
+      <h3>Download firmware files</h3>
+
+      <FirmwareFiles />
+    </div>
   </q-page>
 </template>
 
 <script>
-import Homepage from 'components/Homepage.vue'
 import { defineComponent } from 'vue'
+import AppContainer from 'components/AppContainer.vue'
+import QFlipper from 'components/QFlipper.vue'
+import FirmwareFiles from 'components/FirmwareFiles.vue'
 
 export default defineComponent({
   name: 'PageIndex',
   components: {
-    Homepage
-  },
-  props: {
-    customSource: Object
+    AppContainer,
+    QFlipper,
+    FirmwareFiles
   },
   setup () {
     return {
@@ -49,6 +57,13 @@ export default defineComponent({
       this.userAgent.usb = false
       this.userAgent.serial = false
     }
+
+    this.$store.commit({
+      type: 'setUserAgent',
+      userAgent: this.userAgent
+    })
   }
 })
 </script>
+
+<style lang="scss" src="../css/homepage.scss"></style>

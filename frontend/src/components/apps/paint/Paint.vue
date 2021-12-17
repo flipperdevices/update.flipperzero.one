@@ -1,5 +1,5 @@
 <template>
-  <div id="paint-wrapper" class="absolute z-top fit flex justify-center items-center bg-white">
+  <div id="paint-wrapper" class="fit flex justify-center items-center bg-white">
     <div class="flex column full-width items-center">
       <div class="q-mb-md">
         <div class="q-ma-sm">
@@ -131,8 +131,8 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import * as pbCommands from './updater/protobuf/commands'
-import { xbmValues } from './paint/xbm-values'
+import * as pbCommands from '../updater/protobuf/commands'
+import { xbmValues } from './xbm-values'
 
 import {
   mdiPencil,

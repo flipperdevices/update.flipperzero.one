@@ -15,7 +15,7 @@ async function list () {
     console.error(err)
   }
 
-  writeFileSync('./src/components/updater/protobuf/xbms.js', 'export default ' + JSON.stringify(converted))
+  writeFileSync('./src/components/apps/updater/protobuf/xbms.js', 'export default ' + JSON.stringify(converted))
 }
 
 function convert (file) {

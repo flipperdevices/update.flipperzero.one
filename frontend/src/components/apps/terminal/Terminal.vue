@@ -10,7 +10,7 @@ import { Terminal } from 'xterm'
 import 'xterm/css/xterm.css'
 import { FitAddon } from 'xterm-addon-fit'
 
-import { emitter } from './updater/core'
+import { emitter } from '../../core/core'
 
 import {
   evaCloseOutline
@@ -118,4 +118,4 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss" src="../css/terminal.scss"></style>
+<style lang="scss" src="../../../css/terminal.scss"></style>
