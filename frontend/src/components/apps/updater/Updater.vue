@@ -105,7 +105,7 @@
 
             <div v-if="!checks.target" class="alert">
               <p>
-                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.
+                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.<span v-if="custom && custom.files[0].target"> Firmware target: <b>{{ custom.files[0].target }}</b>, Flipper hardware target: <b>f{{ flipper.properties.target }}</b></span>
               </p>
               This firmware might break your device!
             </div>
@@ -199,7 +199,7 @@
           Check your connection and try again.
         </div>
         <div v-if="showUsbRecognizeButton">
-          <q-btn color="positive" padding="12px 30px" @click="recognizeDevice('usb')">Continue</q-btn>
+          <q-btn color="positive" padding="12px 30px" @click="this.$emit('recognizeDevice', 'usb')">Continue</q-btn>
         </div>
         <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
           <q-linear-progress
@@ -863,6 +863,9 @@ export default defineComponent({
     this.fwModel = this.fwOptions[0]
 
     this.compareVersions()
+    if (this.custom && this.custom.files[0].target) {
+      this.checks.target = 'f' + this.flipper.properties.target === this.custom.files[0].target
+    }
   }
 })
 </script>

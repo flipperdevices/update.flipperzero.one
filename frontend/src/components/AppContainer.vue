@@ -10,7 +10,7 @@
         </q-card-section>
         <q-card-section v-if="userAgent.browser !== 'Not supported'" class="q-pb-lg text-left updater-desc">
           <h4>Web updater</h4>
-          <h5>Flash the latest firmware right in your userAgent.browser using WebUSB.</h5>
+          <h5>Flash the latest firmware right in your browser using WebUSB.</h5>
           <p v-if="userAgent.os === 'Windows'">
             1. For the first time you may need to connect Flipper in DFU mode and install WinUSB driver. You can use <a @click="route(dropdown[0].href)">qFlipper installer</a> for that.
           </p>
@@ -38,7 +38,7 @@
             No drivers needed!
           </p>
           <p>
-            <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from userAgent.browser prompt.
+            <span v-if="userAgent.os === 'Windows' || userAgent.os === 'Linux'">2. </span>Connect your Flipper to the computer, press the button below and choose your device from browser prompt.
           </p>
           <p>
             Currently supports only Chrome-based browsers (except Opera).
@@ -62,7 +62,7 @@
         v-if="userAgent.browser === 'Not supported'"
         class="fit flex column flex-center q-pa-md"
       >
-        <h4>Your userAgent.browser doesn't support Web Updater <span style="white-space: nowrap;">:(</span></h4>
+        <h4>Your browser doesn't support Web Updater <span style="white-space: nowrap;">:(</span></h4>
         <img
           v-if="userAgent.os !== 'Android'"
           src="../assets/notsupported.svg"
@@ -73,9 +73,9 @@
           <q-img src="../assets/chrome.svg" class="updater-img absolute"></q-img>
         </div>
         <p class="q-pt-md">
-          Your userAgent.browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
+          Your browser doesn’t support <span v-if="!userAgent.usb">WebUSB</span><span v-if="!userAgent.usb && !userAgent.serial"> and </span><span v-if="!userAgent.serial">WebSerial</span><span v-if="userAgent.usb">, but Recovery Mode is still available. <a href="https://docs.flipperzero.one/ru/basics/firmware-update/web-updater#ws-recovery-mode">Learn about Recovery Mode usage</a></span>.
         </p>
-        <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex userAgent.browser.</p>
+        <p v-if="userAgent.os !== 'Android'">Updater currently supports only Chrome-based browsers (except Opera). Try Chrome/Edge/Yandex browser.</p>
         <p v-if="userAgent.os === 'Android' && !userAgent.usb">Updater supports Recovery Mode in Chrome for Android. Install latest Chrome version or Chrome Beta.</p>
         <div>
           <q-btn v-if="!userAgent.usb" color="accent" padding="12px 30px" type="a" href="https://caniuse.com/webusb">Compatibility List</q-btn>
@@ -180,6 +180,8 @@
                 :flipper="flipper"
                 @connect="connect"
                 @set-manifest="setManifest"
+                @recognize-device="recognizeDevice"
+                ref="Updater"
               />
               <Terminal
                 v-else-if="currentApp === 'Terminal'"
@@ -306,6 +308,14 @@ export default defineComponent({
   computed: {
     connection () {
       return this.flipper.state.connection
+    },
+    knownSerialDevices () {
+      const serialFilters = [{ usbVendorId: 0x0483, usbProductId: 0x5740 }]
+      return navigator.serial.getPorts({ serialFilters })
+    },
+    knownUsbDevices () {
+      const usbFilters = [{ vendorId: 0x0483, productId: 0x5740 }]
+      return navigator.usb.getDevices({ usbFilters })
     },
     status () {
       return this.flipper.state.status
@@ -476,7 +486,7 @@ export default defineComponent({
                 this.flipper.restartWorker()
                 return this.connect()
               } else {
-                console.log(error)
+                console.error(error)
               }
               throw error
             }
@@ -533,11 +543,6 @@ export default defineComponent({
       if (this.cliResponseTimeout) {
         clearTimeout(this.cliResponseTimeout)
         this.cliResponseTimeout = undefined
-      }
-      if (!this.error.isError) {
-        if (this.custom && this.custom.files[0].target) {
-          this.checks.target = 'f' + this.flipper.properties.target === this.custom.files[0].target
-        }
       }
     },
 
@@ -687,6 +692,11 @@ export default defineComponent({
               })
           }
         } else if (mode === 'usb') {
+          const m = this.mode
+          this.$store.commit({
+            type: 'setMode',
+            mode: 'usb'
+          })
           const filters = [
             { vendorId: 0x0483, productId: 0xdf11 }
           ]
@@ -697,6 +707,10 @@ export default defineComponent({
             this.showArrows = true
             await navigator.usb.requestDevice({ filters })
               .then(() => {
+                this.$store.commit({
+                  type: 'setMode',
+                  mode: m
+                })
                 this.$store.commit({
                   type: 'setUiError',
                   error: {
@@ -710,8 +724,8 @@ export default defineComponent({
                 if (this.mode === mode) {
                   return this.connect()
                 } else {
-                  this.updateStage = 2
-                  return this.update()
+                  this.$refs.Updater.updateStage = 2
+                  return this.$refs.Updater.update()
                 }
               })
           }
@@ -805,7 +819,7 @@ export default defineComponent({
       }
       if (this.autoReconnectEnabled) {
         this.reconnectLoop = setInterval(async () => {
-          if (!this.ui.reconnecting) {
+          if (!this.ui.reconnecting && !this.$refs.Updater.updateSuccess) {
             let ports, filters
             if (this.mode === 'serial') {
               filters = [
@@ -888,7 +902,7 @@ export default defineComponent({
     })
   },
 
-  mounted () {
+  async mounted () {
     this.customSource = {
       url: this.$route.query.url,
       channel: this.$route.query.channel,
@@ -903,7 +917,12 @@ export default defineComponent({
       localStorage.setItem('autoReconnectEnabled', 0)
     } else {
       this.autoReconnectEnabled = true
-      this.start('serial')
+      this.knownSerialDevices
+        .then(ports => {
+          if (ports.length > 0) {
+            this.start('serial')
+          }
+        })
     }
 
     navigator.serial.addEventListener('disconnect', this.onDisconnect)
