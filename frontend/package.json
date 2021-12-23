@@ -8,7 +8,7 @@
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "build": "quasar build",
-    "compile-protofiles": "npx pbjs -t static-module -w es6 --no-comments --lint \"eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars, camelcase, default-case-last, no-mixed-operators\" -o src/components/updater/protobuf/proto-compiled.js ./flipperzero-protobuf/*.proto && eslint --fix src/components/updater/protobuf/proto-compiled.js",
+    "compile-protofiles": "npx pbjs -t static-module -w es6 --no-comments --lint \"eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars, camelcase, default-case-last, no-mixed-operators\" -o src/components/apps/updater/protobuf/proto-compiled.js ./flipperzero-protobuf/*.proto && eslint --fix src/components/apps/updater/protobuf/proto-compiled.js",
     "compile-xbms": "node scripts/xbm-compiler.mjs && eslint --fix src/components/apps/updater/protobuf/xbms.js"
   },
   "dependencies": {

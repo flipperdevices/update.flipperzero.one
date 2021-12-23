@@ -413,6 +413,9 @@ export const PB = $root.PB = (() => {
     Main.prototype.systemDeviceInfoRequest = null
     Main.prototype.systemDeviceInfoResponse = null
     Main.prototype.systemFactoryResetRequest = null
+    Main.prototype.systemGetDatetimeRequest = null
+    Main.prototype.systemGetDatetimeResponse = null
+    Main.prototype.systemSetDatetimeRequest = null
     Main.prototype.storageInfoRequest = null
     Main.prototype.storageInfoResponse = null
     Main.prototype.storageStatRequest = null
@@ -440,7 +443,7 @@ export const PB = $root.PB = (() => {
     let $oneOfFields
 
     Object.defineProperty(Main.prototype, 'content', {
-      get: $util.oneOfGetter($oneOfFields = ['empty', 'stopSession', 'systemPingRequest', 'systemPingResponse', 'systemRebootRequest', 'systemDeviceInfoRequest', 'systemDeviceInfoResponse', 'systemFactoryResetRequest', 'storageInfoRequest', 'storageInfoResponse', 'storageStatRequest', 'storageStatResponse', 'storageListRequest', 'storageListResponse', 'storageReadRequest', 'storageReadResponse', 'storageWriteRequest', 'storageDeleteRequest', 'storageMkdirRequest', 'storageMd5sumRequest', 'storageMd5sumResponse', 'storageRenameRequest', 'appStartRequest', 'appLockStatusRequest', 'appLockStatusResponse', 'guiStartScreenStreamRequest', 'guiStopScreenStreamRequest', 'guiScreenFrame', 'guiSendInputEventRequest', 'guiStartVirtualDisplayRequest', 'guiStopVirtualDisplayRequest']),
+      get: $util.oneOfGetter($oneOfFields = ['empty', 'stopSession', 'systemPingRequest', 'systemPingResponse', 'systemRebootRequest', 'systemDeviceInfoRequest', 'systemDeviceInfoResponse', 'systemFactoryResetRequest', 'systemGetDatetimeRequest', 'systemGetDatetimeResponse', 'systemSetDatetimeRequest', 'storageInfoRequest', 'storageInfoResponse', 'storageStatRequest', 'storageStatResponse', 'storageListRequest', 'storageListResponse', 'storageReadRequest', 'storageReadResponse', 'storageWriteRequest', 'storageDeleteRequest', 'storageMkdirRequest', 'storageMd5sumRequest', 'storageMd5sumResponse', 'storageRenameRequest', 'appStartRequest', 'appLockStatusRequest', 'appLockStatusResponse', 'guiStartScreenStreamRequest', 'guiStopScreenStreamRequest', 'guiScreenFrame', 'guiSendInputEventRequest', 'guiStartVirtualDisplayRequest', 'guiStopVirtualDisplayRequest']),
       set: $util.oneOfSetter($oneOfFields)
     })
 
@@ -484,6 +487,9 @@ export const PB = $root.PB = (() => {
       if (message.systemDeviceInfoRequest != null && Object.hasOwnProperty.call(message, 'systemDeviceInfoRequest')) { $root.PB_System.DeviceInfoRequest.encode(message.systemDeviceInfoRequest, writer.uint32(258).fork()).ldelim() }
       if (message.systemDeviceInfoResponse != null && Object.hasOwnProperty.call(message, 'systemDeviceInfoResponse')) { $root.PB_System.DeviceInfoResponse.encode(message.systemDeviceInfoResponse, writer.uint32(266).fork()).ldelim() }
       if (message.systemFactoryResetRequest != null && Object.hasOwnProperty.call(message, 'systemFactoryResetRequest')) { $root.PB_System.FactoryResetRequest.encode(message.systemFactoryResetRequest, writer.uint32(274).fork()).ldelim() }
+      if (message.systemGetDatetimeRequest != null && Object.hasOwnProperty.call(message, 'systemGetDatetimeRequest')) { $root.PB_System.GetDateTimeRequest.encode(message.systemGetDatetimeRequest, writer.uint32(282).fork()).ldelim() }
+      if (message.systemGetDatetimeResponse != null && Object.hasOwnProperty.call(message, 'systemGetDatetimeResponse')) { $root.PB_System.GetDateTimeResponse.encode(message.systemGetDatetimeResponse, writer.uint32(290).fork()).ldelim() }
+      if (message.systemSetDatetimeRequest != null && Object.hasOwnProperty.call(message, 'systemSetDatetimeRequest')) { $root.PB_System.SetDateTimeRequest.encode(message.systemSetDatetimeRequest, writer.uint32(298).fork()).ldelim() }
       return writer
     }
 
@@ -529,6 +535,15 @@ export const PB = $root.PB = (() => {
             break
           case 34:
             message.systemFactoryResetRequest = $root.PB_System.FactoryResetRequest.decode(reader, reader.uint32())
+            break
+          case 35:
+            message.systemGetDatetimeRequest = $root.PB_System.GetDateTimeRequest.decode(reader, reader.uint32())
+            break
+          case 36:
+            message.systemGetDatetimeResponse = $root.PB_System.GetDateTimeResponse.decode(reader, reader.uint32())
+            break
+          case 37:
+            message.systemSetDatetimeRequest = $root.PB_System.SetDateTimeRequest.decode(reader, reader.uint32())
             break
           case 28:
             message.storageInfoRequest = $root.PB_Storage.InfoRequest.decode(reader, reader.uint32())
@@ -710,6 +725,30 @@ export const PB = $root.PB = (() => {
         {
           const error = $root.PB_System.FactoryResetRequest.verify(message.systemFactoryResetRequest)
           if (error) { return 'systemFactoryResetRequest.' + error }
+        }
+      }
+      if (message.systemGetDatetimeRequest != null && message.hasOwnProperty('systemGetDatetimeRequest')) {
+        if (properties.content === 1) { return 'content: multiple values' }
+        properties.content = 1
+        {
+          const error = $root.PB_System.GetDateTimeRequest.verify(message.systemGetDatetimeRequest)
+          if (error) { return 'systemGetDatetimeRequest.' + error }
+        }
+      }
+      if (message.systemGetDatetimeResponse != null && message.hasOwnProperty('systemGetDatetimeResponse')) {
+        if (properties.content === 1) { return 'content: multiple values' }
+        properties.content = 1
+        {
+          const error = $root.PB_System.GetDateTimeResponse.verify(message.systemGetDatetimeResponse)
+          if (error) { return 'systemGetDatetimeResponse.' + error }
+        }
+      }
+      if (message.systemSetDatetimeRequest != null && message.hasOwnProperty('systemSetDatetimeRequest')) {
+        if (properties.content === 1) { return 'content: multiple values' }
+        properties.content = 1
+        {
+          const error = $root.PB_System.SetDateTimeRequest.verify(message.systemSetDatetimeRequest)
+          if (error) { return 'systemSetDatetimeRequest.' + error }
         }
       }
       if (message.storageInfoRequest != null && message.hasOwnProperty('storageInfoRequest')) {
@@ -1022,6 +1061,18 @@ export const PB = $root.PB = (() => {
         if (typeof object.systemFactoryResetRequest !== 'object') { throw TypeError('.PB.Main.systemFactoryResetRequest: object expected') }
         message.systemFactoryResetRequest = $root.PB_System.FactoryResetRequest.fromObject(object.systemFactoryResetRequest)
       }
+      if (object.systemGetDatetimeRequest != null) {
+        if (typeof object.systemGetDatetimeRequest !== 'object') { throw TypeError('.PB.Main.systemGetDatetimeRequest: object expected') }
+        message.systemGetDatetimeRequest = $root.PB_System.GetDateTimeRequest.fromObject(object.systemGetDatetimeRequest)
+      }
+      if (object.systemGetDatetimeResponse != null) {
+        if (typeof object.systemGetDatetimeResponse !== 'object') { throw TypeError('.PB.Main.systemGetDatetimeResponse: object expected') }
+        message.systemGetDatetimeResponse = $root.PB_System.GetDateTimeResponse.fromObject(object.systemGetDatetimeResponse)
+      }
+      if (object.systemSetDatetimeRequest != null) {
+        if (typeof object.systemSetDatetimeRequest !== 'object') { throw TypeError('.PB.Main.systemSetDatetimeRequest: object expected') }
+        message.systemSetDatetimeRequest = $root.PB_System.SetDateTimeRequest.fromObject(object.systemSetDatetimeRequest)
+      }
       if (object.storageInfoRequest != null) {
         if (typeof object.storageInfoRequest !== 'object') { throw TypeError('.PB.Main.storageInfoRequest: object expected') }
         message.storageInfoRequest = $root.PB_Storage.InfoRequest.fromObject(object.storageInfoRequest)
@@ -1251,6 +1302,18 @@ export const PB = $root.PB = (() => {
       if (message.systemFactoryResetRequest != null && message.hasOwnProperty('systemFactoryResetRequest')) {
         object.systemFactoryResetRequest = $root.PB_System.FactoryResetRequest.toObject(message.systemFactoryResetRequest, options)
         if (options.oneofs) { object.content = 'systemFactoryResetRequest' }
+      }
+      if (message.systemGetDatetimeRequest != null && message.hasOwnProperty('systemGetDatetimeRequest')) {
+        object.systemGetDatetimeRequest = $root.PB_System.GetDateTimeRequest.toObject(message.systemGetDatetimeRequest, options)
+        if (options.oneofs) { object.content = 'systemGetDatetimeRequest' }
+      }
+      if (message.systemGetDatetimeResponse != null && message.hasOwnProperty('systemGetDatetimeResponse')) {
+        object.systemGetDatetimeResponse = $root.PB_System.GetDateTimeResponse.toObject(message.systemGetDatetimeResponse, options)
+        if (options.oneofs) { object.content = 'systemGetDatetimeResponse' }
+      }
+      if (message.systemSetDatetimeRequest != null && message.hasOwnProperty('systemSetDatetimeRequest')) {
+        object.systemSetDatetimeRequest = $root.PB_System.SetDateTimeRequest.toObject(message.systemSetDatetimeRequest, options)
+        if (options.oneofs) { object.content = 'systemSetDatetimeRequest' }
       }
       return object
     }
@@ -3068,6 +3131,375 @@ export const PB_System = $root.PB_System = (() => {
     return FactoryResetRequest
   })()
 
+  PB_System.GetDateTimeRequest = (function () {
+    function GetDateTimeRequest (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    GetDateTimeRequest.create = function create (properties) {
+      return new GetDateTimeRequest(properties)
+    }
+
+    GetDateTimeRequest.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      return writer
+    }
+
+    GetDateTimeRequest.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    GetDateTimeRequest.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_System.GetDateTimeRequest()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    GetDateTimeRequest.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    GetDateTimeRequest.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      return null
+    }
+
+    GetDateTimeRequest.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_System.GetDateTimeRequest) { return object }
+      return new $root.PB_System.GetDateTimeRequest()
+    }
+
+    GetDateTimeRequest.toObject = function toObject () {
+      return {}
+    }
+
+    GetDateTimeRequest.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return GetDateTimeRequest
+  })()
+
+  PB_System.GetDateTimeResponse = (function () {
+    function GetDateTimeResponse (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    GetDateTimeResponse.prototype.datetime = null
+
+    GetDateTimeResponse.create = function create (properties) {
+      return new GetDateTimeResponse(properties)
+    }
+
+    GetDateTimeResponse.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      if (message.datetime != null && Object.hasOwnProperty.call(message, 'datetime')) { $root.PB_System.DateTime.encode(message.datetime, writer.uint32(10).fork()).ldelim() }
+      return writer
+    }
+
+    GetDateTimeResponse.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    GetDateTimeResponse.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_System.GetDateTimeResponse()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          case 1:
+            message.datetime = $root.PB_System.DateTime.decode(reader, reader.uint32())
+            break
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    GetDateTimeResponse.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    GetDateTimeResponse.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.datetime != null && message.hasOwnProperty('datetime')) {
+        const error = $root.PB_System.DateTime.verify(message.datetime)
+        if (error) { return 'datetime.' + error }
+      }
+      return null
+    }
+
+    GetDateTimeResponse.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_System.GetDateTimeResponse) { return object }
+      const message = new $root.PB_System.GetDateTimeResponse()
+      if (object.datetime != null) {
+        if (typeof object.datetime !== 'object') { throw TypeError('.PB_System.GetDateTimeResponse.datetime: object expected') }
+        message.datetime = $root.PB_System.DateTime.fromObject(object.datetime)
+      }
+      return message
+    }
+
+    GetDateTimeResponse.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) { object.datetime = null }
+      if (message.datetime != null && message.hasOwnProperty('datetime')) { object.datetime = $root.PB_System.DateTime.toObject(message.datetime, options) }
+      return object
+    }
+
+    GetDateTimeResponse.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return GetDateTimeResponse
+  })()
+
+  PB_System.SetDateTimeRequest = (function () {
+    function SetDateTimeRequest (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    SetDateTimeRequest.prototype.datetime = null
+
+    SetDateTimeRequest.create = function create (properties) {
+      return new SetDateTimeRequest(properties)
+    }
+
+    SetDateTimeRequest.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      if (message.datetime != null && Object.hasOwnProperty.call(message, 'datetime')) { $root.PB_System.DateTime.encode(message.datetime, writer.uint32(10).fork()).ldelim() }
+      return writer
+    }
+
+    SetDateTimeRequest.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    SetDateTimeRequest.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_System.SetDateTimeRequest()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          case 1:
+            message.datetime = $root.PB_System.DateTime.decode(reader, reader.uint32())
+            break
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    SetDateTimeRequest.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    SetDateTimeRequest.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.datetime != null && message.hasOwnProperty('datetime')) {
+        const error = $root.PB_System.DateTime.verify(message.datetime)
+        if (error) { return 'datetime.' + error }
+      }
+      return null
+    }
+
+    SetDateTimeRequest.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_System.SetDateTimeRequest) { return object }
+      const message = new $root.PB_System.SetDateTimeRequest()
+      if (object.datetime != null) {
+        if (typeof object.datetime !== 'object') { throw TypeError('.PB_System.SetDateTimeRequest.datetime: object expected') }
+        message.datetime = $root.PB_System.DateTime.fromObject(object.datetime)
+      }
+      return message
+    }
+
+    SetDateTimeRequest.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) { object.datetime = null }
+      if (message.datetime != null && message.hasOwnProperty('datetime')) { object.datetime = $root.PB_System.DateTime.toObject(message.datetime, options) }
+      return object
+    }
+
+    SetDateTimeRequest.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return SetDateTimeRequest
+  })()
+
+  PB_System.DateTime = (function () {
+    function DateTime (properties) {
+      if (properties) {
+        for (let keys = Object.keys(properties), i = 0; i < keys.length; ++i) {
+          if (properties[keys[i]] != null) { this[keys[i]] = properties[keys[i]] }
+        }
+      }
+    }
+
+    DateTime.prototype.hour = 0
+    DateTime.prototype.minute = 0
+    DateTime.prototype.second = 0
+    DateTime.prototype.day = 0
+    DateTime.prototype.month = 0
+    DateTime.prototype.year = 0
+    DateTime.prototype.weekday = 0
+
+    DateTime.create = function create (properties) {
+      return new DateTime(properties)
+    }
+
+    DateTime.encode = function encode (message, writer) {
+      if (!writer) { writer = $Writer.create() }
+      if (message.hour != null && Object.hasOwnProperty.call(message, 'hour')) { writer.uint32(8).uint32(message.hour) }
+      if (message.minute != null && Object.hasOwnProperty.call(message, 'minute')) { writer.uint32(16).uint32(message.minute) }
+      if (message.second != null && Object.hasOwnProperty.call(message, 'second')) { writer.uint32(24).uint32(message.second) }
+      if (message.day != null && Object.hasOwnProperty.call(message, 'day')) { writer.uint32(32).uint32(message.day) }
+      if (message.month != null && Object.hasOwnProperty.call(message, 'month')) { writer.uint32(40).uint32(message.month) }
+      if (message.year != null && Object.hasOwnProperty.call(message, 'year')) { writer.uint32(48).uint32(message.year) }
+      if (message.weekday != null && Object.hasOwnProperty.call(message, 'weekday')) { writer.uint32(56).uint32(message.weekday) }
+      return writer
+    }
+
+    DateTime.encodeDelimited = function encodeDelimited (message, writer) {
+      return this.encode(message, writer).ldelim()
+    }
+
+    DateTime.decode = function decode (reader, length) {
+      if (!(reader instanceof $Reader)) { reader = $Reader.create(reader) }
+      const end = length === undefined ? reader.len : reader.pos + length, message = new $root.PB_System.DateTime()
+      while (reader.pos < end) {
+        const tag = reader.uint32()
+        switch (tag >>> 3) {
+          case 1:
+            message.hour = reader.uint32()
+            break
+          case 2:
+            message.minute = reader.uint32()
+            break
+          case 3:
+            message.second = reader.uint32()
+            break
+          case 4:
+            message.day = reader.uint32()
+            break
+          case 5:
+            message.month = reader.uint32()
+            break
+          case 6:
+            message.year = reader.uint32()
+            break
+          case 7:
+            message.weekday = reader.uint32()
+            break
+          default:
+            reader.skipType(tag & 7)
+            break
+        }
+      }
+      return message
+    }
+
+    DateTime.decodeDelimited = function decodeDelimited (reader) {
+      if (!(reader instanceof $Reader)) { reader = new $Reader(reader) }
+      return this.decode(reader, reader.uint32())
+    }
+
+    DateTime.verify = function verify (message) {
+      if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.hour != null && message.hasOwnProperty('hour')) {
+        if (!$util.isInteger(message.hour)) { return 'hour: integer expected' }
+      }
+      if (message.minute != null && message.hasOwnProperty('minute')) {
+        if (!$util.isInteger(message.minute)) { return 'minute: integer expected' }
+      }
+      if (message.second != null && message.hasOwnProperty('second')) {
+        if (!$util.isInteger(message.second)) { return 'second: integer expected' }
+      }
+      if (message.day != null && message.hasOwnProperty('day')) {
+        if (!$util.isInteger(message.day)) { return 'day: integer expected' }
+      }
+      if (message.month != null && message.hasOwnProperty('month')) {
+        if (!$util.isInteger(message.month)) { return 'month: integer expected' }
+      }
+      if (message.year != null && message.hasOwnProperty('year')) {
+        if (!$util.isInteger(message.year)) { return 'year: integer expected' }
+      }
+      if (message.weekday != null && message.hasOwnProperty('weekday')) {
+        if (!$util.isInteger(message.weekday)) { return 'weekday: integer expected' }
+      }
+      return null
+    }
+
+    DateTime.fromObject = function fromObject (object) {
+      if (object instanceof $root.PB_System.DateTime) { return object }
+      const message = new $root.PB_System.DateTime()
+      if (object.hour != null) { message.hour = object.hour >>> 0 }
+      if (object.minute != null) { message.minute = object.minute >>> 0 }
+      if (object.second != null) { message.second = object.second >>> 0 }
+      if (object.day != null) { message.day = object.day >>> 0 }
+      if (object.month != null) { message.month = object.month >>> 0 }
+      if (object.year != null) { message.year = object.year >>> 0 }
+      if (object.weekday != null) { message.weekday = object.weekday >>> 0 }
+      return message
+    }
+
+    DateTime.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) {
+        object.hour = 0
+        object.minute = 0
+        object.second = 0
+        object.day = 0
+        object.month = 0
+        object.year = 0
+        object.weekday = 0
+      }
+      if (message.hour != null && message.hasOwnProperty('hour')) { object.hour = message.hour }
+      if (message.minute != null && message.hasOwnProperty('minute')) { object.minute = message.minute }
+      if (message.second != null && message.hasOwnProperty('second')) { object.second = message.second }
+      if (message.day != null && message.hasOwnProperty('day')) { object.day = message.day }
+      if (message.month != null && message.hasOwnProperty('month')) { object.month = message.month }
+      if (message.year != null && message.hasOwnProperty('year')) { object.year = message.year }
+      if (message.weekday != null && message.hasOwnProperty('weekday')) { object.weekday = message.weekday }
+      return object
+    }
+
+    DateTime.prototype.toJSON = function toJSON () {
+      return this.constructor.toObject(this, $protobuf.util.toJSONOptions)
+    }
+
+    return DateTime
+  })()
+
   return PB_System
 })()
 
@@ -3467,12 +3899,15 @@ export const PB_Gui = $root.PB_Gui = (() => {
       }
     }
 
+    StartVirtualDisplayRequest.prototype.firstFrame = null
+
     StartVirtualDisplayRequest.create = function create (properties) {
       return new StartVirtualDisplayRequest(properties)
     }
 
     StartVirtualDisplayRequest.encode = function encode (message, writer) {
       if (!writer) { writer = $Writer.create() }
+      if (message.firstFrame != null && Object.hasOwnProperty.call(message, 'firstFrame')) { $root.PB_Gui.ScreenFrame.encode(message.firstFrame, writer.uint32(10).fork()).ldelim() }
       return writer
     }
 
@@ -3486,6 +3921,9 @@ export const PB_Gui = $root.PB_Gui = (() => {
       while (reader.pos < end) {
         const tag = reader.uint32()
         switch (tag >>> 3) {
+          case 1:
+            message.firstFrame = $root.PB_Gui.ScreenFrame.decode(reader, reader.uint32())
+            break
           default:
             reader.skipType(tag & 7)
             break
@@ -3501,16 +3939,29 @@ export const PB_Gui = $root.PB_Gui = (() => {
 
     StartVirtualDisplayRequest.verify = function verify (message) {
       if (typeof message !== 'object' || message === null) { return 'object expected' }
+      if (message.firstFrame != null && message.hasOwnProperty('firstFrame')) {
+        const error = $root.PB_Gui.ScreenFrame.verify(message.firstFrame)
+        if (error) { return 'firstFrame.' + error }
+      }
       return null
     }
 
     StartVirtualDisplayRequest.fromObject = function fromObject (object) {
       if (object instanceof $root.PB_Gui.StartVirtualDisplayRequest) { return object }
-      return new $root.PB_Gui.StartVirtualDisplayRequest()
+      const message = new $root.PB_Gui.StartVirtualDisplayRequest()
+      if (object.firstFrame != null) {
+        if (typeof object.firstFrame !== 'object') { throw TypeError('.PB_Gui.StartVirtualDisplayRequest.firstFrame: object expected') }
+        message.firstFrame = $root.PB_Gui.ScreenFrame.fromObject(object.firstFrame)
+      }
+      return message
     }
 
-    StartVirtualDisplayRequest.toObject = function toObject () {
-      return {}
+    StartVirtualDisplayRequest.toObject = function toObject (message, options) {
+      if (!options) { options = {} }
+      const object = {}
+      if (options.defaults) { object.firstFrame = null }
+      if (message.firstFrame != null && message.hasOwnProperty('firstFrame')) { object.firstFrame = $root.PB_Gui.ScreenFrame.toObject(message.firstFrame, options) }
+      return object
     }
 
     StartVirtualDisplayRequest.prototype.toJSON = function toJSON () {
