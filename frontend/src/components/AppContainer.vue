@@ -176,7 +176,7 @@
           <template v-if="flipperResponds">
             <q-card-section>
               <Updater
-                v-if="currentApp === 'Updater'"
+                v-if="currentApp === 'Updater' && dev.version"
                 :flipper="flipper"
                 @connect="connect"
                 @set-manifest="setManifest"
@@ -634,7 +634,7 @@ export default defineComponent({
         await this.flipper.reboot()
           .catch(async error => {
             if (error.message && error.message.includes('No known')) {
-              this.recognizeDevice(this.mode)
+              this.connect()
             }
           })
         await waitForDevice('rebooted to ' + this.mode)
