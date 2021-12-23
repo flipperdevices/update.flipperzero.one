@@ -35,13 +35,15 @@
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
-                <div><b>Device type:</b></div><div>{{ flipper.properties.type }}</div>
                 <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.stm32Serial }}</div>
                 <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
                 <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
                 <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
                 <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
                 <div><b>SD card:</b></div><div>{{ flipper.properties.sdCardMounted ? 'mounted' : 'missing' }}</div>
+                <template v-if="databasesPresent !== undefined">
+                  <div><b>Databases:</b></div><div>{{ databasesPresent ? 'present' : 'missing' }}</div>
+                </template>
               </div>
             </q-card-section>
           </q-card>
@@ -282,6 +284,7 @@ export default defineComponent({
         sha256: true,
         target: true
       }),
+      databasesPresent: ref(undefined),
       fetchedManifest: ref(undefined),
       firmware: ref({
         fileName: '',

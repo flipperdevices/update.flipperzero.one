@@ -255,6 +255,7 @@ import Paint from './apps/paint/Paint.vue'
 import { Flipper } from './core/core'
 import { sleep, waitForDevice } from './util'
 import * as semver from 'semver'
+import * as pbCommands from './apps/updater/protobuf/commands'
 
 import {
   mdiChevronDown,
@@ -543,6 +544,21 @@ export default defineComponent({
       if (this.cliResponseTimeout) {
         clearTimeout(this.cliResponseTimeout)
         this.cliResponseTimeout = undefined
+      }
+
+      if (this.flipper.properties.sdCardMounted) {
+        const startPing = await pbCommands.startRpcSession(this.flipper)
+        if (!startPing.resolved || startPing.error) {
+          throw new Error('Couldn\'t start rpc session')
+        } else {
+          const internal = await pbCommands.storageList('/ext')
+          if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
+            this.$refs.Updater.databasesPresent = true
+          } else {
+            this.$refs.Updater.databasesPresent = false
+          }
+          await pbCommands.stopRpcSession()
+        }
       }
     },
 
