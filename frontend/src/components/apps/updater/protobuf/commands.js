@@ -211,11 +211,13 @@ function storageDelete (path, isRecursive) {
   })
 }
 
-function guiStartVirtualDisplay () {
+function guiStartVirtualDisplay (firstFrame) {
   return new Promise((resolve, reject) => {
     enqueue({
       requestType: 'guiStartVirtualDisplayRequest',
-      args: {}
+      args: {
+        firstFrame: firstFrame
+      }
     })
     const unbind = emitter.on('response', res => {
       if (res && res.error) {

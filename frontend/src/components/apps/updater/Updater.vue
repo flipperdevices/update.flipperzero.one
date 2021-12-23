@@ -691,7 +691,7 @@ export default defineComponent({
       }
       this.rpcStatus.isSession = true
 
-      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
       } else {
@@ -730,12 +730,9 @@ export default defineComponent({
           throw new Error('Couldn\'t start rpc session')
         }
 
-        const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+        const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
         if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
           console.error('Couldn\'t start virtual display session')
-        } else {
-          const data = new Uint8Array(xbms.updating)
-          await pbCommands.guiScreenFrame(data)
         }
       }
 
@@ -771,12 +768,9 @@ export default defineComponent({
         throw new Error('Couldn\'t start rpc session')
       }
 
-      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
-      } else {
-        const data = new Uint8Array(xbms.updating)
-        await pbCommands.guiScreenFrame(data)
       }
 
       const empty = {
