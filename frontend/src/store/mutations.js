@@ -18,5 +18,8 @@ export const mutations = {
   },
   setFirmwareChannels (state, payload) {
     state.firmwareChannels = payload.firmwareChannels
+  },
+  incrementUpdateCounter (state) {
+    state.updateCounter++
   }
 }

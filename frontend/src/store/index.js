@@ -23,7 +23,9 @@ export default createStore({
       release: {},
       rc: {},
       dev: {}
-    }
+    },
+
+    updateCounter: 0
   },
   actions,
   mutations

@@ -321,7 +321,6 @@ export default defineComponent({
         command: undefined
       }),
       showUsbRecognizeButton: ref(false),
-      updateCounter: ref(0),
       updateStage: ref(1),
       updateSuccess: ref(false)
     }
@@ -387,6 +386,9 @@ export default defineComponent({
     },
     error () {
       return this.$store.state.ui.error
+    },
+    updateCounter () {
+      return this.$store.state.updateCounter
     }
   },
 
@@ -399,7 +401,9 @@ export default defineComponent({
         event.returnValue = ''
       }
       if (this.updateStage === 1) {
-        this.updateCounter++
+        this.$store.commit({
+          type: 'incrementUpdateCounter'
+        })
         console.log('⎡ Update #' + this.updateCounter, 'started')
         console.log('⎢ Stage 1')
 

@@ -559,7 +559,6 @@ export default defineComponent({
           }
 
           const datetime = await pbCommands.systemGetDatetime()
-          console.log(datetime)
           const now = new Date()
           if (Math.abs(now - datetime > 3000)) {
             await pbCommands.systemSetDatetime(now)

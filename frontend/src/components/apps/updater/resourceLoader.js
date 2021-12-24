@@ -1,6 +1,5 @@
 import untar from 'js-untar'
 import pako from 'pako'
-const inflate = new pako.Inflate()
 import * as pbCommands from './protobuf/commands'
 import { emitter } from '../../core/core'
 
@@ -25,6 +24,7 @@ async function fetchResources (channel, files) {
 }
 
 function unpackResources (buffer) {
+  const inflate = new pako.Inflate()
   inflate.push(new Uint8Array(buffer))
   const ungzipped = inflate.result
   return untar(ungzipped.buffer)
