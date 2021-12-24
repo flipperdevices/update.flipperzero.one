@@ -41,8 +41,8 @@
                 <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
                 <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
                 <div><b>SD card:</b></div><div>{{ flipper.properties.sdCardMounted ? 'mounted' : 'missing' }}</div>
-                <template v-if="databasesPresent !== undefined">
-                  <div><b>Databases:</b></div><div>{{ databasesPresent ? 'present' : 'missing' }}</div>
+                <template v-if="flipper.properties.databasesPresent !== undefined">
+                  <div><b>Databases:</b></div><div>{{ flipper.properties.databasesPresent ? 'present' : 'missing' }}</div>
                 </template>
               </div>
             </q-card-section>
@@ -184,7 +184,7 @@
               padding="12px 30px"
               size="13px"
               class="q-ma-sm"
-              @click="this.$emit('connect')"
+              @click="$emit('connect')"
             >
               Reconnect
             </q-btn>
@@ -201,7 +201,7 @@
           Check your connection and try again.
         </div>
         <div v-if="showUsbRecognizeButton">
-          <q-btn color="positive" padding="12px 30px" @click="this.$emit('recognizeDevice', 'usb')">Continue</q-btn>
+          <q-btn color="positive" padding="12px 30px" @click="$emit('recognizeDevice', 'usb')">Continue</q-btn>
         </div>
         <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
           <q-linear-progress
@@ -237,7 +237,7 @@
     </div>
     <div v-if="updateSuccess">
       <h2>Update success</h2>
-      <q-btn color="positive" padding="12px 30px" @click="updateSuccess = false; this.$emit('connect')">Continue</q-btn>
+      <q-btn color="positive" padding="12px 30px" @click="updateSuccess = false; $emit('connect')">Continue</q-btn>
     </div>
   </div>
 </template>
@@ -284,7 +284,6 @@ export default defineComponent({
         sha256: true,
         target: true
       }),
-      databasesPresent: ref(undefined),
       fetchedManifest: ref(undefined),
       firmware: ref({
         fileName: '',

@@ -174,7 +174,7 @@
 
         <template v-if="!error.isError">
           <template v-if="flipperResponds">
-            <q-card-section>
+            <q-card-section class="fit">
               <Updater
                 v-if="currentApp === 'Updater' && dev.version"
                 :flipper="flipper"
@@ -186,6 +186,7 @@
               <Terminal
                 v-else-if="currentApp === 'Terminal'"
                 :flipper="flipper"
+                @toggle-terminal="toggleTerminal"
                 ref="Terminal"
               />
               <Paint
@@ -193,26 +194,22 @@
                 :flipper="flipper"
               />
             </q-card-section>
-            <div v-if="!ui.blockButtons" class="absolute-top-right">
+            <div v-if="!ui.blockButtons && currentApp === 'Updater' && connection === 2" class="absolute-top-right">
               <q-btn
-                v-if="!showPaint && connection === 2"
                 flat
                 dense
-                :color="showTerminal ? 'grey-2' : 'grey-7'"
-                :icon="showTerminal ? evaCloseOutline : mdiConsole"
+                :color="'grey-7'"
+                :icon="mdiConsole"
                 size="16px"
-                class="q-ma-sm"
-                :class="showTerminal ? 'z-max' : 'z-top'"
-                :style="showTerminal ? 'position: fixed; right: 0; top: 0;' : ''"
+                class="q-ma-sm z-top"
                 @click="toggleTerminal"
               ></q-btn>
 
               <q-btn
-                v-if="connection === 2"
                 flat
                 dense
                 color="grey-7"
-                :icon="showPaint ? evaCloseOutline : evaBrushOutline"
+                :icon="evaBrushOutline"
                 size="16px"
                 class="q-ma-sm"
                 :class="showPaint ? 'z-max' : 'z-top'"
@@ -468,6 +465,14 @@ export default defineComponent({
       if (this.reconnectLoop) {
         clearInterval(this.reconnectLoop)
       }
+      this.$store.commit({
+        type: 'setUiFlag',
+        flag: {
+          name: 'blockButtons',
+          value: true
+        }
+      })
+
       try {
         this.init()
 
@@ -494,6 +499,13 @@ export default defineComponent({
           })
 
         if (!this.error.isError && !this.ui.reconnecting) {
+          this.$store.commit({
+            type: 'setUiFlag',
+            flag: {
+              name: 'blockButtons',
+              value: true
+            }
+          })
           return this.readProperties()
         }
       } catch (error) {
@@ -506,27 +518,38 @@ export default defineComponent({
             button: this.mode
           }
         })
+        this.$store.commit({
+          type: 'setUiFlag',
+          flag: {
+            name: 'blockButtons',
+            value: false
+          }
+        })
       }
     },
 
     async readProperties () {
-      if (!this.isUpdating) {
-        this.cliResponseTimeout = setTimeout(() => {
-          if (!this.flipper.properties.name) {
-            this.$store.commit({
-              type: 'setUiError',
-              error: {
-                isError: true,
-                message: 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.',
-                button: this.mode
-              }
-            })
-          }
-        }, 4000)
-      }
-      if (this.isUpdating) {
-        console.log('⎢ ⎢ ⎡ parsing properties (response timeout: ' + !!this.cliResponseTimeout + ', is updating: ' + this.isUpdating + ')')
-      }
+      this.$store.commit({
+        type: 'setUiFlag',
+        flag: {
+          name: 'blockButtons',
+          value: true
+        }
+      })
+
+      this.cliResponseTimeout = setTimeout(() => {
+        if (!this.flipper.properties.name) {
+          this.$store.commit({
+            type: 'setUiError',
+            error: {
+              isError: true,
+              message: 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.',
+              button: this.mode
+            }
+          })
+        }
+      }, 4000)
+
       let i = 10
       while (!this.flipperResponds && i > 0) {
         await this.flipper.readProperties()
@@ -538,13 +561,13 @@ export default defineComponent({
         i++
         await sleep(100)
       }
-      if (this.isUpdating) {
-        console.log('⎢ ⎢ ⎣ parsed properties')
-      }
+
       if (this.cliResponseTimeout) {
         clearTimeout(this.cliResponseTimeout)
         this.cliResponseTimeout = undefined
       }
+
+      this.flipper.properties.databasesPresent = undefined
 
       if (this.flipper.properties.sdCardMounted) {
         const startPing = await pbCommands.startRpcSession(this.flipper)
@@ -553,9 +576,9 @@ export default defineComponent({
         } else {
           const internal = await pbCommands.storageList('/ext')
           if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
-            this.$refs.Updater.databasesPresent = true
+            this.flipper.properties.databasesPresent = true
           } else {
-            this.$refs.Updater.databasesPresent = false
+            this.flipper.properties.databasesPresent = false
           }
 
           const datetime = await pbCommands.systemGetDatetime()
@@ -567,6 +590,14 @@ export default defineComponent({
           await pbCommands.stopRpcSession()
         }
       }
+
+      this.$store.commit({
+        type: 'setUiFlag',
+        flag: {
+          name: 'blockButtons',
+          value: false
+        }
+      })
     },
 
     // Utils
@@ -877,7 +908,7 @@ export default defineComponent({
       if (!this.terminalEnabled) {
         this.terminalEnabled = true
       } else {
-        if (!this.showTerminal) {
+        if (!this.showTerminal && this.$refs.Terminal) {
           this.$refs.Terminal.read()
         }
       }
@@ -919,7 +950,7 @@ export default defineComponent({
     this.evaBrushOutline = evaBrushOutline
 
     window.addEventListener('keydown', (e) => {
-      if (!this.showTerminal && e.key === 'Escape') {
+      if (this.currentApp !== 'Terminal' && e.key === 'Escape') {
         this.showOverlay = false
       }
     })

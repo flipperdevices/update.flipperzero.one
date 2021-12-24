@@ -126,6 +126,15 @@
       height="64"
       ref="resizeCanvas"
     ></canvas>
+
+    <q-btn
+      flat
+      dense
+      color="grey-7"
+      :icon="evaCloseOutline"
+      size="16px"
+      class="absolute-top-right q-ma-sm"
+      @click="close"></q-btn>
   </div>
 </template>
 
@@ -133,6 +142,10 @@
 import { defineComponent, ref } from 'vue'
 import * as pbCommands from '../updater/protobuf/commands'
 import { xbmValues } from './xbm-values'
+
+import {
+  evaCloseOutline
+} from '@quasar/extras/eva-icons'
 
 import {
   mdiPencil,
@@ -174,6 +187,13 @@ export default defineComponent({
   },
 
   methods: {
+    close () {
+      this.$store.commit({
+        type: 'setCurrentApp',
+        currentApp: 'Updater'
+      })
+    },
+
     async startSession () {
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
@@ -365,6 +385,7 @@ export default defineComponent({
   },
 
   created () {
+    this.evaCloseOutline = evaCloseOutline
     this.mdiPencil = mdiPencil
     this.mdiPencilMinus = mdiPencilMinus
     this.mdiPencilPlus = mdiPencilPlus

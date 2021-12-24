@@ -1,6 +1,15 @@
 <template>
   <div id="terminal-wrapper" class="z-top fit">
     <div id="terminal-container" class="fit"></div>
+
+    <q-btn
+      flat
+      dense
+      color="grey-2"
+      :icon="evaCloseOutline"
+      size="16px"
+      class="absolute-top-right q-ma-sm z-top"
+      @click="$emit('toggleTerminal')"></q-btn>
   </div>
 </template>
 
