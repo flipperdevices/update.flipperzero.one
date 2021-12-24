@@ -508,7 +508,6 @@ export default defineComponent({
       }
 
       if (this.updateStage === 2) {
-        console.log('⎢ Stage 2')
         this.$store.commit({
           type: 'setUiFlag',
           flag: {
@@ -520,6 +519,16 @@ export default defineComponent({
         this.flipper.restartWorker('serial')
         this.showUsbRecognizeButton = false
         await this.flipper.connect('usb')
+          .catch(error => {
+            if (error.toString().includes('No known')) {
+              this.showUsbRecognizeButton = true
+            } else {
+              console.error(error)
+            }
+          })
+        if (this.flipper.state.connection !== 3) {
+          return
+        }
         this.$store.commit({
           type: 'setUiFlag',
           flag: {
@@ -527,6 +536,7 @@ export default defineComponent({
             value: false
           }
         })
+        console.log('⎢ Stage 2')
 
         const unbind = emitter.on('log progress', progress => {
           this.progress = progress
