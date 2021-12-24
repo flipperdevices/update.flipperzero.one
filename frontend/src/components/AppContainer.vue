@@ -104,7 +104,7 @@
           <q-card v-show="error.isError" flat bordered dark style="background: none;" id="error">
             <q-card-section class="text-white text-left">
               <div class="text-h6"><q-icon :name="evaAlertCircleOutline" color="negative"></q-icon> Error</div>
-              <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+              <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.toString().includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
             </q-card-section>
 
             <q-separator dark v-if="error.button.length"></q-separator>
@@ -162,7 +162,7 @@
         <q-card v-show="error.isError && !showOverlay" id="error" class="q-ma-xl">
           <q-card-section class="bg-negative text-white text-left">
             <div class="text-h6"><q-icon :name="evaAlertCircleOutline"></q-icon> Error</div>
-            <div class="text-subtitle2">{{ error.message }}<a v-if="error.message && error.message.includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
+            <div class="text-subtitle2">{{ error.message }}<a v-if="error.toString().includes('access')" href="https://docs.flipperzero.one/en/usage/general/flashing-firmware/#fix-drivers">the wrong driver</a></div>
           </q-card-section>
 
           <q-separator v-if="error.button.length"></q-separator>
@@ -250,7 +250,7 @@ import Terminal from './apps/terminal/Terminal.vue'
 import Paint from './apps/paint/Paint.vue'
 
 import { Flipper } from './core/core'
-import { sleep, waitForDevice } from './util'
+import { sleep } from './util'
 import * as semver from 'semver'
 import * as pbCommands from './apps/updater/protobuf/commands'
 
@@ -483,12 +483,12 @@ export default defineComponent({
             }
           })
           .catch(async error => {
-            if (error.message && error.message.includes('No known')) {
+            if (error.toString().includes('No known')) {
               return this.recognizeDevice(this.mode)
             } else {
-              if (error.message && error.message.includes('Failed to open')) {
+              if (error.toString().includes('Failed to open')) {
                 throw new Error('Flipper serial port may be occupied by another process, close it and try again.')
-              } else if (error.message && error.message.includes("'open' on 'SerialPort'")) {
+              } else if (error.toString().includes("'open' on 'SerialPort'")) {
                 this.flipper.restartWorker()
                 return this.connect()
               } else {
@@ -569,25 +569,29 @@ export default defineComponent({
 
       this.flipper.properties.databasesPresent = undefined
 
-      if (this.flipper.properties.sdCardMounted) {
-        const startPing = await pbCommands.startRpcSession(this.flipper)
-        if (!startPing.resolved || startPing.error) {
-          throw new Error('Couldn\'t start rpc session')
-        } else {
-          const internal = await pbCommands.storageList('/ext')
-          if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
-            this.flipper.properties.databasesPresent = true
+      if (this.mode === 'serial') {
+        if (this.flipper.properties.sdCardMounted) {
+          const startPing = await pbCommands.startRpcSession(this.flipper)
+          if (!startPing.resolved || startPing.error) {
+            throw new Error('Couldn\'t start rpc session')
           } else {
-            this.flipper.properties.databasesPresent = false
-          }
+            const internal = await pbCommands.storageList('/ext')
+            if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
+              this.flipper.properties.databasesPresent = true
+            } else {
+              this.flipper.properties.databasesPresent = false
+            }
 
-          const datetime = await pbCommands.systemGetDatetime()
-          const now = new Date()
-          if (Math.abs(now - datetime > 3000)) {
-            await pbCommands.systemSetDatetime(now)
-          }
+            const datetime = await pbCommands.systemGetDatetime()
+            const now = new Date()
+            if (Math.abs(now - datetime > 3000)) {
+              await pbCommands.systemSetDatetime(now)
+            }
 
-          await pbCommands.stopRpcSession()
+            await pbCommands.stopRpcSession()
+          }
+        } else {
+          this.flipper.properties.databasesPresent = false
         }
       }
 
@@ -686,22 +690,25 @@ export default defineComponent({
           }
         })
         await this.flipper.reboot()
+          .then(() => {
+            this.$store.commit({
+              type: 'setUiFlag',
+              flag: {
+                name: 'reconnecting',
+                value: false
+              }
+            })
+            return this.connect()
+          })
           .catch(async error => {
-            if (error.message && error.message.includes('No known')) {
+            if (error.toString().includes('No known')) {
               this.connect()
+            } else {
+              console.error(error)
             }
           })
-        await waitForDevice('rebooted to ' + this.mode)
-        this.$store.commit({
-          type: 'setUiFlag',
-          flag: {
-            name: 'reconnecting',
-            value: false
-          }
-        })
-        await this.readProperties()
       } else {
-        await this.connect()
+        return this.connect()
       }
     },
 

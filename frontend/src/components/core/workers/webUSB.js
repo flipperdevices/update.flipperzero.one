@@ -165,7 +165,7 @@ async function write ({ file, startAddress }) {
     })
 
     process.events.on('error', (error) => {
-      if (!error.message.includes('DFU GETSTATUS failed')) {
+      if (!error.toString().includes('DFU GETSTATUS failed')) {
         self.postMessage({
           operation: 'write',
           status: 0,

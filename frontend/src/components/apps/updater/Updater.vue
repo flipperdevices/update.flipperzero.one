@@ -487,7 +487,7 @@ export default defineComponent({
                 this.updateStage = 2
               })
               .catch(async error => {
-                if (error.message && error.message.includes('No known')) {
+                if (error.toString().includes('No known')) {
                   this.showUsbRecognizeButton = true
                 } else {
                   console.log(error)
@@ -619,7 +619,7 @@ export default defineComponent({
             unbind()
             document.title = 'Flipper Zero Update Page'
             this.error.isError = true
-            if (error.message && error.message.includes('stall')) {
+            if (error.toString().includes('stall')) {
               this.error.message = 'Flipper USB port may be occupied by another process. Close it and try again.'
             } else {
               this.error.message = error

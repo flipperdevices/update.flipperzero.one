@@ -55,7 +55,7 @@ function disconnect () {
         })
       })
       .catch(error => {
-        if (!(error.message && error.message.includes('The port is already closed.'))) {
+        if (!(error.toString().includes('The port is already closed.'))) {
           self.postMessage({
             operation: 'disconnect',
             status: 0,
