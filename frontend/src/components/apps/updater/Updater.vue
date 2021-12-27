@@ -236,7 +236,7 @@
       </div>
     </div>
     <div v-if="updateSuccess">
-      <h2>Update success</h2>
+      <h2>Success!</h2>
       <q-btn color="positive" padding="12px 30px" @click="updateSuccess = false; $emit('connect')">Continue</q-btn>
     </div>
   </div>
@@ -542,12 +542,12 @@ export default defineComponent({
           this.progress = progress
         })
 
-        console.log('⎢ ⎡ begin writing firmware')
+        console.log('⎢ ⎡ Begin writing firmware')
         await this.flipper.writeFirmware({ file: this.firmware.binary, startAddress: this.firmware.startAddress })
           .then(async () => {
-            console.log('⎢ ⎣ end writing firmware')
+            console.log('⎢ ⎣ End writing firmware')
             unbind()
-            console.log('⎢ ⎡ rebooting to serial')
+            console.log('⎢ ⎡ Rebooting to serial')
             if (this.mode === 'usb') {
               this.$store.commit({
                 type: 'setMode',
@@ -563,7 +563,7 @@ export default defineComponent({
               }
             })
             await waitForDevice('rebooted to serial')
-            console.log('⎢ ⎣ rebooted to serial')
+            console.log('⎢ ⎣ Rebooted to serial')
             this.$store.commit({
               type: 'setUiFlag',
               flag: {
@@ -572,7 +572,7 @@ export default defineComponent({
               }
             })
 
-            console.log('⎢ ⎡ connecting')
+            console.log('⎢ ⎡ Connecting')
             await this.flipper.connect('serial')
             for (let i = 0; i < 30; i++) {
               if (this.connection === 2) {
@@ -583,7 +583,7 @@ export default defineComponent({
             if (this.connection !== 2) {
               throw new Error('reconnection timeout')
             }
-            console.log('⎢ ⎣ connected')
+            console.log('⎢ ⎣ Connected')
             document.title = 'Flipper Zero Update Page'
 
             if (this.mode === 'serial') {
@@ -700,7 +700,7 @@ export default defineComponent({
     },
 
     async backupSettings () {
-      console.log('⎢ ⎡ begin settings backup')
+      console.log('⎢ ⎡ Begin settings backup')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         throw new Error('Couldn\'t start rpc session')
@@ -734,12 +734,12 @@ export default defineComponent({
       await pbCommands.stopRpcSession()
       unbind()
       unbindCQ()
-      console.log('⎢ ⎣ end settings backup')
+      console.log('⎢ ⎣ End settings backup')
     },
 
     async restoreSettings (isVirtualDisplaySession) {
       const nested = isVirtualDisplaySession ? '⎢ ' : ''
-      console.log('⎢ ' + nested + '⎡ begin settings restore')
+      console.log('⎢ ' + nested + '⎡ Begin restoring settings')
       if (!isVirtualDisplaySession) {
         const startPing = await pbCommands.startRpcSession(this.flipper)
         if (!startPing.resolved || startPing.error) {
@@ -774,11 +774,11 @@ export default defineComponent({
 
       unbind()
       unbindCQ()
-      console.log('⎢ ' + nested + '⎣ end settings restore')
+      console.log('⎢ ' + nested + '⎣ End restoring settings')
     },
 
     async updateResources () {
-      console.log('⎢ ⎡ begin resource update')
+      console.log('⎢ ⎡ Begin updating databases')
       const startPing = await pbCommands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         throw new Error('Couldn\'t start rpc session')
@@ -820,14 +820,14 @@ export default defineComponent({
         })
         const globalStart = Date.now()
         await commandQueue(queue)
-        console.log('⎢ ⎢  Resources updated in ' + (Date.now() - globalStart) + ' ms')
+        console.log('⎢ ⎢  Databases updated in ' + (Date.now() - globalStart) + ' ms')
         unbind()
         await this.restoreSettings(true)
-        console.log('⎢ ⎣ end resource update')
+        console.log('⎢ ⎣ End updating databases')
       } catch (error) {
         console.log(error)
         await pbCommands.stopRpcSession()
-        console.log('⎢ ⎣ error during resource update')
+        console.log('⎢ ⎣ Error while updating databases')
       }
     },
 
