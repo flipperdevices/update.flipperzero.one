@@ -1,6 +1,6 @@
 import untar from 'js-untar'
 import pako from 'pako'
-import * as pbCommands from './protobuf/commands'
+import * as commands from './protobuf/commands/commands'
 import { emitter } from '../../core/core'
 
 async function fetchResources (channel, files) {
@@ -197,16 +197,16 @@ async function commandQueue (queue) {
     const start = Date.now()
     switch (entry.command) {
       case 'mkdir':
-        req = pbCommands.storageMkdir(entry.path)
+        req = commands.storage.mkdir(entry.path)
         break
       case 'write':
-        req = pbCommands.storageWrite(entry.path, entry.buffer)
+        req = commands.storage.write(entry.path, entry.buffer)
         break
       case 'delete':
-        req = pbCommands.storageDelete(entry.path, entry.isRecursive)
+        req = commands.storage.remove(entry.path, entry.isRecursive)
         break
       case 'stop session':
-        req = pbCommands.stopRpcSession()
+        req = commands.stopRpcSession()
         break
     }
     if (req) {
@@ -231,12 +231,12 @@ async function commandQueue (queue) {
 }
 
 async function readDir (path) {
-  const files = await pbCommands.storageList(path)
+  const files = await commands.storage.list(path)
   for (const file of files) {
     file.path = path + '/' + file.name
     if (file.type !== 1) {
       emitter.emit('storageRead', { path: file.path, status: 'in progress' })
-      file.data = await pbCommands.storageRead(file.path)
+      file.data = await commands.storage.read(file.path)
       emitter.emit('storageRead', { path: file.path, status: 'ok' })
     } else {
       file.files = await readDir(file.path)
@@ -273,7 +273,7 @@ async function readInternalStorage () {
 
 async function writeInternalStorage (files) {
   emitter.emit('writeInternalStorage', 'start')
-  const flipperFiles = await pbCommands.storageList('/int')
+  const flipperFiles = await commands.storage.list('/int')
   let queue = []
 
   if (flipperFiles !== 'empty response') {

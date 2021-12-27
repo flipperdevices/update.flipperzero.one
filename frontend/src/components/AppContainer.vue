@@ -251,7 +251,7 @@ import Paint from './apps/paint/Paint.vue'
 import { Flipper } from './core/core'
 import { sleep } from './util'
 import * as semver from 'semver'
-import * as pbCommands from './apps/updater/protobuf/commands'
+import * as commands from './apps/updater/protobuf/commands/commands'
 
 import {
   mdiChevronDown,
@@ -568,12 +568,12 @@ export default defineComponent({
       this.flipper.properties.databasesPresent = undefined
 
       if (this.mode === 'serial') {
-        const startPing = await pbCommands.startRpcSession(this.flipper)
+        const startPing = await commands.startRpcSession(this.flipper)
         if (!startPing.resolved || startPing.error) {
           throw new Error('Couldn\'t start rpc session')
         } else {
           if (this.flipper.properties.sdCardMounted) {
-            const internal = await pbCommands.storageList('/ext')
+            const internal = await commands.storage.list('/ext')
             if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
               this.flipper.properties.databasesPresent = true
             } else {
@@ -582,8 +582,8 @@ export default defineComponent({
           } else {
             this.flipper.properties.databasesPresent = false
           }
-          await pbCommands.systemSetDatetime(new Date())
-          await pbCommands.stopRpcSession()
+          await commands.system.setDatetime(new Date())
+          await commands.stopRpcSession()
         }
       }
 

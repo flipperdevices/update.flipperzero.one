@@ -259,7 +259,7 @@ import {
   readInternalStorage,
   writeInternalStorage
 } from './resourceLoader'
-import * as pbCommands from './protobuf/commands'
+import * as commands from './protobuf/commands/commands'
 import xbms from './protobuf/xbms'
 
 import semver from 'semver'
@@ -701,18 +701,18 @@ export default defineComponent({
 
     async backupSettings () {
       console.log('⎢ ⎡ Begin settings backup')
-      const startPing = await pbCommands.startRpcSession(this.flipper)
+      const startPing = await commands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         throw new Error('Couldn\'t start rpc session')
       }
       this.rpcStatus.isSession = true
 
-      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
+      const startVirtualDisplay = await commands.gui.startVirtualDisplay({ data: new Uint8Array(xbms.updating) })
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
       } else {
         const data = new Uint8Array(xbms.updating)
-        await pbCommands.guiScreenFrame(data)
+        await commands.gui.screenFrame(data)
       }
 
       const unbind = emitter.on('readInternalStorage', status => {
@@ -731,7 +731,7 @@ export default defineComponent({
       this.internalStorageFiles = await readInternalStorage()
       await sleep(500)
 
-      await pbCommands.stopRpcSession()
+      await commands.stopRpcSession()
       unbind()
       unbindCQ()
       console.log('⎢ ⎣ End settings backup')
@@ -741,12 +741,12 @@ export default defineComponent({
       const nested = isVirtualDisplaySession ? '⎢ ' : ''
       console.log('⎢ ' + nested + '⎡ Begin restoring settings')
       if (!isVirtualDisplaySession) {
-        const startPing = await pbCommands.startRpcSession(this.flipper)
+        const startPing = await commands.startRpcSession(this.flipper)
         if (!startPing.resolved || startPing.error) {
           throw new Error('Couldn\'t start rpc session')
         }
 
-        const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
+        const startVirtualDisplay = await commands.gui.startVirtualDisplay({ data: new Uint8Array(xbms.updating) })
         if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
           console.error('Couldn\'t start virtual display session')
         }
@@ -769,8 +769,8 @@ export default defineComponent({
 
       await writeInternalStorage(this.internalStorageFiles)
 
-      await pbCommands.guiStopVirtualDisplay()
-      await pbCommands.stopRpcSession()
+      await commands.gui.stopVirtualDisplay()
+      await commands.stopRpcSession()
 
       unbind()
       unbindCQ()
@@ -779,12 +779,12 @@ export default defineComponent({
 
     async updateResources () {
       console.log('⎢ ⎡ Begin updating databases')
-      const startPing = await pbCommands.startRpcSession(this.flipper)
+      const startPing = await commands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         throw new Error('Couldn\'t start rpc session')
       }
 
-      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay({ data: new Uint8Array(xbms.updating) })
+      const startVirtualDisplay = await commands.gui.startVirtualDisplay({ data: new Uint8Array(xbms.updating) })
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.error('Couldn\'t start virtual display session')
       }
@@ -794,11 +794,11 @@ export default defineComponent({
         timestamp: undefined,
         storage: {}
       }
-      const manifest = await pbCommands.storageRead('/ext/Manifest')
+      const manifest = await commands.storage.read('/ext/Manifest')
         .then(async res => {
           const parsed = parseManifest(res)
           if (parsed === 'invalid manifest') {
-            await pbCommands.storageDelete('/ext/Manifest')
+            await commands.storage.remove('/ext/Manifest')
             return empty
           }
           return parsed
@@ -826,7 +826,7 @@ export default defineComponent({
         console.log('⎢ ⎣ End updating databases')
       } catch (error) {
         console.log(error)
-        await pbCommands.stopRpcSession()
+        await commands.stopRpcSession()
         console.log('⎢ ⎣ Error while updating databases')
       }
     },

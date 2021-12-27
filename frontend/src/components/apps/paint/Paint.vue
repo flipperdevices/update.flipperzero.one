@@ -140,7 +140,7 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import * as pbCommands from '../updater/protobuf/commands'
+import * as commands from '../updater/protobuf/commands/commands'
 import { xbmValues } from './xbm-values'
 
 import {
@@ -196,13 +196,13 @@ export default defineComponent({
     },
 
     async startSession () {
-      const startPing = await pbCommands.startRpcSession(this.flipper)
+      const startPing = await commands.startRpcSession(this.flipper)
       if (!startPing.resolved || startPing.error) {
         console.log('Couldn\'t start rpc session:', startPing.error)
         return
       }
 
-      const startVirtualDisplay = await pbCommands.guiStartVirtualDisplay()
+      const startVirtualDisplay = await commands.gui.startVirtualDisplay()
       if (!startVirtualDisplay.resolved || startVirtualDisplay.error) {
         console.log('Couldn\'t start virtual display session:', startVirtualDisplay.error)
       }
@@ -210,8 +210,8 @@ export default defineComponent({
       await this.enableBacklight()
     },
     async stopSession () {
-      await pbCommands.guiStopVirtualDisplay()
-      await pbCommands.stopRpcSession()
+      await commands.gui.stopVirtualDisplay()
+      await commands.stopRpcSession()
     },
     async sendFrame () {
       const resized = this.resize()
@@ -242,7 +242,7 @@ export default defineComponent({
         }
       }
 
-      pbCommands.guiScreenFrame(new Uint8Array(xbmBytes))
+      commands.gui.screenFrame(new Uint8Array(xbmBytes))
     },
     toggleAutoStreaming () {
       if (this.autoStreaming.enabled) {
@@ -255,9 +255,9 @@ export default defineComponent({
       }
     },
     async enableBacklight () {
-      await pbCommands.guiSendInputEvent(4, 0)
-      await pbCommands.guiSendInputEvent(4, 2)
-      await pbCommands.guiSendInputEvent(4, 1)
+      await commands.gui.sendInputEvent(4, 0)
+      await commands.gui.sendInputEvent(4, 2)
+      await commands.gui.sendInputEvent(4, 1)
     },
 
     clear () {
