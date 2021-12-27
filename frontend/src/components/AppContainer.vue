@@ -580,11 +580,7 @@ export default defineComponent({
               this.flipper.properties.databasesPresent = false
             }
 
-            const datetime = await pbCommands.systemGetDatetime()
-            const now = new Date()
-            if (Math.abs(now - datetime > 3000)) {
-              await pbCommands.systemSetDatetime(now)
-            }
+            await pbCommands.systemSetDatetime(new Date())
 
             await pbCommands.stopRpcSession()
           }
