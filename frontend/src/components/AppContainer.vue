@@ -880,7 +880,7 @@ export default defineComponent({
       }
       if (this.autoReconnectEnabled) {
         this.reconnectLoop = setInterval(async () => {
-          if (!this.ui.reconnecting && !this.$refs.Updater.updateSuccess) {
+          if (this.autoReconnectEnabled && !this.ui.reconnecting && !this.$refs.Updater.updateSuccess) {
             let ports, filters
             if (this.mode === 'serial') {
               filters = [
@@ -893,7 +893,7 @@ export default defineComponent({
               ]
               ports = await navigator.usb.getDevices({ filters })
             }
-            if (ports && ports.length > 0) {
+            if ((ports && ports.length > 0) || !this.autoReconnectEnabled) {
               clearInterval(this.reconnectLoop)
               this.reconnectLoop = undefined
               return await this.connect()
