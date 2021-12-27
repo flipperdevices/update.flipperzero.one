@@ -67,8 +67,46 @@ function setDatetime (date) {
   })
 }
 
+function reboot (mode) {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'systemRebootRequest',
+      args: {
+        mode: mode
+      }
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
+function deviceInfo () {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'systemDeviceInfoRequest',
+      args: {}
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res)
+      }
+      unbind()
+    })
+  })
+}
+
 export {
   ping,
   getDatetime,
-  setDatetime
+  setDatetime,
+  reboot,
+  deviceInfo
 }
