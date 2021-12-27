@@ -543,7 +543,7 @@ export default defineComponent({
             type: 'setUiError',
             error: {
               isError: true,
-              message: 'Flipper does not respond to CLI commands. Try reconnecting/rebooting.',
+              message: 'Flipper does not respond to CLI commands. Try reconnecting. If Flipper still doesn\'t respond, reboot it.',
               button: this.mode
             }
           })

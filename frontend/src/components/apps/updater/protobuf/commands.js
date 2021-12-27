@@ -71,6 +71,7 @@ function stopRpcSession () {
       args: {}
     })
     const unbind = emitter.on('response', async () => {
+      await sleep(300)
       await flipper.closeReader()
       rpc.flushCommandQueue()
       resolve()
