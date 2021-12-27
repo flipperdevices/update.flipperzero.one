@@ -568,24 +568,22 @@ export default defineComponent({
       this.flipper.properties.databasesPresent = undefined
 
       if (this.mode === 'serial') {
-        if (this.flipper.properties.sdCardMounted) {
-          const startPing = await pbCommands.startRpcSession(this.flipper)
-          if (!startPing.resolved || startPing.error) {
-            throw new Error('Couldn\'t start rpc session')
-          } else {
+        const startPing = await pbCommands.startRpcSession(this.flipper)
+        if (!startPing.resolved || startPing.error) {
+          throw new Error('Couldn\'t start rpc session')
+        } else {
+          if (this.flipper.properties.sdCardMounted) {
             const internal = await pbCommands.storageList('/ext')
             if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
               this.flipper.properties.databasesPresent = true
             } else {
               this.flipper.properties.databasesPresent = false
             }
-
-            await pbCommands.systemSetDatetime(new Date())
-
-            await pbCommands.stopRpcSession()
+          } else {
+            this.flipper.properties.databasesPresent = false
           }
-        } else {
-          this.flipper.properties.databasesPresent = false
+          await pbCommands.systemSetDatetime(new Date())
+          await pbCommands.stopRpcSession()
         }
       }
 
