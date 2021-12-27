@@ -187,7 +187,8 @@ export default defineComponent({
   },
 
   methods: {
-    close () {
+    async close () {
+      await this.stopSession()
       this.$store.commit({
         type: 'setCurrentApp',
         currentApp: 'Updater'

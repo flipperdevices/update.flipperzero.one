@@ -211,9 +211,8 @@
                 color="grey-7"
                 :icon="evaBrushOutline"
                 size="16px"
-                class="q-ma-sm"
-                :class="showPaint ? 'z-max' : 'z-top'"
-                @click="togglePaint"
+                class="q-ma-sm z-top"
+                @click="showPaint"
               ></q-btn>
             </div>
           </template>
@@ -297,7 +296,6 @@ export default defineComponent({
       reconnectLoop: ref(undefined),
       showArrows: ref(false),
       showOverlay: ref(false),
-      showPaint: ref(false),
       showTerminal: ref(false),
       terminalEnabled: ref(false)
     }
@@ -927,15 +925,14 @@ export default defineComponent({
       document.querySelector('body').style.overflowY = this.showTerminal ? 'hidden' : 'auto'
     },
 
-    async togglePaint () {
+    async showPaint () {
       if (this.flipper.state.connection === 2 && this.flipper.state.status === 2) {
         await this.flipper.closeReader()
       }
 
-      this.showPaint = !this.showPaint
       this.$store.commit({
         type: 'setCurrentApp',
-        currentApp: this.showPaint ? 'Paint' : 'Updater'
+        currentApp: 'Paint'
       })
     },
 
