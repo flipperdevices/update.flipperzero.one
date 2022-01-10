@@ -55,7 +55,8 @@ function parseOutputText (text) {
     },
     btMac: undefined,
     otpVer: undefined,
-    sdCardMounted: true
+    sdCardMounted: true,
+    rpcVer: 0
   }
 
   lines.forEach(line => {
@@ -150,6 +151,10 @@ function parseOutputText (text) {
     }
     if (line.includes('hardware_otp_ver')) {
       properties.otpVer = line.replace(/hardware_otp_ver\s*:\s/g, '').trim()
+    }
+
+    if (line.includes('rpc_version')) {
+      properties.rpcVer = line.replace(/rpc_version\s*:\s/g, '').trim()
     }
 
     if (line.includes('Storage error: internal error')) {
