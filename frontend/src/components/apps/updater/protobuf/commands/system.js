@@ -96,7 +96,7 @@ function deviceInfo () {
       if (res && res.error) {
         reject(res.error, res)
       } else {
-        resolve(res)
+        resolve(res.chunks)
       }
       unbind()
     })

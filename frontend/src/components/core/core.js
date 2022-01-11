@@ -1,6 +1,6 @@
 import {
   waitForDevice,
-  parseOutputText,
+  Operation,
   parseOTPData
 } from '../util'
 import { createNanoEvents } from 'nanoevents'
@@ -16,28 +16,6 @@ const title = {
   progress: 0
 }
 
-class Operation {
-  constructor () {
-    this.resolve = undefined
-    this.reject = undefined
-  }
-
-  create (worker, operation, data) {
-    return new Promise((resolve, reject) => {
-      worker.postMessage({ operation: operation, data: data })
-      this.resolve = resolve
-      this.reject = reject
-    })
-  }
-
-  terminate (event) {
-    if (event.status === 1) {
-      this.resolve(event.data)
-    } else {
-      this.reject(event.error)
-    }
-  }
-}
 const operation = new Operation()
 
 function startSerialWorker () {
@@ -109,6 +87,16 @@ export class Flipper {
       }
       const connectSerial = operation.create(serial, 'connect')
       await connectSerial
+        .then(async () => {
+          const writeLine = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['\r\n'] })
+          this.state.status = 3
+          await writeLine
+
+          const readPrompt = operation.create(serial, 'read')
+          this.state.status = 2
+          await readPrompt
+          this.state.status = 1
+        })
         .catch(error => {
           this.state.connection = 0
           this.state.status = 0
@@ -138,7 +126,7 @@ export class Flipper {
     }
   }
 
-  async disconnect (force) {
+  async disconnect () {
     if (this.state.connection === 2 || this.state.connection === 0) {
       const disconnectSerial = operation.create(serial, 'disconnect')
       await disconnectSerial
@@ -176,38 +164,8 @@ export class Flipper {
     }
   }
 
-  async readProperties () {
-    if (this.state.connection === 2) {
-      const writePropertiesData = operation.create(serial, 'write', { mode: 'cli/delimited', data: ['power_info', 'device_info', 'storage list /ext'] })
-
-      this.state.status = 3
-      await writePropertiesData
-        .catch(error => {
-          this.state.status = 0
-          throw error
-        })
-
-      const readPropertiesData = operation.create(serial, 'read')
-
-      const readTimeout = setTimeout(() => {
-        throw new Error('readTimeout (flipper.readProperties)')
-      }, 1000)
-
-      this.state.status = 2
-      this.properties = await readPropertiesData
-        .then(data => {
-          clearTimeout(readTimeout)
-          this.state.status = 1
-          const decoder = new TextDecoder()
-          return decoder.decode(data)
-        })
-        .then(text => parseOutputText(text))
-        .catch(error => {
-          this.state.status = 0
-          throw error
-        })
-      return this.properties
-    } else if (this.state.connection === 3) {
+  async readOTP () {
+    if (this.state.connection === 3) {
       const readPropertiesData = operation.create(usb, 'read')
 
       this.state.status = 2
@@ -221,7 +179,7 @@ export class Flipper {
         })
       return this.properties
     } else {
-      throw new Error('Wrong connection state (flipper.readProperties): expected 2 or 3, got ' + this.state.connection)
+      throw new Error('Wrong connection state (flipper.readOTP): expected 3, got ' + this.state.connection)
     }
   }
 

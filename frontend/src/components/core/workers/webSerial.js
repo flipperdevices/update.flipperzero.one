@@ -146,8 +146,13 @@ async function read (mode) {
           newBuffer.set(value, buffer.length)
           buffer = newBuffer
 
-          if (decoder.decode(buffer.slice(-12)).replace(/\s/g, '').endsWith('>:\x07>:\x07')) {
+          if (decoder.decode(buffer.slice(-12)).replace(/\s/g, '').endsWith('>:\x07')) {
             readComplete = true
+            self.postMessage({
+              operation: 'read',
+              data: 'read',
+              status: 1
+            })
           }
         }
       }

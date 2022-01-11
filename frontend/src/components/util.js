@@ -23,161 +23,28 @@ async function waitForDevice (c) {
   }
 }
 
-// Serial utils
-
-function parseOutputText (text) {
-  const lines = text.split(/\r?\n/)
-
-  const properties = {
-    type: undefined,
-    battery: undefined,
-    name: undefined,
-    stm32Serial: undefined,
-    bodyColor: undefined,
-    region: undefined,
-    hardwareVer: undefined,
-    target: undefined,
-    firmwareVer: undefined,
-    firmwareCommit: undefined,
-    firmwareBuild: undefined,
-    bootloaderVer: undefined,
-    bootloaderCommit: undefined,
-    bootloaderBuild: undefined,
-    radioFusFirmware: {
-      major: undefined,
-      minor: undefined,
-      sub: undefined
-    },
-    radioFirmware: {
-      major: undefined,
-      minor: undefined,
-      sub: undefined
-    },
-    btMac: undefined,
-    otpVer: undefined,
-    sdCardMounted: true,
-    rpcVer: 0
+class Operation {
+  constructor () {
+    this.resolve = undefined
+    this.reject = undefined
   }
 
-  lines.forEach(line => {
-    if (line.includes('State of Charge: ')) {
-      properties.battery = line.match(/State of Charge: (\d){1,3}%/g)[0].slice(-4).trim()
-      if (properties.battery[0] === ':') {
-        properties.battery = properties.battery.slice(1)
-      }
-      return
-    }
-
-    if (line.includes('hardware_model')) {
-      properties.type = line.replace(/hardware_model\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_name')) {
-      properties.name = line.replace(/hardware_name\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_uid')) {
-      properties.stm32Serial = line.replace(/hardware_uid\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_color')) {
-      properties.bodyColor = line.replace(/hardware_color\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_region')) {
-      properties.region = line.replace(/hardware_region\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_ver')) {
-      properties.hardwareVer = line.replace(/hardware_ver\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('hardware_target')) {
-      properties.target = line.replace(/hardware_target\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('firmware_version')) {
-      properties.firmwareVer = line.replace(/firmware_version\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('firmware_commit')) {
-      properties.firmwareCommit = line.replace(/firmware_commit\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('firmware_build_date')) {
-      properties.firmwareBuild = line.replace(/firmware_build_date\s*:\s/g, '').trim()
-      return
-    }
-    // Legacy hell with boot/bootloader in different device_info versions
-    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('version')) {
-      properties.bootloaderVer = line.replace(/boot(loader)?_version\s*:\s/g, '').trim()
-      return
-    }
-    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('commit')) {
-      properties.bootloaderCommit = line.replace(/boot(loader)?_commit\s*:\s/g, '').trim()
-      return
-    }
-    if ((line.includes('boot_') || line.includes('bootloader_')) && line.includes('build_date')) {
-      properties.bootloaderBuild = line.replace(/boot(loader)?_build_date\s*:\s/g, '').trim()
-      return
-    }
-
-    if (line.includes('radio_fus_major')) {
-      properties.radioFusFirmware.major = line.replace(/radio_fus_major\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_fus_minor')) {
-      properties.radioFusFirmware.minor = line.replace(/radio_fus_minor\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_fus_sub')) {
-      properties.radioFusFirmware.sub = line.replace(/radio_fus_sub\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_stack_major')) {
-      properties.radioFirmware.major = line.replace(/radio_stack_major\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_stack_minor')) {
-      properties.radioFirmware.minor = line.replace(/radio_stack_minor\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_stack_sub')) {
-      properties.radioFirmware.sub = line.replace(/radio_stack_sub\s*:\s/g, '').trim()
-      return
-    }
-    if (line.includes('radio_ble_mac')) {
-      properties.btMac = line.replace(/radio_ble_mac\s*:\s/g, '').trim()
-    }
-    if (line.includes('hardware_otp_ver')) {
-      properties.otpVer = line.replace(/hardware_otp_ver\s*:\s/g, '').trim()
-    }
-
-    if (line.includes('rpc_version')) {
-      properties.rpcVer = line.replace(/rpc_version\s*:\s/g, '').trim()
-    }
-
-    if (line.includes('Storage error: internal error')) {
-      properties.sdCardMounted = false
-    }
-  })
-
-  if (!properties.otpVer) {
-    properties.otpVer = 1
+  create (worker, operation, data) {
+    return new Promise((resolve, reject) => {
+      worker.postMessage({ operation: operation, data: data })
+      this.resolve = resolve
+      this.reject = reject
+    })
   }
 
-  properties.radioFusFirmware = properties.radioFusFirmware.major + '.' +
-    properties.radioFusFirmware.minor + '.' +
-    properties.radioFusFirmware.sub
-
-  properties.radioFirmware = properties.radioFirmware.major + '.' +
-    properties.radioFirmware.minor + '.' +
-    properties.radioFirmware.sub
-
-  return parseEnums(properties)
+  terminate (event) {
+    if (event.status === 1) {
+      this.resolve(event.data)
+    } else {
+      this.reject(event.error)
+    }
+  }
 }
-
-// USB utils
 
 async function parseOTPData (blob) {
   const otp = {
@@ -232,43 +99,12 @@ async function parseOTPData (blob) {
   }
 
   const properties = {
-    name: otp.name,
-    hardwareVer: otp.boardInfo.version,
-    target: otp.boardInfo.target,
-    bodyColor: otp.deviceInfo.color,
-    otpVer: otp.header.version,
-    region: otp.deviceInfo.region
-  }
-
-  return parseEnums(properties)
-}
-
-function parseEnums (properties) {
-  switch (Number(properties.bodyColor)) {
-    case 1:
-      properties.bodyColor = 'black'
-      break
-    case 2:
-      properties.bodyColor = 'white'
-      break
-    default:
-      properties.bodyColor = 'unknown'
-      break
-  }
-
-  switch (Number(properties.region)) {
-    case 1:
-      properties.region = 'EuRu'
-      break
-    case 2:
-      properties.region = 'UsCaAu'
-      break
-    case 3:
-      properties.region = 'Jp'
-      break
-    default:
-      properties.region = 'unknown'
-      break
+    hardware_name: otp.name,
+    hardware_ver: otp.boardInfo.version,
+    hardware_target: otp.boardInfo.target,
+    hardware_color: otp.deviceInfo.color,
+    hardware_otp_ver: otp.header.version,
+    hardware_region: otp.deviceInfo.region
   }
 
   return properties
@@ -277,6 +113,6 @@ function parseEnums (properties) {
 export {
   sleep,
   waitForDevice,
-  parseOutputText,
+  Operation,
   parseOTPData
 }

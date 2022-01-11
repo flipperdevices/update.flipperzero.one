@@ -12,12 +12,12 @@
               </g>
               <circle :style="'fill:' + ledColor" cx="238.5" cy="94.5" r="2.5"/>
             </svg>
-            <img v-if="flipper.properties.bodyColor === 'white' || flipper.properties.bodyColor === 'unknown'" src="../../../assets/flipper_w.svg" />
-            <img v-if="flipper.properties.bodyColor === 'black'" src="../../../assets/flipper_b.svg" />
+            <img v-if="bodyColor === 'white' || bodyColor === 'unknown'" src="../../../assets/flipper_w.svg" />
+            <img v-if="bodyColor === 'black'" src="../../../assets/flipper_b.svg" />
           </div>
           <div class="col-6 q-ml-xl" style="white-space: nowrap;">
             <h5 class="q-mb-none">
-              <b>{{ flipper.properties.name }}&nbsp;</b>
+              <b>{{ flipper.properties.hardware_name }}&nbsp;</b>
               <span v-if="ui.reconnecting">reconnecting...</span>
               <span v-else-if="connection">connected
                 <span v-if="connection === 3">
@@ -26,7 +26,7 @@
               </span>
               <span v-else class="text-accent">disconnected</span>
             </h5>
-            <h5 v-if="mode === 'serial'">
+            <h5 v-if="mode === 'serial' && flipper.properties.battery">
               Battery: <span :style="'color: ' + batteryColor">{{ flipper.properties.battery ? flipper.properties.battery : 'undefined' }}</span>
             </h5>
           </div>
@@ -35,11 +35,11 @@
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
-                <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.stm32Serial }}</div>
-                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
-                <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
-                <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.btMac }}</div>
-                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
+                <div><b>Stm32 serial:</b></div><div>{{ flipper.properties.hardware_uid }}</div>
+                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardware_ver }}</div>
+                <div><b>Hardware target:</b></div><div>{{ flipper.properties.hardware_target }}</div>
+                <div><b>Bluetooth mac:</b></div><div>{{ flipper.properties.radio_ble_mac }}</div>
+                <div><b>Region:</b></div><div>{{ region }}</div>
                 <div><b>SD card:</b></div><div>{{ flipper.properties.sdCardMounted ? 'mounted' : 'missing' }}</div>
                 <template v-if="flipper.properties.databasesPresent !== undefined">
                   <div><b>Databases:</b></div><div>{{ flipper.properties.databasesPresent ? 'present' : 'missing' }}</div>
@@ -50,13 +50,13 @@
           <q-card flat class="col-6 q-ml-xl">
             <q-card-section horizontal>
               <div class="properties">
-                <div><b>Firmware version:</b></div><div>{{ flipper.properties.firmwareVer !== 'unknown' ? flipper.properties.firmwareVer : flipper.properties.firmwareCommit }}</div>
-                <div><b>Firmware build:</b></div><div>{{ flipper.properties.firmwareBuild }}</div>
-                <div><b>Bootloader version:</b></div><div>{{ flipper.properties.bootloaderVer !== 'unknown' ? flipper.properties.bootloaderVer : flipper.properties.bootloaderCommit }}</div>
-                <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloaderBuild }}</div>
-                <div><b>FUS version:</b></div><div>{{ flipper.properties.radioFusFirmware }}</div>
-                <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radioFirmware }}</div>
-                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
+                <div><b>Firmware version:</b></div><div>{{ flipper.properties.firmware_version !== 'unknown' ? flipper.properties.firmware_version : flipper.properties.firmware_commit }}</div>
+                <div><b>Firmware build:</b></div><div>{{ flipper.properties.firmware_build_date }}</div>
+                <div><b>Bootloader version:</b></div><div>{{ flipper.properties.bootloader_version !== 'unknown' ? flipper.properties.bootloader_version : flipper.properties.bootloader_commit }}</div>
+                <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloader_build_date }}</div>
+                <div><b>FUS version:</b></div><div>{{ flipper.properties.radio_fus_major + '.' + flipper.properties.radio_fus_minor + '.' + flipper.properties.radio_fus_sub }}</div>
+                <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radio_stack_major + '.' + flipper.properties.radio_stack_minor + '.' + flipper.properties.radio_stack_sub }}</div>
+                <div><b>OTP version:</b></div><div>{{ flipper.properties.hardware_otp_ver }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -65,16 +65,16 @@
           <q-card flat class="col-6">
             <q-card-section horizontal>
               <div class="properties">
-                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardwareVer }}</div>
-                <div><b>Region:</b></div><div>{{ flipper.properties.region }}</div>
+                <div><b>Hardware revision:</b></div><div>{{ flipper.properties.hardware_ver }}</div>
+                <div><b>Region:</b></div><div>{{ region }}</div>
               </div>
             </q-card-section>
           </q-card>
           <q-card flat class="col-6 q-ml-xl">
             <q-card-section horizontal>
               <div class="properties">
-                <div><b>Hardware target:</b></div><div>{{ flipper.properties.target }}</div>
-                <div><b>OTP version:</b></div><div>{{ flipper.properties.otpVer }}</div>
+                <div><b>Hardware target:</b></div><div>{{ flipper.properties.hardware_target }}</div>
+                <div><b>OTP version:</b></div><div>{{ flipper.properties.hardware_otp_ver }}</div>
               </div>
             </q-card-section>
           </q-card>
@@ -107,7 +107,7 @@
 
             <div v-if="!checks.target" class="alert">
               <p>
-                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.<span v-if="custom && custom.files[0].target"> Firmware target: <b>{{ custom.files[0].target }}</b>, Flipper hardware target: <b>f{{ flipper.properties.target }}</b></span>
+                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.<span v-if="custom && custom.files[0].target"> Firmware target: <b>{{ custom.files[0].target }}</b>, Flipper hardware target: <b>f{{ flipper.properties.hardware_target }}</b></span>
               </p>
               This firmware might break your device!
             </div>
@@ -355,6 +355,28 @@ export default defineComponent({
         }
       }
       return color
+    },
+    bodyColor () {
+      switch (Number(this.flipper.properties.hardware_color)) {
+        case 1:
+          return 'black'
+        case 2:
+          return 'white'
+        default:
+          return 'unknown'
+      }
+    },
+    region () {
+      switch (Number(this.flipper.properties.hardware_region)) {
+        case 1:
+          return 'EuRu'
+        case 2:
+          return 'UsCaAu'
+        case 3:
+          return 'Jp'
+        default:
+          return 'unknown'
+      }
     },
     connection () {
       return this.flipper.state.connection
@@ -620,6 +642,7 @@ export default defineComponent({
 
             if (document.location.search.includes('infinite=true')) {
               await sleep(5000)
+              this.updateSuccess = false
               return this.update()
             }
           })
@@ -654,7 +677,7 @@ export default defineComponent({
     },
 
     async fetchFirmwareFile (channel) {
-      await fetchFirmwareFile(channel, this[channel.toLowerCase()].files, this.flipper.properties.target)
+      await fetchFirmwareFile(channel, this[channel.toLowerCase()].files, this.flipper.properties.hardware_target)
         .then(({ binary, startAddress, targetCheck, crc32Check }) => {
           this.firmware.binary = binary
           this.firmware.startAddress = startAddress
@@ -672,7 +695,7 @@ export default defineComponent({
 
     async loadFirmwareFile (event) {
       this.firmware.fileName = event.target.files[0].name
-      await loadFirmwareFile(event.target.files[0], this.flipper.properties.target)
+      await loadFirmwareFile(event.target.files[0], this.flipper.properties.hardware_target)
         .then(({ binary, startAddress, targetCheck, crc32Check }) => {
           this.firmware.binary = binary
           this.firmware.startAddress = startAddress
@@ -833,11 +856,11 @@ export default defineComponent({
 
     // Utils
     compareVersions () {
-      if (this.flipper.properties.firmwareVer) {
-        if (this.flipper.properties.firmwareVer !== 'unknown') {
-          if (semver.eq(this.flipper.properties.firmwareVer, this.release.version)) {
+      if (this.flipper.properties.firmware_version) {
+        if (this.flipper.properties.firmware_version !== 'unknown') {
+          if (semver.eq(this.flipper.properties.firmware_version, this.release.version)) {
             this.isOutdated = false
-          } else if (semver.gt(this.flipper.properties.firmwareVer, this.release.version)) {
+          } else if (semver.gt(this.flipper.properties.firmware_version, this.release.version)) {
             this.isOutdated = false
             this.newerThanLTS = true
           } else {
@@ -874,7 +897,7 @@ export default defineComponent({
 
     this.compareVersions()
     if (this.custom && this.custom.files[0].target) {
-      this.checks.target = 'f' + this.flipper.properties.target === this.custom.files[0].target
+      this.checks.target = 'f' + this.flipper.properties.hardware_target === this.custom.files[0].target
     }
   }
 })

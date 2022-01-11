@@ -1,6 +1,23 @@
 import { enqueue } from './commands'
 import { emitter } from '../../../../core/core'
 
+function info (path) {
+  return new Promise((resolve, reject) => {
+    enqueue({
+      requestType: 'storageInfoRequest',
+      args: { path: path }
+    })
+    const unbind = emitter.on('response', res => {
+      if (res && res.error) {
+        reject(res.error, res)
+      } else {
+        resolve(res.chunks[0])
+      }
+      unbind()
+    })
+  })
+}
+
 function list (path) {
   return new Promise((resolve, reject) => {
     enqueue({
@@ -117,6 +134,7 @@ function remove (path, isRecursive) {
 }
 
 export {
+  info,
   list,
   read,
   write,

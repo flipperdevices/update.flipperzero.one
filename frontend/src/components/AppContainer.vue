@@ -220,6 +220,7 @@
             v-else
             color="accent"
             size="3em"
+            class="q-ma-xl"
           ></q-spinner>
         </template>
       </div>
@@ -249,7 +250,6 @@ import Terminal from './apps/terminal/Terminal.vue'
 import Paint from './apps/paint/Paint.vue'
 
 import { Flipper } from './core/core'
-import { sleep } from './util'
 import * as semver from 'semver'
 import * as commands from './apps/updater/protobuf/commands/commands'
 
@@ -317,7 +317,7 @@ export default defineComponent({
       return this.flipper.state.status
     },
     flipperResponds () {
-      return !!this.flipper.properties.name
+      return !!this.flipper.properties.hardware_name
     },
     currentApp () {
       return this.$store.state.currentApp
@@ -474,13 +474,26 @@ export default defineComponent({
       try {
         this.init()
 
+        const connectTimeout = setTimeout(() => {
+          this.$store.commit({
+            type: 'setUiError',
+            error: {
+              isError: true,
+              message: 'Couldn\'t connect to Flipper (response timeout)',
+              button: this.mode
+            }
+          })
+        }, 7000)
+
         await this.flipper.connect(this.mode)
           .then(() => {
+            clearTimeout(connectTimeout)
             if (this.flipper.state.connection === 0) {
               throw new Error('No device selected')
             }
           })
           .catch(async error => {
+            clearTimeout(connectTimeout)
             if (error.toString().includes('No known')) {
               return this.recognizeDevice(this.mode)
             } else {
@@ -535,56 +548,58 @@ export default defineComponent({
         }
       })
 
-      this.cliResponseTimeout = setTimeout(() => {
-        if (!this.flipper.properties.name) {
-          this.$store.commit({
-            type: 'setUiError',
-            error: {
-              isError: true,
-              message: 'Flipper does not respond to CLI commands. Try reconnecting. If Flipper still doesn\'t respond, reboot it.',
-              button: this.mode
-            }
-          })
-        }
-      }, 4000)
-
-      let i = 10
-      while (!this.flipperResponds && i > 0) {
-        await this.flipper.readProperties()
-          .catch(async error => {
-            console.error(error)
-            await this.flipper.disconnect()
-            await this.connect()
-          })
-        i++
-        await sleep(100)
-      }
-
-      if (this.cliResponseTimeout) {
-        clearTimeout(this.cliResponseTimeout)
-        this.cliResponseTimeout = undefined
-      }
-
-      this.flipper.properties.databasesPresent = undefined
-
       if (this.mode === 'serial') {
         const startPing = await commands.startRpcSession(this.flipper)
         if (!startPing.resolved || startPing.error) {
           throw new Error('Couldn\'t start rpc session')
-        } else {
-          if (this.flipper.properties.sdCardMounted) {
+        }
+
+        const res = await commands.system.deviceInfo()
+        for (const line of res) {
+          this.flipper.properties[line.key] = line.value
+        }
+        if (!this.flipper.properties.otpVer) {
+          this.flipper.properties.otpVer = 1
+        }
+        // todo
+        this.flipper.properties.battery = undefined
+
+        this.flipper.properties.sdCardMounted = undefined
+        await commands.storage.info('/ext')
+          .then(async () => {
+            this.flipper.properties.sdCardMounted = true
             const internal = await commands.storage.list('/ext')
             if (internal.find(file => file.name === 'Manifest' && file.type !== 1)) {
               this.flipper.properties.databasesPresent = true
             } else {
               this.flipper.properties.databasesPresent = false
             }
-          } else {
-            this.flipper.properties.databasesPresent = false
-          }
-          await commands.system.setDatetime(new Date())
-          await commands.stopRpcSession()
-        }
+          })
+          .catch(error => {
+            if (error.toString().includes('ERROR_STORAGE_INTERNAL')) {
+              this.flipper.properties.sdCardMounted = false
+              this.flipper.properties.databasesPresent = false
+            } else {
+              console.error(error)
+            }
+          })
+
+        await commands.system.setDatetime(new Date())
+
+        await commands.stopRpcSession()
+      } else {
+        await this.flipper.readOTP()
+          .catch(async error => {
+            this.$store.commit({
+              type: 'setUiError',
+              error: {
+                isError: true,
+                message: error,
+                button: this.mode
+              }
+            })
+            await this.flipper.disconnect()
+          })
       }
 
       this.$store.commit({
@@ -611,33 +626,8 @@ export default defineComponent({
         loading: false,
         binary: undefined
       }
-      this.flipper.properties = {
-        type: undefined,
-        battery: undefined,
-        name: undefined,
-        stm32Serial: undefined,
-        bodyColor: undefined,
-        region: undefined,
-        hardwareVer: undefined,
-        target: undefined,
-        firmwareVer: undefined,
-        firmwareCommit: undefined,
-        firmwareBuild: undefined,
-        bootloaderVer: undefined,
-        bootloaderCommit: undefined,
-        bootloaderBuild: undefined,
-        radioFusFirmware: {
-          major: undefined,
-          minor: undefined,
-          sub: undefined
-        },
-        radioFirmware: {
-          major: undefined,
-          minor: undefined,
-          sub: undefined
-        },
-        btMac: undefined,
-        otpVer: undefined
+      for (const prop in this.flipper.properties) {
+        this.flipper.properties[prop] = undefined
       }
       this.isOutdated = undefined
       this.newerThanLTS = false
