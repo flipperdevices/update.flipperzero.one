@@ -865,7 +865,7 @@ export default defineComponent({
       }
       if (this.autoReconnectEnabled) {
         this.reconnectLoop = setInterval(async () => {
-          if (this.autoReconnectEnabled && !this.ui.reconnecting && !this.$refs.Updater.updateSuccess) {
+          if (this.autoReconnectEnabled && !this.ui.reconnecting && this.$refs.Updater && !this.$refs.Updater.updateSuccess) {
             let ports, filters
             if (this.mode === 'serial') {
               filters = [
