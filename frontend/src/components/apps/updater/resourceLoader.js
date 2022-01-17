@@ -1,7 +1,44 @@
-import untar from 'js-untar'
-import pako from 'pako'
+import { unpack } from '../../util'
 import * as commands from './protobuf/commands/commands'
 import { emitter } from '../../core/core'
+
+async function fetchCopro (channel, files) {
+  const file = files.find(e => {
+    if (e.type === 'core2_firmware_tgz') return e
+    else return undefined
+  })
+  if (file === undefined) {
+    throw new Error('Coprofile not found')
+  }
+  let url = file.url
+  if (channel === 'dev') {
+    url = 'https://update.flipperzero.one/firmware/development/any/core2_firmware_tgz'
+  }
+
+  const coproFiles = await fetch(url)
+    .then(async response => {
+      if (response.status >= 400) {
+        throw new Error('Failed to fetch coprofile: ' + response.status)
+      }
+      const buffer = await response.arrayBuffer()
+      return unpack(buffer)
+    })
+
+  return parseCopro(coproFiles)
+}
+
+function parseCopro (files) {
+  const manifestFile = files.find(e => {
+    if (e.name === 'core2_firmware/Manifest.json') return e
+    else return undefined
+  })
+  if (manifestFile === undefined) {
+    throw new Error('Copromanifest not found')
+  }
+
+  const manifest = JSON.parse(new TextDecoder().decode(manifestFile.buffer))
+  return manifest
+}
 
 async function fetchResources (channel, files) {
   const file = files.find(e => {
@@ -19,17 +56,7 @@ async function fetchResources (channel, files) {
         throw new Error('Failed to fetch resources: ' + response.status)
       }
       const buffer = await response.arrayBuffer()
-      return unpackResources(buffer)
-    })
-}
-
-function unpackResources (buffer) {
-  const inflate = new pako.Inflate()
-  inflate.push(new Uint8Array(buffer))
-  const ungzipped = inflate.result
-  return untar(ungzipped.buffer)
-    .then(extractedFiles => {
-      return extractedFiles
+      return unpack(buffer)
     })
 }
 
@@ -299,8 +326,8 @@ async function writeInternalStorage (files) {
 }
 
 export {
+  fetchCopro,
   fetchResources,
-  unpackResources,
   parseManifest,
   compareManifests,
   commandQueue,

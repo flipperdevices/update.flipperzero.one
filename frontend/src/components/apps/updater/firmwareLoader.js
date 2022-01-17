@@ -6,6 +6,9 @@ async function fetchFirmwareFile (channel, files, target) {
     if (e.type === 'full_dfu' && (e.target === 'f' + target || !e.target)) return e
     else return undefined
   })
+  if (file === undefined) {
+    throw new Error('Firmware file not found')
+  }
   let url = file.url
   if (channel === 'dev') {
     url = 'https://update.flipperzero.one/firmware/development/f' + target + '/full_dfu'

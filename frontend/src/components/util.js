@@ -1,3 +1,6 @@
+import untar from 'js-untar'
+import pako from 'pako'
+
 async function sleep (ms) {
   const sleepPromise = new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -110,9 +113,17 @@ async function parseOTPData (blob) {
   return properties
 }
 
+function unpack (buffer) {
+  const inflate = new pako.Inflate()
+  inflate.push(new Uint8Array(buffer))
+  const ungzipped = inflate.result
+  return untar(ungzipped.buffer)
+}
+
 export {
   sleep,
   waitForDevice,
   Operation,
-  parseOTPData
+  parseOTPData,
+  unpack
 }

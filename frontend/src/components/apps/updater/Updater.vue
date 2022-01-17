@@ -81,142 +81,148 @@
         </q-card-section>
       </q-card>
 
-      <template v-if="!isUpdating">
-        <template v-if="!ui.reconnecting">
-          <div v-if="isOutdated && connection === 2" id="outdated">
-            <p v-if="!firmware.fileName.length">
-              Your firmware is outdated, latest release is <b>{{ release.version }}</b>
-            </p>
-          </div>
-          <div v-if="isOutdated === false && connection === 2" id="up-to-date">
-            <p v-if="!firmware.fileName.length && !newerThanLTS">
-              Your firmware is up to date.
-            </p>
-            <p v-if="!firmware.fileName.length && newerThanLTS">
-              Your firmware version is ahead of latest release.
-            </p>
-          </div>
-
-          <div v-if="!firmware.fileName.length && status === 1">
-            <div v-if="fwModel.value === 'custom'" class="alert">
-              <p>
-                <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/><b style="word-break: break-all;">{{ this['custom'].url }}</b>
+      <template v-if="checks.radio">
+        <template v-if="!isUpdating">
+          <template v-if="!ui.reconnecting">
+            <div v-if="isOutdated && connection === 2" id="outdated">
+              <p v-if="!firmware.fileName.length">
+                Your firmware is outdated, latest release is <b>{{ release.version }}</b>
               </p>
-              This firmware might be <b>malicious</b> and might <b>break your device</b>!
+            </div>
+            <div v-if="isOutdated === false && connection === 2" id="up-to-date">
+              <p v-if="!firmware.fileName.length && !newerThanLTS">
+                Your firmware is up to date.
+              </p>
+              <p v-if="!firmware.fileName.length && newerThanLTS">
+                Your firmware version is ahead of latest release.
+              </p>
             </div>
 
-            <div v-if="!checks.target" class="alert">
-              <p>
-                  <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.<span v-if="custom && custom.files[0].target"> Firmware target: <b>{{ custom.files[0].target }}</b>, Flipper hardware target: <b>f{{ flipper.properties.hardware_target }}</b></span>
-              </p>
-              This firmware might break your device!
+            <div v-if="!firmware.fileName.length && status === 1">
+              <div v-if="fwModel.value === 'custom'" class="alert">
+                <p>
+                  <q-icon :name="evaAlertCircleOutline"></q-icon> You are installing <b>unofficial</b> firmware from<br/><b style="word-break: break-all;">{{ this['custom'].url }}</b>
+                </p>
+                This firmware might be <b>malicious</b> and might <b>break your device</b>!
+              </div>
+
+              <div v-if="!checks.target" class="alert">
+                <p>
+                    <q-icon :name="evaAlertCircleOutline"></q-icon> Looks like <b> {{ firmware.fileName || custom.channel }}</b>  is incompatible with your Flipper&nbsp;Zero hardware revision.<span v-if="custom && custom.files[0].target"> Firmware target: <b>{{ custom.files[0].target }}</b>, Flipper hardware target: <b>f{{ flipper.properties.hardware_target }}</b></span>
+                </p>
+                This firmware might break your device!
+              </div>
+
+              <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
+                <q-select
+                  v-model="fwModel"
+                  :options="fwOptions"
+                  label="Choose firmware"
+                  :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
+                  id="fw-select"
+                  :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
+                >
+                  <template v-slot:option="scope">
+                    <q-item v-bind="scope.itemProps">
+                      <q-item-section class="items-start">
+                        <q-item-label v-html="scope.opt.label" />
+                      </q-item-section>
+                      <q-item-section class="items-end">
+                        <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
+                <q-btn
+                  :loading="firmware.loading"
+                  v-if="fwModel"
+                  @click="update"
+                  color="positive"
+                  padding="12px 30px"
+                  class="q-ml-lg"
+                  :class="!$q.screen.xs ? '' : 'q-mt-sm'"
+                >Flash</q-btn>
+              </div>
             </div>
 
-            <div v-if="checks.sha256 && connection !== 0" class="flex flex-center">
-              <q-select
-                v-model="fwModel"
-                :options="fwOptions"
-                label="Choose firmware"
-                :suffix="fwOptions.find(({label}) => label === fwModel.label) ? fwOptions.find(({label}) => label === fwModel.label).version : ''"
-                id="fw-select"
-                :style="!$q.screen.xs ? 'width: 300px;' : 'width: 198px;'"
-              >
-                <template v-slot:option="scope">
-                  <q-item v-bind="scope.itemProps">
-                    <q-item-section class="items-start">
-                      <q-item-label v-html="scope.opt.label" />
-                    </q-item-section>
-                    <q-item-section class="items-end">
-                      <q-item-label v-html="scope.opt.version" :class="'fw-option-label ' + scope.opt.value"/>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
+            <div v-if="firmware.fileName.length">
+              <div v-if="!checks.crc32" class="alert">
+                <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
+              </div>
+            </div>
+
+            <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
+              <p v-if="!firmware.fileName.length" class="q-mt-xl">
+                Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
+              </p>
               <q-btn
-                :loading="firmware.loading"
-                v-if="fwModel"
+                v-if="firmware.fileName.length && checks.crc32 && checks.target"
                 @click="update"
                 color="positive"
                 padding="12px 30px"
+              >Flash {{ firmware.fileName }}</q-btn>
+              <q-btn
+                v-if="firmware.fileName.length"
+                @click="cancelUpload"
+                :flat="checks.target"
+                :color="checks.target ? '' : 'positive'"
+                :class="checks.crc32 ? 'q-ml-lg' : ''"
+                padding="12px 30px"
+              >Cancel</q-btn>
+              <q-btn
+                v-if="firmware.fileName.length && !checks.target"
+                flat
+                color="grey-8"
+                @click="update"
+                padding="12px 30px"
                 class="q-ml-lg"
-                :class="!$q.screen.xs ? '' : 'q-mt-sm'"
-              >Flash</q-btn>
+              >Flash anyway</q-btn>
             </div>
-          </div>
 
-          <div v-if="firmware.fileName.length">
-            <div v-if="!checks.crc32" class="alert">
-              <span><q-icon :name="evaAlertCircleOutline"></q-icon> Crc32 check has failed for <b>{{ firmware.fileName }}</b>!</span>
+            <div v-if="connection === 0 && !ui.reconnecting" class="flex column flex-center">
+              <q-btn
+                color="positive"
+                padding="12px 30px"
+                size="13px"
+                class="q-ma-sm"
+                @click="$emit('connect')"
+              >
+                Reconnect
+              </q-btn>
             </div>
+          </template>
+        </template>
+        <template v-else>
+          <div class="alert" v-if="checks.sha256">
+            <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
+            <p class="q-mb-md">Don't disconnect your Flipper</p>
           </div>
-
-          <div v-if="connection !== 0 && status === 1" class="flex flex-center q-mt-md">
-            <p v-if="!firmware.fileName.length" class="q-mt-xl">
-              Flash alternative firmware from local file <input type="file" @change="loadFirmwareFile" accept=".dfu" class="q-ml-sm"/>
-            </p>
-            <q-btn
-              v-if="firmware.fileName.length && checks.crc32 && checks.target"
-              @click="update"
-              color="positive"
-              padding="12px 30px"
-            >Flash {{ firmware.fileName }}</q-btn>
-            <q-btn
-              v-if="firmware.fileName.length"
-              @click="cancelUpload"
-              :flat="checks.target"
-              :color="checks.target ? '' : 'positive'"
-              :class="checks.crc32 ? 'q-ml-lg' : ''"
-              padding="12px 30px"
-            >Cancel</q-btn>
-            <q-btn
-              v-if="firmware.fileName.length && !checks.target"
-              flat
-              color="grey-8"
-              @click="update"
-              padding="12px 30px"
-              class="q-ml-lg"
-            >Flash anyway</q-btn>
+          <div v-else class="alert">
+            <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
+            Check your connection and try again.
           </div>
-
-          <div v-if="connection === 0 && !ui.reconnecting" class="flex column flex-center">
-            <q-btn
+          <div v-if="showUsbRecognizeButton">
+            <q-btn color="positive" padding="12px 30px" @click="$emit('recognizeDevice', 'usb')">Continue</q-btn>
+          </div>
+          <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
+            <q-linear-progress
+              rounded
+              size="2.25rem"
+              :value="progress.current / progress.max"
               color="positive"
-              padding="12px 30px"
-              size="13px"
-              class="q-ma-sm"
-              @click="$emit('connect')"
+              class="q-mt-sm q-mb-lg"
             >
-              Reconnect
-            </q-btn>
+              <div class="absolute-full flex flex-center">
+                <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
+              </div>
+            </q-linear-progress>
           </div>
         </template>
       </template>
-      <template v-else>
-        <div class="alert" v-if="checks.sha256">
-          <h5>Installing firmware (step {{ updateStage }} of {{ mode === 'serial' && (flipper.properties.sdCardMounted || internalStorageFiles) ? '3' : 2 }})</h5>
-          <p class="q-mb-md">Don't disconnect your Flipper</p>
-        </div>
-        <div v-else class="alert">
-          <p><q-icon :name="evaAlertCircleOutline"></q-icon> sha256 check has failed for <b>{{ fwModel.value }}</b>!</p>
-          Check your connection and try again.
-        </div>
-        <div v-if="showUsbRecognizeButton">
-          <q-btn color="positive" padding="12px 30px" @click="$emit('recognizeDevice', 'usb')">Continue</q-btn>
-        </div>
-        <div v-show="connection === 3 && status === 3 && !showUsbRecognizeButton">
-          <q-linear-progress
-            rounded
-            size="2.25rem"
-            :value="progress.current / progress.max"
-            color="positive"
-            class="q-mt-sm q-mb-lg"
-          >
-            <div class="absolute-full flex flex-center">
-              <q-badge color="white" text-color="positive" :label="progress.stage === 0 ? 'Erasing device memory' : 'Writing data'"></q-badge>
-            </div>
-          </q-linear-progress>
-        </div>
-      </template>
+      <div v-else class="alert">
+        <p><q-icon :name="evaAlertCircleOutline"></q-icon> <b>Radio stack on your Flipper is outdated.</b></p>
+        Please update it with <a :href="qFlipperLink">qFlipper</a> (the desktop app).
+      </div>
 
       <div v-if="ui.reconnecting && connection < 2 || rpcStatus.isSession && rpcStatus.operation" class="flex column flex-center q-ma-lg">
         <q-spinner
@@ -252,6 +258,7 @@ import {
 } from './firmwareLoader'
 
 import {
+  fetchCopro,
   fetchResources,
   parseManifest,
   compareManifests,
@@ -282,7 +289,8 @@ export default defineComponent({
       checks: ref({
         crc32: true,
         sha256: true,
-        target: true
+        target: true,
+        radio: true
       }),
       fetchedManifest: ref(undefined),
       firmware: ref({
@@ -410,6 +418,9 @@ export default defineComponent({
     },
     updateCounter () {
       return this.$store.state.updateCounter
+    },
+    qFlipperLink () {
+      return this.$store.state.qFlipperLink
     }
   },
 
@@ -884,7 +895,7 @@ export default defineComponent({
     this.evaAlertCircleOutline = evaAlertCircleOutline
   },
 
-  mounted () {
+  async mounted () {
     this.fwOptions[0].version = this.release.version
     this.fwOptions[1].version = this.rc.version
     this.fwOptions[2].version = this.dev.version
@@ -899,6 +910,12 @@ export default defineComponent({
     if (this.custom && this.custom.files[0].target) {
       this.checks.target = 'f' + this.flipper.properties.hardware_target === this.custom.files[0].target
     }
+
+    const channel = this.fwModel.value
+    const coproManifest = await fetchCopro(channel, this[channel.toLowerCase()].files)
+    const manifestVersion = coproManifest.copro.radio.version.major + '.' + coproManifest.copro.radio.version.minor + '.' + coproManifest.copro.radio.version.sub
+    const flipperVersion = this.flipper.properties.radio_stack_major + '.' + this.flipper.properties.radio_stack_minor + '.' + this.flipper.properties.radio_stack_sub
+    this.checks.radio = !semver.lt(flipperVersion, manifestVersion)
   }
 })
 </script>
