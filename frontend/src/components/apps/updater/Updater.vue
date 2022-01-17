@@ -54,8 +54,12 @@
                 <div><b>Firmware build:</b></div><div>{{ flipper.properties.firmware_build_date }}</div>
                 <div><b>Bootloader version:</b></div><div>{{ flipper.properties.bootloader_version !== 'unknown' ? flipper.properties.bootloader_version : flipper.properties.bootloader_commit }}</div>
                 <div><b>Bootloader build:</b></div><div>{{ flipper.properties.bootloader_build_date }}</div>
-                <div><b>FUS version:</b></div><div>{{ flipper.properties.radio_fus_major + '.' + flipper.properties.radio_fus_minor + '.' + flipper.properties.radio_fus_sub }}</div>
-                <div><b>Radio stack version:</b></div><div>{{ flipper.properties.radio_stack_major + '.' + flipper.properties.radio_stack_minor + '.' + flipper.properties.radio_stack_sub }}</div>
+                <div><b>FUS version:</b></div>
+                <div v-if="flipper.properties.radio_alive === 'true'">{{ flipper.properties.radio_fus_major + '.' + flipper.properties.radio_fus_minor + '.' + flipper.properties.radio_fus_sub }}</div>
+                <div v-else><b>corrupted</b></div>
+                <div><b>Radio stack version:</b></div>
+                <div v-if="flipper.properties.radio_alive === 'true'">{{ flipper.properties.radio_stack_major + '.' + flipper.properties.radio_stack_minor + '.' + flipper.properties.radio_stack_sub }}</div>
+                <div v-else><b>corrupted</b></div>
                 <div><b>OTP version:</b></div><div>{{ flipper.properties.hardware_otp_ver }}</div>
               </div>
             </q-card-section>
@@ -220,7 +224,7 @@
         </template>
       </template>
       <div v-else class="alert">
-        <p><q-icon :name="evaAlertCircleOutline"></q-icon> <b>Radio stack on your Flipper is outdated.</b></p>
+        <p><q-icon :name="evaAlertCircleOutline"></q-icon> <b>Radio stack on your Flipper is {{ this.flipper.properties.radio_alive === 'true' ? 'outdated' : 'corrupted or missing' }}.</b></p>
         Please update it with <a :href="qFlipperLink">qFlipper</a> (the desktop app).
       </div>
 
@@ -911,11 +915,15 @@ export default defineComponent({
       this.checks.target = 'f' + this.flipper.properties.hardware_target === this.custom.files[0].target
     }
 
-    const channel = this.fwModel.value
-    const coproManifest = await fetchCopro(channel, this[channel.toLowerCase()].files)
-    const manifestVersion = coproManifest.copro.radio.version.major + '.' + coproManifest.copro.radio.version.minor + '.' + coproManifest.copro.radio.version.sub
-    const flipperVersion = this.flipper.properties.radio_stack_major + '.' + this.flipper.properties.radio_stack_minor + '.' + this.flipper.properties.radio_stack_sub
-    this.checks.radio = !semver.lt(flipperVersion, manifestVersion)
+    if (this.flipper.properties.radio_alive === 'true') {
+      const channel = this.fwModel.value
+      const coproManifest = await fetchCopro(channel, this[channel.toLowerCase()].files)
+      const manifestVersion = coproManifest.copro.radio.version.major + '.' + coproManifest.copro.radio.version.minor + '.' + coproManifest.copro.radio.version.sub
+      const flipperVersion = this.flipper.properties.radio_stack_major + '.' + this.flipper.properties.radio_stack_minor + '.' + this.flipper.properties.radio_stack_sub
+      this.checks.radio = !semver.lt(flipperVersion, manifestVersion)
+    } else {
+      this.checks.radio = false
+    }
   }
 })
 </script>
