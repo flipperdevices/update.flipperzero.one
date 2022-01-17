@@ -21,5 +21,8 @@ export const mutations = {
   },
   incrementUpdateCounter (state) {
     state.updateCounter++
+  },
+  setQFlipperLink (state, payload) {
+    state.qFlipperLink = payload.qFlipperLink
   }
 }

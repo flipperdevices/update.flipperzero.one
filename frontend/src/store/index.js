@@ -25,6 +25,8 @@ export default createStore({
       dev: {}
     },
 
+    qFlipperLink: '',
+
     updateCounter: 0
   },
   actions,

@@ -114,6 +114,11 @@ export default defineComponent({
                   break
               }
             })
+            console.log(this.dropdown)
+            this.$store.commit({
+              type: 'setQFlipperLink',
+              qFlipperLink: this.dropdown[0].href
+            })
           }
         })
     }
