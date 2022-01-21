@@ -179,6 +179,7 @@
                 v-if="currentApp === 'Updater' && dev.version"
                 :flipper="flipper"
                 @connect="connect"
+                @read-properties="readProperties"
                 @set-manifest="setManifest"
                 @recognize-device="recognizeDevice"
                 ref="Updater"
@@ -567,6 +568,8 @@ export default defineComponent({
         // todo
         this.flipper.properties.battery = undefined
 
+        await commands.system.setDatetime(new Date())
+
         this.flipper.properties.sdCardMounted = undefined
         await commands.storage.info('/ext')
           .then(async () => {
@@ -586,8 +589,6 @@ export default defineComponent({
               console.error(error)
             }
           })
-
-        await commands.system.setDatetime(new Date())
 
         await commands.stopRpcSession()
       } else {

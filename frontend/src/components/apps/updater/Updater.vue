@@ -454,6 +454,11 @@ export default defineComponent({
         if (!this.firmware.fileName.length) {
           this.firmware.loading = true
           await this.fetchFirmwareFile(this.fwModel.value)
+            .then(() => {
+              if (!this.firmware.binary) {
+                throw new Error('Failed to fetch firmware')
+              }
+            })
             .catch(error => {
               console.log('⎣ Update #' + this.updateCounter, 'failed')
               window.removeEventListener('beforeunload', preventTabClose)
@@ -483,10 +488,6 @@ export default defineComponent({
 
         if (!this.error.isError) {
           if (this.mode === 'serial') {
-            if (!this.resources && this.flipper.properties.sdCardMounted) {
-              await this.fetchResources('dev')
-            }
-
             await this.backupSettings()
               .catch(async error => {
                 console.log('⎣ Update #' + this.updateCounter, 'failed')
@@ -531,6 +532,7 @@ export default defineComponent({
                 }
               })
           } else {
+            console.log('⎢ Skipped in recovery mode')
             this.updateStage = 2
           }
           this.$store.commit({
@@ -601,6 +603,7 @@ export default defineComponent({
             })
             await waitForDevice('rebooted to serial')
             console.log('⎢ ⎣ Rebooted to serial')
+            document.title = 'Flipper Zero Update Page'
             this.$store.commit({
               type: 'setUiFlag',
               flag: {
@@ -610,21 +613,31 @@ export default defineComponent({
             })
 
             console.log('⎢ ⎡ Connecting')
-            await this.flipper.connect('serial')
-            for (let i = 0; i < 30; i++) {
-              if (this.connection === 2) {
-                break
-              }
-              await sleep(200)
-            }
+            await this.rawConnect()
             if (this.connection !== 2) {
               throw new Error('reconnection timeout')
             }
             console.log('⎢ ⎣ Connected')
-            document.title = 'Flipper Zero Update Page'
+
+            if (this.flipper.properties.sdCardMounted === undefined) {
+              console.log('⎢ ⎡ Reading properties')
+              this.$emit('read-properties')
+              for (let i = 0; i < 20; i++) {
+                if (this.flipper.properties.sdCardMounted) {
+                  break
+                }
+                await sleep(500)
+              }
+              this.flipper.restartWorker()
+              await this.rawConnect()
+              console.log('⎢ ⎣ Read properties')
+            }
 
             if (this.mode === 'serial') {
-              if (this.resources && this.flipper.properties.sdCardMounted) {
+              if (this.flipper.properties.sdCardMounted) {
+                if (!this.resources) {
+                  await this.fetchResources('dev')
+                }
                 await sleep(500)
                 this.updateStage = 3
                 console.log('⎢ Stage 3')
@@ -860,7 +873,9 @@ export default defineComponent({
         await commandQueue(queue)
         console.log('⎢ ⎢  Databases updated in ' + (Date.now() - globalStart) + ' ms')
         unbind()
-        await this.restoreSettings(true)
+        if (this.internalStorageFiles) {
+          await this.restoreSettings(true)
+        }
         console.log('⎢ ⎣ End updating databases')
       } catch (error) {
         console.log(error)
@@ -870,6 +885,16 @@ export default defineComponent({
     },
 
     // Utils
+    async rawConnect () {
+      await this.flipper.connect('serial')
+      for (let i = 0; i < 30; i++) {
+        if (this.connection === 2) {
+          break
+        }
+        await sleep(200)
+      }
+    },
+
     compareVersions () {
       if (this.flipper.properties.firmware_version) {
         if (this.flipper.properties.firmware_version !== 'unknown') {
@@ -921,7 +946,7 @@ export default defineComponent({
       const manifestVersion = coproManifest.copro.radio.version.major + '.' + coproManifest.copro.radio.version.minor + '.' + coproManifest.copro.radio.version.sub
       const flipperVersion = this.flipper.properties.radio_stack_major + '.' + this.flipper.properties.radio_stack_minor + '.' + this.flipper.properties.radio_stack_sub
       this.checks.radio = !semver.lt(flipperVersion, manifestVersion)
-    } else {
+    } else if (this.mode === 'serial') {
       this.checks.radio = false
     }
   }
