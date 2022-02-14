@@ -107,7 +107,7 @@
             <img src="https://cdn.flipperzero.one/instagram-logo.png" :style="$q.screen.xs ? 'height: 30px;' : 'height: 42px;'" />
           </a>
         </div>
-        <p>Copyright &copy; 2021 Flipper Devices Inc.</p>
+        <p>Copyright &copy; 2022 Flipper Devices Inc.</p>
       </div>
       <img class="absolute-bottom-right flipper-footer" src="../assets/flipper-footer.png" />
     </q-footer>
